@@ -3192,9 +3192,15 @@ class Component extends DCLogic {
     return 'https://script.google.com/macros/s/AKfycbw8TGcUb7K76IvyTI3DNCwneXfj4jSt9_838rnR9CnbhLtW3XQQ8ITiP6liBdQEEOLeuw/exec';
   }
 
-  /** Link oficial do app, usado no texto de WhatsApp da entrega. */
+  /**
+   * Link oficial do app, usado no texto de WhatsApp da entrega.
+   *
+   * Aponta para a pagina publicada, NAO para o Apps Script. O endereco do
+   * Apps Script continua funcionando, mas quem abre por la cai na versao
+   * de dentro do quadro isolado - a que nao guarda o codigo.
+   */
   get LINK_DO_APP() {
-    return 'https://script.google.com/macros/s/AKfycbw8TGcUb7K76IvyTI3DNCwneXfj4jSt9_838rnR9CnbhLtW3XQQ8ITiP6liBdQEEOLeuw/exec';
+    return 'https://marlenoliveira.github.io/rede-de-oticas-app/';
   }
 
 
