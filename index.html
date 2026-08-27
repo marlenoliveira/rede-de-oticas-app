@@ -2268,14 +2268,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
 
     <div style="font-size:14px;color:#8A9099;margin-top:24px;line-height:1.5">Não sabe seu código? Fale com a gerente da sua loja.</div>
 
-    <!-- MEDIDOR TEMPORARIO: descobre por que o codigo nao fica guardado.
-         Sai daqui assim que a causa estiver confirmada. -->
-    <div style="margin-top:28px;padding:12px;border-radius:12px;background:#EDEFF2;font-size:12px;color:#3A3F47;line-height:1.6;text-align:left;word-break:break-all">
-      <div style="font-weight:800;color:#02306E;margin-bottom:4px">medidor (temporário)</div>
-      <div>origem: {{ medidaOrigem }}</div>
-      <div>consegue gravar: {{ medidaGravar }}</div>
-      <div>lembrou da abertura anterior: {{ medidaLembrou }}</div>
-    </div>
+
   </div>
 </div>
 
@@ -3234,36 +3227,7 @@ class Component extends DCLogic {
     catch (e) { /* navegador sem armazenamento: o app funciona, so pergunta o codigo toda vez */ }
   }
 
-  /**
-   * MEDIDOR TEMPORARIO (27/08/2026).
-   *
-   * O codigo nao esta ficando guardado no Mac nem no iPhone. O app roda
-   * dentro de um quadro isolado do Apps Script, e o navegador pode estar
-   * tratando o que se grava ali como armazenamento de terceiro - o Safari
-   * apaga isso por padrao.
-   *
-   * Este medidor responde tres coisas no aparelho da pessoa:
-   *   origem  - de qual endereco o app pensa que esta rodando
-   *   gravar  - se consegue gravar e reler na mesma sessao
-   *   lembrou - se o que foi gravado numa abertura anterior sobreviveu
-   *
-   * Sai daqui assim que a causa estiver confirmada.
-   */
-  medir() {
-    const r = { origem: '?', gravar: 'nao', lembrou: 'nao' };
-    try {
-      r.origem = String((window.location && window.location.origin) || '?');
-      if (r.origem === 'null' || !r.origem) r.origem = 'null (quadro isolado)';
-    } catch (e) { r.origem = 'bloqueado'; }
-    try {
-      r.lembrou = window.localStorage.getItem('rdo_medida') ? 'SIM' : 'nao';
-      window.localStorage.setItem('rdo_medida', '1');
-      r.gravar = window.localStorage.getItem('rdo_medida') ? 'SIM' : 'nao';
-    } catch (e) {
-      r.gravar = 'BLOQUEADO pelo navegador';
-    }
-    return r;
-  }
+
 
   /** Identificador do aparelho, so para a trava de tentativas. Nao e segredo. */
   idDoAparelho() {
@@ -3658,11 +3622,6 @@ class Component extends DCLogic {
       mostrarCarregando: s.identCarregando ? 'flex' : 'none',
       mostrarLogin: naLogin ? 'flex' : 'none',
       mostrarApp: (!s.identCarregando && !!s.ident) ? 'flex' : 'none',
-
-      // ---- medidor temporário (some quando a causa estiver confirmada) ----
-      medidaOrigem: (this._medida || (this._medida = this.medir())).origem,
-      medidaGravar: (this._medida || {}).gravar,
-      medidaLembrou: (this._medida || {}).lembrou,
 
       // ---- tela de código ----
       // Mostra bolinhas, nunca os números: o app é usado no balcão, com
