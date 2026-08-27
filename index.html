@@ -197,6 +197,20 @@ a{color:#02306E}a:hover{color:#E06E0A}
         </sc-if>
 
         <sc-if value="{{ faseResultado }}" hint-placeholder-val="{{ false }}">
+          <!-- Confere quem esta logado ANTES de gravar. Na loja o
+               computador e compartilhado: quem senta depois registra no
+               nome de quem sentou antes, e o dado sai errado sem ninguem
+               ver. Melhor ver o nome errado agora do que descobrir na
+               planilha depois. -->
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin-bottom:20px;padding:16px;border-radius:12px;border:2px solid #E06E0A;background:#FDF1E4">
+            <div style="min-width:0">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A5A0A">Vai ser registrado como</div>
+              <div style="font-size:20px;font-weight:800;color:#02306E;line-height:1.25">{{ identNome }}</div>
+              <div style="font-size:13px;color:#8A9099">{{ usuarioPapel }}</div>
+            </div>
+            <button style="min-height:48px;padding:12px 20px;border-radius:12px;background:#fff;border:2px solid #E06E0A;color:#E06E0A;font-size:16px;font-weight:800;flex:none" onClick="{{ naoSouEu }}">Não sou eu</button>
+          </div>
+
           <h1 style="font-size:30px;font-weight:800;color:#02306E;margin:0 0 8px;line-height:1.1">Registrar o resultado</h1>
           <p style="font-size:16px;margin:0 0 24px">Um toque. É isso que alimenta o seu desempenho e o painel da loja.</p>
           <div style="display:grid;grid-template-columns:{{ grid3 }};gap:16px">
@@ -1437,6 +1451,17 @@ class Component extends DCLogic {
       identNome: identNome,
       identEmail: id.email || '',
       sair: () => this.sair(),
+      // "Nao sou eu": sai da conta E descarta o atendimento pela metade.
+      // Se so saisse, o rascunho da pessoa anterior ficaria na tela para
+      // a proxima continuar - e o dado sairia errado do mesmo jeito.
+      naoSouEu: () => {
+        this.setState({
+          passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null,
+          valorTexto: '', descontoTexto: '0', justificativa: '', visao: null,
+          segundoPar: null, armacao: null, orcamento: null, tratamentos: {},
+          horaInicio: null, erroSalvar: null, salvando: false
+        }, () => this.sair());
+      },
       vendedora: identPrimeiro + (identLoja ? ' · ' + identLoja : ''),
       usuarioPrimeiro: identPrimeiro,
       usuarioInicial: (identPrimeiro || '?').charAt(0),
