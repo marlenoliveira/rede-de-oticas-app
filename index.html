@@ -55,7 +55,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
 <!-- Tela 1: identificando. Aparece enquanto o servidor nao respondeu quem e o usuario. -->
 <div data-tela="carregando" style="display:{{ mostrarCarregando }};min-height:100vh;align-items:center;justify-content:center;background:#fff;padding:24px">
   <div style="text-align:center">
-    <div style="font-size:22px;font-weight:800;color:#02306E">Rede de Óticas</div>
+    <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:210px;max-width:100%;height:auto;display:block;margin:0 auto">
     <div style="font-size:15px;color:#8A9099;margin-top:12px">Identificando você…</div>
   </div>
 </div>
@@ -65,8 +65,8 @@ a{color:#02306E}a:hover{color:#E06E0A}
      campo grande, teclado de números e o botão Entrar. Nada mais. -->
 <div data-tela="login" style="display:{{ mostrarLogin }};min-height:100vh;align-items:center;justify-content:center;background:#fff;padding:24px">
   <div style="max-width:360px;width:100%;text-align:center">
-    <div style="font-size:24px;font-weight:800;color:#02306E">Rede de Óticas</div>
-    <div style="font-size:15px;color:#8A9099;margin-top:6px">Ver bem é viver melhor.</div>
+    <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:250px;max-width:100%;height:auto;display:block;margin:0 auto">
+    <div style="font-size:15px;color:#8A9099;margin-top:10px">Ver bem é viver melhor.</div>
 
     <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-top:36px">Código de acesso</div>
     <div style="margin-top:12px;min-height:72px;border:2px solid {{ bordaCodigo }};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#02306E;letter-spacing:.28em;font-variant-numeric:tabular-nums;background:#fff">{{ codigoNaTela }}</div>
@@ -91,8 +91,8 @@ a{color:#02306E}a:hover{color:#E06E0A}
 
   <div style="display:{{ mostrarLateral }};width:264px;flex:none;border-right:1px solid #EDEFF2;padding:24px 16px;flex-direction:column;gap:8px;position:sticky;top:0;height:100vh">
     <div style="padding:8px 12px 16px">
-      <div style="font-size:20px;font-weight:800;color:#02306E;letter-spacing:-.01em">Rede de Óticas</div>
-      <div style="font-size:13px;color:#8A9099;margin-top:4px">Ver bem é viver melhor.</div>
+      <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:190px;max-width:100%;height:auto;display:block">
+      <div style="font-size:13px;color:#8A9099;margin-top:6px">Ver bem é viver melhor.</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;padding:0 4px 16px">
       <button style="flex:1;display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-radius:12px;background:#EDEFF2;text-align:left" onClick="{{ abrirMenu }}">
@@ -118,7 +118,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
   <div style="flex:1;min-width:0;display:flex;flex-direction:column">
 
     <div style="display:{{ mostrarTopo }};align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #EDEFF2;position:sticky;top:0;background:#fff;z-index:20">
-      <div style="font-size:18px;font-weight:800;color:#02306E">Rede de Óticas</div>
+      <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:148px;max-width:52vw;height:auto;display:block">
       <div style="display:flex;gap:8px;align-items:center">
         <button style="display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-radius:12px;background:#EDEFF2" onClick="{{ abrirMenu }}">
           <span style="width:28px;height:28px;border-radius:14px;background:#02306E;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
@@ -749,7 +749,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
 
       <div style="margin-top:40px;border-top:1px solid #EDEFF2;padding-top:24px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
         <div style="font-size:22px;font-weight:800;color:#02306E;line-height:1.25;max-width:34ch">{{ txt_lemaOrdem }}</div>
-        <div style="font-size:14px;color:#8A9099">Rede de Óticas · Ver bem é viver melhor.</div>
+        <div style="font-size:14px;color:#8A9099">Casa do Olhar · Ver bem é viver melhor.</div>
       </div>
     </div>
 
@@ -951,7 +951,7 @@ class Component extends DCLogic {
   montarEntrega(nome, codigo, loja) {
     const primeiro = String(nome || '').split(' ')[0];
     const texto =
-      'Oi, ' + primeiro + '! Esse é o app da Rede de Óticas para você registrar os atendimentos.\n\n' +
+      'Oi, ' + primeiro + '! Esse é o app da Casa do Olhar para você registrar os atendimentos.\n\n' +
       '1) Abra este link no celular:\n' + this.LINK_DO_APP + '\n\n' +
       '2) Digite o seu código de acesso: ' + codigo + '\n\n' +
       '3) Para ficar com o ícone na tela inicial: toque no botão de compartilhar do navegador e escolha "Adicionar à Tela de Início".\n\n' +
