@@ -24,7 +24,7 @@
 <title>Casa do Olhar</title>
 <meta name="apple-mobile-web-app-title" content="Casa do Olhar">
 <meta name="application-name" content="Casa do Olhar">
-<meta name="theme-color" content="#02306E">
+<meta name="theme-color" content="#062D7B">
 <link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-512.png">
@@ -47,44 +47,39 @@ html,body{margin:0;padding:0;background:#fff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:system-ui,-apple-system,"Segoe UI",Helvetica,sans-serif;color:#3A3F47}
 button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
-a{color:#02306E}a:hover{color:#E06E0A}
+a{color:#062D7B}a:hover{color:#F96B05}
 ::selection{background:rgba(224,110,10,.22)}
-:focus-visible{outline:2px solid #E06E0A;outline-offset:2px}
+:focus-visible{outline:2px solid #F96B05;outline-offset:2px}
 
-/* Abertura do app (tela "carregando"): fundo azul da marca, logo azul
-   dentro de um cartao branco que chega crescendo e depois respira.
-   Escolha do Marlen em 29/08/2026; as 4 opcoes comparadas estao em
-   ferramentas/abertura-opcoes.html. Quem desliga animacao no aparelho
-   (prefers-reduced-motion) ve a mesma tela, parada. */
-[data-abre="fundo"]{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 34%,rgba(255,255,255,.14),transparent 62%)}
-[data-abre="halo"]{position:absolute;top:0;right:0;bottom:14%;left:0;margin:auto;width:min(380px,92vw);height:min(380px,92vw);border-radius:50%;background:radial-gradient(circle,rgba(224,110,10,.34),transparent 68%);animation:abre-respira 3.2s ease-in-out infinite}
-[data-abre="cartao"]{position:relative;background:#fff;border-radius:22px;padding:22px 26px;box-shadow:0 18px 44px rgba(0,0,0,.28);overflow:hidden;animation:abre-cresce 1s cubic-bezier(.2,.8,.2,1) both,abre-respira 3.2s 1s ease-in-out infinite}
-[data-abre="luz"]{position:absolute;top:0;bottom:0;width:55%;background:linear-gradient(100deg,transparent,rgba(2,48,110,.16),transparent);animation:abre-varre 3.2s 1.1s ease-in-out infinite}
-[data-abre="slogan"]{position:relative;margin-top:18px;font-size:15px;color:rgba(255,255,255,.9);animation:abre-aparece .7s .55s both}
-[data-abre="barra"]{position:relative;margin-top:18px;width:186px;height:5px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden;animation:abre-aparece .7s .75s both}
-[data-abre="corre"]{position:absolute;top:0;bottom:0;width:42%;border-radius:99px;background:#E06E0A;animation:abre-corre 1.5s ease-in-out infinite}
-[data-abre="dizer"]{position:relative;margin-top:14px;font-size:14.5px;color:rgba(255,255,255,.72);animation:abre-aparece .7s .9s both}
-@keyframes abre-cresce{from{opacity:0;transform:translateY(12px) scale(.9)}to{opacity:1;transform:none}}
+/* Abertura do app (tela "carregando").
+   Fundo no azul do BRAND BOOK v2.2 (#062D7B) com a versao oficial do logo
+   para fundo azul — CASA e OTICA brancos, OLHAR laranja — como manda a
+   secao 08 do brand book. Nada de efeito sobre a marca: a secao 09 proibe
+   brilho, sombra e 3D no logo, e a versao anterior tinha uma varredura de
+   luz passando por cima dele. Ver marca/CLAUDE.md. */
+[data-abre="marca"]{width:300px;max-width:74vw;height:auto;display:block;animation:abre-marca 1s cubic-bezier(.2,.8,.2,1) both}
+[data-abre="slogan"]{margin-top:38px;font-size:15px;color:#fff;animation:abre-aparece .7s .5s both}
+[data-abre="slogan"] i{font-style:normal;color:#F96B05}
+[data-abre="barra"]{position:relative;margin-top:20px;width:186px;height:5px;border-radius:99px;background:rgba(255,255,255,.24);overflow:hidden;animation:abre-aparece .7s .65s both}
+[data-abre="corre"]{position:absolute;top:0;bottom:0;width:42%;border-radius:99px;background:#F96B05;animation:abre-corre 1.5s ease-in-out infinite}
+[data-abre="dizer"]{margin-top:16px;font-size:14.5px;color:rgba(255,255,255,.74);animation:abre-aparece .7s .8s both}
+@keyframes abre-marca{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
 @keyframes abre-aparece{from{opacity:0}to{opacity:1}}
-@keyframes abre-respira{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
-@keyframes abre-varre{0%{transform:translateX(-130%)}55%,100%{transform:translateX(230%)}}
 @keyframes abre-corre{0%{left:-45%}100%{left:100%}}
 @media (prefers-reduced-motion:reduce){[data-abre]{animation:none!important}}
 </style>
 </helmet>
 
 <!-- Tela 1: identificando. Aparece enquanto o servidor nao respondeu quem e o usuario.
-     Fundo azul #02306E, o mesmo do theme-color la em cima: o iPhone pinta a barra
-     de status dessa cor, entao a abertura entra sem emenda visivel.
-     O desenho e o "Cartao azul" de ferramentas/abertura-opcoes.html. -->
-<div data-tela="carregando" style="display:{{ mostrarCarregando }};position:relative;overflow:hidden;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;background:#02306E;padding:24px;text-align:center">
-  <div data-abre="fundo"></div>
-  <div data-abre="halo"></div>
-  <div data-abre="cartao">
-    <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:210px;max-width:62vw;height:auto;display:block">
-    <div data-abre="luz"></div>
-  </div>
-  <div data-abre="slogan">Ver bem é viver melhor.</div>
+     Fundo #062D7B, o azul do brand book, igual ao theme-color la em cima: no iPhone
+     a barra de status fica dessa cor e a abertura entra sem emenda.
+     A marca aqui e logo-fundo-azul.png — a versao OFICIAL para fundo azul. Nao e a
+     mesma imagem das outras telas: aquela (logo-horizontal.png) e a versao para fundo
+     branco, e sobre azul o escrito "CASA DO" sumiria. Trocar uma pela outra quebra a
+     regra da secao 08 do brand book. -->
+<div data-tela="carregando" style="display:{{ mostrarCarregando }};min-height:100vh;flex-direction:column;align-items:center;justify-content:center;background:#062D7B;padding:24px;text-align:center">
+  <img data-abre="marca" src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-fundo-azul.png" alt="Casa do Olhar">
+  <div data-abre="slogan">Ver bem é <i>viver melhor.</i></div>
   <div data-abre="barra"><div data-abre="corre"></div></div>
   <div data-abre="dizer">Identificando você…</div>
 </div>
@@ -97,8 +92,8 @@ a{color:#02306E}a:hover{color:#E06E0A}
     <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:250px;max-width:100%;height:auto;display:block;margin:0 auto">
     <div style="font-size:15px;color:#8A9099;margin-top:10px">Ver bem é viver melhor.</div>
 
-    <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-top:36px">Código de acesso</div>
-    <div style="margin-top:12px;min-height:72px;border:2px solid {{ bordaCodigo }};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#02306E;letter-spacing:.28em;font-variant-numeric:tabular-nums;background:#fff">{{ codigoNaTela }}</div>
+    <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:36px">Código de acesso</div>
+    <div style="margin-top:12px;min-height:72px;border:2px solid {{ bordaCodigo }};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#062D7B;letter-spacing:.28em;font-variant-numeric:tabular-nums;background:#fff">{{ codigoNaTela }}</div>
 
     <div style="display:{{ mostrarErroLogin }};margin-top:16px;padding:12px 16px;border-radius:12px;background:#FBECEA;border:2px solid #C0392B;font-size:15px;font-weight:700;color:#8E2A1F;line-height:1.4">{{ erroLogin }}</div>
 
@@ -125,9 +120,9 @@ a{color:#02306E}a:hover{color:#E06E0A}
     </div>
     <div style="display:flex;gap:8px;align-items:center;padding:0 4px 16px">
       <button style="flex:1;display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-radius:12px;background:#EDEFF2;text-align:left" onClick="{{ abrirMenu }}">
-        <span style="width:32px;height:32px;flex:none;border-radius:16px;background:#02306E;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
+        <span style="width:32px;height:32px;flex:none;border-radius:16px;background:#062D7B;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
         <span style="flex:1;min-width:0">
-          <span style="display:block;font-size:15px;font-weight:800;color:#02306E">{{ usuarioPrimeiro }}</span>
+          <span style="display:block;font-size:15px;font-weight:800;color:#062D7B">{{ usuarioPrimeiro }}</span>
           <span style="display:block;font-size:12px;color:#8A9099">{{ usuarioPapel }}</span>
         </span>
         <span style="font-size:12px;color:#8A9099">▾</span>
@@ -141,7 +136,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
       </button>
     </sc-for>
     <div style="flex:1"></div>
-    <div style="border-radius:12px;background:#EDEFF2;padding:16px;font-size:14px;font-weight:700;color:#02306E;line-height:1.35">{{ txt_lemaOrdem }}</div>
+    <div style="border-radius:12px;background:#EDEFF2;padding:16px;font-size:14px;font-weight:700;color:#062D7B;line-height:1.35">{{ txt_lemaOrdem }}</div>
   </div>
 
   <div style="flex:1;min-width:0;display:flex;flex-direction:column">
@@ -150,8 +145,8 @@ a{color:#02306E}a:hover{color:#E06E0A}
       <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:148px;max-width:52vw;height:auto;display:block">
       <div style="display:flex;gap:8px;align-items:center">
         <button style="display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-radius:12px;background:#EDEFF2" onClick="{{ abrirMenu }}">
-          <span style="width:28px;height:28px;border-radius:14px;background:#02306E;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
-          <span style="font-size:14px;font-weight:800;color:#02306E">{{ usuarioPrimeiro }}</span>
+          <span style="width:28px;height:28px;border-radius:14px;background:#062D7B;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
+          <span style="font-size:14px;font-weight:800;color:#062D7B">{{ usuarioPrimeiro }}</span>
           <span style="font-size:12px;color:#8A9099">▾</span>
         </button>
       </div>
@@ -162,15 +157,15 @@ a{color:#02306E}a:hover{color:#E06E0A}
       <sc-if value="{{ menuAberto }}" hint-placeholder-val="{{ false }}">
         <div style="border:1px solid #EDEFF2;border-radius:12px;padding:16px;margin-bottom:24px">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-            <div style="font-size:16px;font-weight:800;color:#02306E">Quem está usando</div>
+            <div style="font-size:16px;font-weight:800;color:#062D7B">Quem está usando</div>
             <button style="min-height:48px;padding:8px 16px;border-radius:12px;font-size:15px;font-weight:700;color:#8A9099" onClick="{{ fecharMenu }}">Fechar</button>
           </div>
           <!-- Antes aqui havia um seletor manual de perfil. Foi removido:
                quem manda e o quemSouEu() do servidor, nao a escolha do navegador. -->
           <div style="display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;border-radius:12px;background:#EDEFF2">
-            <span style="width:36px;height:36px;flex:none;border-radius:18px;background:#02306E;color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
+            <span style="width:36px;height:36px;flex:none;border-radius:18px;background:#062D7B;color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
             <span style="flex:1;min-width:0">
-              <span style="display:block;font-size:16px;font-weight:700;color:#02306E">{{ identNome }}</span>
+              <span style="display:block;font-size:16px;font-weight:700;color:#062D7B">{{ identNome }}</span>
               <span style="display:block;font-size:13px;color:#8A9099">{{ usuarioPapel }}</span>
             </span>
           </div>
@@ -184,20 +179,20 @@ a{color:#02306E}a:hover{color:#E06E0A}
 
 
       <sc-if value="{{ emNiveis }}" hint-placeholder-val="{{ true }}">
-        <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#E06E0A">Linha de lentes</div>
-        <h1 style="font-size:32px;font-weight:800;color:#02306E;margin:8px 0 8px;line-height:1.1">Os 4 níveis</h1>
+        <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">Linha de lentes</div>
+        <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:8px 0 8px;line-height:1.1">Os 4 níveis</h1>
         <p style="font-size:16px;line-height:1.5;margin:0 0 24px;max-width:62ch">{{ txt_compareFatores }}</p>
         <div style="display:grid;grid-template-columns:{{ gridNiveis }};gap:16px">
           <sc-for list="{{ niveis }}" as="nv" hint-placeholder-count="4">
             <div style="border:1px solid #EDEFF2;border-top:4px solid {{ nv.borda }};border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px;background:#fff">
               <div>
-                <div style="font-size:24px;font-weight:800;color:#02306E;line-height:1.1">{{ nv.nome }}</div>
-                <div style="font-size:13px;font-weight:700;color:#E06E0A;margin-top:4px">{{ nv.faixa }}</div>
+                <div style="font-size:24px;font-weight:800;color:#062D7B;line-height:1.1">{{ nv.nome }}</div>
+                <div style="font-size:13px;font-weight:700;color:#F96B05;margin-top:4px">{{ nv.faixa }}</div>
               </div>
               <div style="display:flex;flex-direction:column;gap:8px">
                 <sc-for list="{{ nv.fatores }}" as="f" hint-placeholder-count="3">
                   <div style="display:flex;align-items:center;gap:8px;font-size:15px">
-                    <span style="width:64px;flex:none;height:8px;border-radius:8px;background:#EDEFF2;overflow:hidden;display:block"><span style="display:block;height:8px;background:#02306E;width:{{ f.largura }}"></span></span>
+                    <span style="width:64px;flex:none;height:8px;border-radius:8px;background:#EDEFF2;overflow:hidden;display:block"><span style="display:block;height:8px;background:#062D7B;width:{{ f.largura }}"></span></span>
                     <span>{{ f.texto }}</span>
                   </div>
                 </sc-for>
@@ -207,13 +202,13 @@ a{color:#02306E}a:hover{color:#E06E0A}
                   <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:8px 12px;border-radius:12px;background:{{ s.fundo }};color:{{ s.cor }}">{{ s.texto }}</span>
                 </sc-for>
               </div>
-              <div style="background:#EDEFF2;border-radius:12px;padding:16px;font-size:16px;line-height:1.45;font-weight:600;color:#02306E">“{{ nv.frase }}”</div>
+              <div style="background:#EDEFF2;border-radius:12px;padding:16px;font-size:16px;line-height:1.45;font-weight:600;color:#062D7B">“{{ nv.frase }}”</div>
             </div>
           </sc-for>
         </div>
-        <div style="margin-top:24px;border-radius:12px;background:#FDF1E4;border:1px solid #E06E0A;padding:16px;display:flex;gap:12px;align-items:center">
+        <div style="margin-top:24px;border-radius:12px;background:#FDF1E4;border:1px solid #F96B05;padding:16px;display:flex;gap:12px;align-items:center">
           <span style="font-size:22px">⚠</span>
-          <div style="font-size:16px;font-weight:700;color:#02306E;line-height:1.4">{{ txt_apresente3 }}</div>
+          <div style="font-size:16px;font-weight:700;color:#062D7B;line-height:1.4">{{ txt_apresente3 }}</div>
         </div>
       </sc-if>
 
@@ -227,8 +222,8 @@ a{color:#02306E}a:hover{color:#E06E0A}
         </div>
 
         <sc-if value="{{ fasePassos }}" hint-placeholder-val="{{ true }}">
-          <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#E06E0A">Passo {{ passoNum }} de 5</div>
-          <h1 style="font-size:30px;font-weight:800;color:#02306E;margin:8px 0 8px;line-height:1.1">{{ passoNome }}</h1>
+          <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">Passo {{ passoNum }} de 5</div>
+          <h1 style="font-size:30px;font-weight:800;color:#062D7B;margin:8px 0 8px;line-height:1.1">{{ passoNome }}</h1>
           <p style="font-size:16px;line-height:1.5;margin:0 0 16px;max-width:60ch">{{ passoAjuda }}</p>
           <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;align-items:start">
             <div style="display:flex;flex-direction:column;gap:8px">
@@ -240,16 +235,16 @@ a{color:#02306E}a:hover{color:#E06E0A}
               </sc-for>
             </div>
             <div style="border-radius:12px;background:#EDEFF2;padding:24px">
-              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E">Fala pronta</div>
-              <p style="font-size:18px;line-height:1.45;font-weight:600;color:#02306E;margin:8px 0 16px">“{{ passoFala }}”</p>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B">Fala pronta</div>
+              <p style="font-size:18px;line-height:1.45;font-weight:600;color:#062D7B;margin:8px 0 16px">“{{ passoFala }}”</p>
               <div style="height:1px;background:#D6DAE0;margin-bottom:16px"></div>
               <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#C0392B">Nunca faça</div>
               <p style="font-size:15px;line-height:1.45;margin:8px 0 0">{{ passoNunca }}</p>
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:24px;flex-wrap:wrap">
-            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800" onClick="{{ avancar }}">{{ rotuloAvancar }}</button>
-            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#02306E;font-size:16px;font-weight:700" onClick="{{ voltar }}">Voltar</button>
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ avancar }}">{{ rotuloAvancar }}</button>
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ voltar }}">Voltar</button>
             <span style="font-size:14px;color:#8A9099">{{ marcados }} de {{ totalItens }} marcados</span>
           </div>
         </sc-if>
@@ -260,16 +255,16 @@ a{color:#02306E}a:hover{color:#E06E0A}
                nome de quem sentou antes, e o dado sai errado sem ninguem
                ver. Melhor ver o nome errado agora do que descobrir na
                planilha depois. -->
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin-bottom:20px;padding:16px;border-radius:12px;border:2px solid #E06E0A;background:#FDF1E4">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin-bottom:20px;padding:16px;border-radius:12px;border:2px solid #F96B05;background:#FDF1E4">
             <div style="min-width:0">
               <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A5A0A">Vai ser registrado como</div>
-              <div style="font-size:20px;font-weight:800;color:#02306E;line-height:1.25">{{ identNome }}</div>
+              <div style="font-size:20px;font-weight:800;color:#062D7B;line-height:1.25">{{ identNome }}</div>
               <div style="font-size:13px;color:#8A9099">{{ usuarioPapel }}</div>
             </div>
-            <button style="min-height:48px;padding:12px 20px;border-radius:12px;background:#fff;border:2px solid #E06E0A;color:#E06E0A;font-size:16px;font-weight:800;flex:none" onClick="{{ naoSouEu }}">Não sou eu</button>
+            <button style="min-height:48px;padding:12px 20px;border-radius:12px;background:#fff;border:2px solid #F96B05;color:#F96B05;font-size:16px;font-weight:800;flex:none" onClick="{{ naoSouEu }}">Não sou eu</button>
           </div>
 
-          <h1 style="font-size:30px;font-weight:800;color:#02306E;margin:0 0 8px;line-height:1.1">Registrar o resultado</h1>
+          <h1 style="font-size:30px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Registrar o resultado</h1>
           <p style="font-size:16px;margin:0 0 24px">Um toque. É isso que alimenta o seu desempenho e o painel da loja.</p>
           <div style="display:grid;grid-template-columns:{{ grid3 }};gap:16px">
             <sc-for list="{{ resultados }}" as="r" hint-placeholder-count="3">
@@ -281,23 +276,23 @@ a{color:#02306E}a:hover{color:#E06E0A}
           </div>
           <sc-if value="{{ vendeu }}" hint-placeholder-val="{{ false }}">
             <div style="margin-top:24px;border-radius:12px;background:#EDEFF2;padding:24px">
-              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Nível vendido</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Nível vendido</div>
               <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
                 <sc-for list="{{ chipsNivel }}" as="ch" hint-placeholder-count="4">
                   <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ ch.borda }};background:{{ ch.fundo }};color:{{ ch.cor }};font-size:16px;font-weight:700" onClick="{{ ch.escolher }}">{{ ch.texto }}</button>
                 </sc-for>
               </div>
-              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Valor do pedido</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Valor do pedido</div>
               <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #EDEFF2;border-radius:12px;padding:0 16px;max-width:320px">
                 <span style="font-size:18px;font-weight:800;color:#8A9099">R$</span>
-                <input type="text" inputmode="numeric" placeholder="0,00" value="{{ valorTexto }}" onInput="{{ mudarValor }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:inherit;font-size:24px;font-weight:800;color:#02306E;padding:12px 0;min-height:48px;font-variant-numeric:tabular-nums" />
+                <input type="text" inputmode="numeric" placeholder="0,00" value="{{ valorTexto }}" onInput="{{ mudarValor }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:inherit;font-size:24px;font-weight:800;color:#062D7B;padding:12px 0;min-height:48px;font-variant-numeric:tabular-nums" />
               </div>
 
               <div style="height:1px;background:#D6DAE0;margin:24px 0"></div>
 
               <div style="display:grid;grid-template-columns:{{ grid2 }};gap:24px">
                 <div>
-                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Tipo de visão</div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Tipo de visão</div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <sc-for list="{{ chipsVisao }}" as="cv" hint-placeholder-count="2">
                       <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ cv.borda }};background:{{ cv.fundo }};color:{{ cv.cor }};font-size:16px;font-weight:700" onClick="{{ cv.escolher }}">{{ cv.texto }}</button>
@@ -305,7 +300,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
                   </div>
                 </div>
                 <div>
-                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Segundo par</div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Segundo par</div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <sc-for list="{{ chipsSegundoPar }}" as="cs" hint-placeholder-count="2">
                       <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ cs.borda }};background:{{ cs.fundo }};color:{{ cs.cor }};font-size:16px;font-weight:700" onClick="{{ cs.escolher }}">{{ cs.texto }}</button>
@@ -313,7 +308,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
                   </div>
                 </div>
                 <div>
-                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Tratamentos <span style="color:#8A9099;font-weight:700">(pode marcar mais de um)</span></div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Tratamentos <span style="color:#8A9099;font-weight:700">(pode marcar mais de um)</span></div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <sc-for list="{{ chipsTratamentos }}" as="ct" hint-placeholder-count="7">
                       <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ ct.borda }};background:{{ ct.fundo }};color:{{ ct.cor }};font-size:16px;font-weight:700" onClick="{{ ct.escolher }}">{{ ct.texto }}</button>
@@ -321,7 +316,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
                   </div>
                 </div>
                 <div>
-                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Armação <span style="color:#8A9099;font-weight:700">(opcional)</span></div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Armação <span style="color:#8A9099;font-weight:700">(opcional)</span></div>
                   <div style="display:flex;gap:8px;flex-wrap:wrap">
                     <sc-for list="{{ chipsArmacao }}" as="ca" hint-placeholder-count="2">
                       <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ ca.borda }};background:{{ ca.fundo }};color:{{ ca.cor }};font-size:16px;font-weight:700" onClick="{{ ca.escolher }}">{{ ca.texto }}</button>
@@ -329,7 +324,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
                   </div>
                 </div>
                 <div>
-                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Desconto concedido</div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Desconto concedido</div>
                   <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid {{ bordaDesconto }};border-radius:12px;padding:0 16px;max-width:200px">
                     <input type="text" inputmode="numeric" value="{{ descontoTexto }}" onInput="{{ mudarDesconto }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:inherit;font-size:24px;font-weight:800;color:{{ corDesconto }};padding:12px 0;min-height:48px;font-variant-numeric:tabular-nums" />
                     <span style="font-size:18px;font-weight:800;color:#8A9099">%</span>
@@ -351,13 +346,13 @@ a{color:#02306E}a:hover{color:#E06E0A}
 
           <sc-if value="{{ vaiPensar }}" hint-placeholder-val="{{ false }}">
             <div style="margin-top:24px;border-radius:12px;background:#EDEFF2;padding:24px">
-              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Deixou orçamento?</div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Deixou orçamento?</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <sc-for list="{{ chipsOrcamento }}" as="co" hint-placeholder-count="2">
                   <button style="min-height:48px;padding:12px 24px;border-radius:12px;border:2px solid {{ co.borda }};background:{{ co.fundo }};color:{{ co.cor }};font-size:16px;font-weight:700" onClick="{{ co.escolher }}">{{ co.texto }}</button>
                 </sc-for>
               </div>
-              <div style="display:{{ mostrarFollowUp }};margin-top:16px;font-size:15px;font-weight:700;color:#02306E">{{ txt_followUp24h }}</div>
+              <div style="display:{{ mostrarFollowUp }};margin-top:16px;font-size:15px;font-weight:700;color:#062D7B">{{ txt_followUp24h }}</div>
             </div>
           </sc-if>
 
@@ -365,20 +360,20 @@ a{color:#02306E}a:hover{color:#E06E0A}
           <div style="display:{{ mostrarErroSalvar }};margin-top:16px;padding:12px 16px;border-radius:12px;background:#FBECEA;border:2px solid #C0392B;font-size:15px;font-weight:700;color:#8E2A1F;line-height:1.4">{{ erroSalvar }}</div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:24px;flex-wrap:wrap">
             <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:{{ fundoSalvar }};color:#fff;font-size:18px;font-weight:800" onClick="{{ salvar }}">{{ rotuloSalvar }}</button>
-            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#02306E;font-size:16px;font-weight:700" onClick="{{ voltar }}">Voltar</button>
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ voltar }}">Voltar</button>
           </div>
         </sc-if>
 
         <sc-if value="{{ faseSalvo }}" hint-placeholder-val="{{ false }}">
           <div style="border-radius:12px;background:#E9F6EF;border:1px solid #1E9E5A;padding:32px;max-width:640px">
             <div style="width:56px;height:56px;border-radius:12px;background:#1E9E5A;color:#fff;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</div>
-            <h1 style="font-size:28px;font-weight:800;color:#02306E;margin:16px 0 8px">Atendimento salvo</h1>
+            <h1 style="font-size:28px;font-weight:800;color:#062D7B;margin:16px 0 8px">Atendimento salvo</h1>
             <p style="font-size:17px;line-height:1.5;margin:0 0 16px">{{ resumoSalvo }}</p>
-            <div style="font-size:15px;color:#3A3F47">Aderência ao passo a passo neste atendimento: <strong style="color:#E06E0A;font-size:20px">{{ aderencia }}</strong></div>
+            <div style="font-size:15px;color:#3A3F47">Aderência ao passo a passo neste atendimento: <strong style="color:#F96B05;font-size:20px">{{ aderencia }}</strong></div>
           </div>
           <div style="display:flex;gap:8px;margin-top:24px;flex-wrap:wrap">
-            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800" onClick="{{ novoAtendimento }}">Novo atendimento</button>
-            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#02306E;font-size:16px;font-weight:700" onClick="{{ irDesempenho }}">Ver meu desempenho</button>
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ novoAtendimento }}">Novo atendimento</button>
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ irDesempenho }}">Ver meu desempenho</button>
           </div>
         </sc-if>
       </sc-if>
@@ -387,7 +382,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
         <div style="margin-bottom:24px">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px">
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">Treino rápido · rodada sorteada de todo o banco</div>
-            <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums"><strong style="color:#02306E">{{ totalBanco }}</strong> questões no banco · <strong style="color:#02306E">{{ totalTipos }}</strong> tipos de rodada</div>
+            <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums"><strong style="color:#062D7B">{{ totalBanco }}</strong> questões no banco · <strong style="color:#062D7B">{{ totalTipos }}</strong> tipos de rodada</div>
           </div>
           <div style="display:{{ mostrarTemas }}">
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Dirigir reforço por tema</div>
@@ -402,20 +397,20 @@ a{color:#02306E}a:hover{color:#E06E0A}
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;padding-top:16px;border-top:1px solid #EDEFF2">
             <sc-for list="{{ contagemBanco }}" as="cb" hint-placeholder-count="12">
-              <span style="font-size:12px;color:#8A9099;font-variant-numeric:tabular-nums">{{ cb.nome }} <strong style="color:#02306E">{{ cb.n }}</strong></span>
+              <span style="font-size:12px;color:#8A9099;font-variant-numeric:tabular-nums">{{ cb.nome }} <strong style="color:#062D7B">{{ cb.n }}</strong></span>
             </sc-for>
           </div>
         </div>
         <sc-if value="{{ treinoAtivo }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
-            <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#E06E0A">{{ tipoRodada }} · {{ nQuestao }} de {{ totalQuestoes }}</div>
+            <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">{{ tipoRodada }} · {{ nQuestao }} de {{ totalQuestoes }}</div>
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:15px;font-weight:700;color:#1E9E5A">{{ acertos }} acertos</span>
-              <button style="min-height:48px;padding:8px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#02306E;font-size:14px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
+              <button style="min-height:48px;padding:8px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:14px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
             </div>
           </div>
-          <div style="height:8px;border-radius:8px;background:#EDEFF2;margin-bottom:24px"><div style="height:8px;border-radius:8px;background:#E06E0A;width:{{ progressoTreino }}"></div></div>
-          <h1 style="font-size:26px;font-weight:800;color:#02306E;margin:0 0 8px;line-height:1.25;max-width:34ch">{{ enunciado }}</h1>
+          <div style="height:8px;border-radius:8px;background:#EDEFF2;margin-bottom:24px"><div style="height:8px;border-radius:8px;background:#F96B05;width:{{ progressoTreino }}"></div></div>
+          <h1 style="font-size:26px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.25;max-width:34ch">{{ enunciado }}</h1>
           <p style="font-size:16px;margin:0 0 24px;color:#8A9099">{{ instrucao }}</p>
           <div style="display:grid;grid-template-columns:{{ grid2 }};gap:8px">
             <sc-for list="{{ opcoes }}" as="o" hint-placeholder-count="4">
@@ -430,33 +425,33 @@ a{color:#02306E}a:hover{color:#E06E0A}
               <div style="font-size:18px;font-weight:800;color:{{ corFeedback }}">{{ tituloFeedback }}</div>
               <p style="font-size:16px;line-height:1.5;margin:8px 0 0">{{ explicacao }}</p>
             </div>
-            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800;margin-top:16px" onClick="{{ proxima }}">{{ rotuloProxima }}</button>
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800;margin-top:16px" onClick="{{ proxima }}">{{ rotuloProxima }}</button>
           </sc-if>
         </sc-if>
         <sc-if value="{{ treinoFim }}" hint-placeholder-val="{{ false }}">
           <div style="border-radius:12px;background:#EDEFF2;padding:32px;max-width:640px;text-align:center">
-            <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#E06E0A">Placar da rodada</div>
-            <div style="font-size:72px;font-weight:800;color:#02306E;line-height:1.05;margin:8px 0">{{ placar }}</div>
+            <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">Placar da rodada</div>
+            <div style="font-size:72px;font-weight:800;color:#062D7B;line-height:1.05;margin:8px 0">{{ placar }}</div>
             <div style="font-size:18px;font-weight:700;color:{{ corPlacar }}">{{ mensagemPlacar }}</div>
             <p style="font-size:16px;line-height:1.5;margin:16px 0 0">{{ dicaPlacar }}</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
-            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800" onClick="{{ treinarDeNovo }}">Treinar de novo</button>
-            <button style="min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#02306E;font-size:16px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ treinarDeNovo }}">Treinar de novo</button>
+            <button style="min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
           </div>
         </sc-if>
       </sc-if>
 
       <sc-if value="{{ emConsulta }}" hint-placeholder-val="{{ false }}">
-        <h1 style="font-size:32px;font-weight:800;color:#02306E;margin:0 0 8px;line-height:1.1">Consulta rápida</h1>
+        <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Consulta rápida</h1>
         <p style="font-size:16px;margin:0 0 24px;max-width:62ch">{{ txt_referenciaInterna }}</p>
         <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;align-items:start">
           <div style="border:1px solid #EDEFF2;border-radius:12px;overflow:hidden">
-            <div style="background:#02306E;color:#fff;padding:16px;font-size:16px;font-weight:800">Grau → material de partida</div>
+            <div style="background:#062D7B;color:#fff;padding:16px;font-size:16px;font-weight:800">Grau → material de partida</div>
             <sc-for list="{{ materiais }}" as="m" hint-placeholder-count="4">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px;border-top:1px solid #EDEFF2">
                 <span style="font-size:16px;font-variant-numeric:tabular-nums">{{ m.grau }}</span>
-                <span style="font-size:18px;font-weight:800;color:#E06E0A;font-variant-numeric:tabular-nums">{{ m.indice }}</span>
+                <span style="font-size:18px;font-weight:800;color:#F96B05;font-variant-numeric:tabular-nums">{{ m.indice }}</span>
               </div>
             </sc-for>
           </div>
@@ -471,39 +466,39 @@ a{color:#02306E}a:hover{color:#E06E0A}
         </div>
         <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px;align-items:start">
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#02306E">Garantia de grau</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B">Garantia de grau</div>
             <ul style="margin:16px 0 0;padding-left:20px;font-size:16px;line-height:1.6">
               <li>90 dias, a partir da Intermediária.</li>
               <li>{{ txt_garantia90dias }}</li>
               <li>Troca sem custo para o cliente.</li>
             </ul>
             <div style="margin-top:16px;border-radius:12px;background:#FDF6E3;border:1px solid #E8B027;padding:16px;font-size:15px;line-height:1.5;color:#7A5B04">
-              <strong style="display:block;color:#02306E;margin-bottom:4px">Atenção — erro da loja</strong>
+              <strong style="display:block;color:#062D7B;margin-bottom:4px">Atenção — erro da loja</strong>
               {{ txt_garantia3meses }}
             </div>
           </div>
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#02306E">Marca da lente</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B">Marca da lente</div>
             <ul style="margin:16px 0 0;padding-left:20px;font-size:16px;line-height:1.6">
               <li>{{ txt_semMarca }}</li>
               <li>{{ txt_comMarca }}</li>
               <li>Tudo que sai do padrão vai no campo <strong>Observação do pedido</strong>.</li>
             </ul>
-            <div style="margin-top:16px;background:#EDEFF2;border-radius:12px;padding:16px;font-size:17px;line-height:1.45;font-weight:600;color:#02306E">{{ txt_falaMarcas }}</div>
+            <div style="margin-top:16px;background:#EDEFF2;border-radius:12px;padding:16px;font-size:17px;line-height:1.45;font-weight:600;color:#062D7B">{{ txt_falaMarcas }}</div>
           </div>
         </div>
       </sc-if>
 
       <sc-if value="{{ emDesempenho }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <h1 style="font-size:32px;font-weight:800;color:#02306E;margin:0 0 8px;line-height:1.1">Meu desempenho</h1>
+          <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Meu desempenho</h1>
           <div style="font-size:14px;color:#8A9099">{{ vendedora }} · comparado à semana anterior</div>
         </div>
         <div style="display:grid;grid-template-columns:{{ gridKpi }};gap:16px;margin-top:16px">
           <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
             <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
               <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">{{ k.rotulo }}</div>
-              <div style="font-size:40px;font-weight:800;color:#E06E0A;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
+              <div style="font-size:40px;font-weight:800;color:#F96B05;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
               <div style="font-size:14px;font-weight:700;color:{{ k.corVar }};margin-top:4px">{{ k.variacao }}</div>
             </div>
           </sc-for>
@@ -511,21 +506,21 @@ a{color:#02306E}a:hover{color:#E06E0A}
           <div style="margin-top:12px;font-size:13px;color:#8A9099;line-height:1.4">{{ textoNaoAuditado }}</div>
         <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px;align-items:start">
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#02306E;margin-bottom:16px">Mix de nível vendido</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Mix de nível vendido</div>
             <sc-for list="{{ mix }}" as="mx" hint-placeholder-count="4">
               <div style="margin-bottom:16px">
-                <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:4px"><span>{{ mx.nome }}</span><span style="font-variant-numeric:tabular-nums;color:#02306E">{{ mx.pct }}</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:4px"><span>{{ mx.nome }}</span><span style="font-variant-numeric:tabular-nums;color:#062D7B">{{ mx.pct }}</span></div>
                 <div style="height:16px;border-radius:8px;background:#EDEFF2;overflow:hidden"><div style="height:16px;background:{{ mx.cor }};width:{{ mx.pct }}"></div></div>
               </div>
             </sc-for>
           </div>
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#02306E;margin-bottom:16px">Atendimentos de hoje</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Atendimentos de hoje</div>
             <div style="display:{{ mostrarVazio }};font-size:15px;color:#8A9099;padding:8px 0">Nenhum atendimento registrado ainda.</div>
             <sc-for list="{{ atendimentosHoje }}" as="at" hint-placeholder-count="5">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
                 <div>
-                  <div style="font-size:16px;font-weight:700;color:#02306E">{{ at.cliente }}</div>
+                  <div style="font-size:16px;font-weight:700;color:#062D7B">{{ at.cliente }}</div>
                   <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ at.hora }} · {{ at.nivel }}</div>
                 </div>
                 <span style="font-size:12px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ at.fundo }};color:{{ at.cor }}">{{ at.estado }}</span>
@@ -534,27 +529,27 @@ a{color:#02306E}a:hover{color:#E06E0A}
           </div>
         </div>
         <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px;margin-top:16px">
-          <div style="font-size:20px;font-weight:800;color:#02306E;margin-bottom:8px">Orçamentos em aberto</div>
+          <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:8px">Orçamentos em aberto</div>
           <div style="display:{{ mostrarSemOrcamento }};font-size:15px;color:#8A9099">Nenhum orçamento aguardando retorno.</div>
           <sc-for list="{{ orcamentosAbertos }}" as="o" hint-placeholder-count="2">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
               <div>
-                <div style="font-size:16px;font-weight:700;color:#02306E">{{ o.cliente }}</div>
+                <div style="font-size:16px;font-weight:700;color:#062D7B">{{ o.cliente }}</div>
                 <div style="font-size:13px;color:#8A9099">{{ o.nivel }}</div>
               </div>
-              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#02306E;font-variant-numeric:tabular-nums">há {{ o.dias }} dias</span>
+              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#062D7B;font-variant-numeric:tabular-nums">há {{ o.dias }} dias</span>
             </div>
           </sc-for>
         </div>
-        <button style="display:{{ mostrarBotaoPainel }};min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800;margin-top:24px;align-items:center;justify-content:center" onClick="{{ irPainel }}">Abrir painel da loja (gerente)</button>
+        <button style="display:{{ mostrarBotaoPainel }};min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800;margin-top:24px;align-items:center;justify-content:center" onClick="{{ irPainel }}">Abrir painel da loja (gerente)</button>
       </sc-if>
 
       <sc-if value="{{ emPainel }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between">
           <div style="display:flex;align-items:center;gap:12px">
-            <span style="width:44px;height:44px;border-radius:12px;background:#02306E;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ lojaSigla }}</span>
+            <span style="width:44px;height:44px;border-radius:12px;background:#062D7B;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ lojaSigla }}</span>
             <div>
-              <div style="font-size:16px;font-weight:800;color:#02306E">{{ lojaNome }}</div>
+              <div style="font-size:16px;font-weight:800;color:#062D7B">{{ lojaNome }}</div>
               <div style="font-size:13px;color:#8A9099">{{ gerenteDaLoja }}</div>
             </div>
           </div>
@@ -564,23 +559,23 @@ a{color:#02306E}a:hover{color:#E06E0A}
             </sc-for>
           </div>
         </div>
-        <h1 style="font-size:32px;font-weight:800;color:#02306E;margin:24px 0 8px;line-height:1.1">Painel da loja · {{ periodoAtual }}</h1>
+        <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:24px 0 8px;line-height:1.1">Painel da loja · {{ periodoAtual }}</h1>
 
         <!-- Nova loja: gravação em arquivo de produção. Só diretoria e
              supervisão veem este botão, e o servidor confere de novo. -->
-        <button style="display:{{ mostrarBotaoLoja }};min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid #E06E0A;background:#fff;color:#E06E0A;font-size:15px;font-weight:800;align-items:center;margin-bottom:8px" onClick="{{ abrirLoja }}">+ Nova loja</button>
+        <button style="display:{{ mostrarBotaoLoja }};min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid #F96B05;background:#fff;color:#F96B05;font-size:15px;font-weight:800;align-items:center;margin-bottom:8px" onClick="{{ abrirLoja }}">+ Nova loja</button>
         <sc-if value="{{ lojaAberta }}" hint-placeholder-val="{{ false }}">
-          <div style="border:2px solid #E06E0A;background:#FDF1E4;border-radius:12px;padding:24px;margin-bottom:16px">
-            <div style="font-size:18px;font-weight:800;color:#02306E">Nova loja</div>
+          <div style="border:2px solid #F96B05;background:#FDF1E4;border-radius:12px;padding:24px;margin-bottom:16px">
+            <div style="font-size:18px;font-weight:800;color:#062D7B">Nova loja</div>
             <div style="font-size:14px;color:#8A9099;margin-top:4px;line-height:1.45">O código não pode repetir nem substituir loja existente.</div>
-            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-top:16px;margin-bottom:6px">Código (3 letras, ex.: ABC)</div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:16px;margin-bottom:6px">Código (3 letras, ex.: ABC)</div>
             <input value="{{ lCodigo }}" onInput="{{ mudarLCodigo }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:800;letter-spacing:.1em">
-            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-top:12px;margin-bottom:6px">Nome da loja</div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:12px;margin-bottom:6px">Nome da loja</div>
             <input value="{{ lNome }}" onInput="{{ mudarLNome }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px">
-            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-top:12px;margin-bottom:6px">Cidade</div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:12px;margin-bottom:6px">Cidade</div>
             <input value="{{ lCidade }}" onInput="{{ mudarLCidade }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px">
             <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-              <button style="min-height:52px;padding:12px 24px;border-radius:12px;background:#E06E0A;color:#fff;font-size:16px;font-weight:800" onClick="{{ confirmarLoja }}">{{ rotuloConfirmarLoja }}</button>
+              <button style="min-height:52px;padding:12px 24px;border-radius:12px;background:#F96B05;color:#fff;font-size:16px;font-weight:800" onClick="{{ confirmarLoja }}">{{ rotuloConfirmarLoja }}</button>
               <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#8A9099;font-size:15px;font-weight:700" onClick="{{ fecharLoja }}">Cancelar</button>
             </div>
           </div>
@@ -589,7 +584,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
           <sc-for list="{{ kpisLoja }}" as="k" hint-placeholder-count="4">
             <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
               <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">{{ k.rotulo }}</div>
-              <div style="font-size:40px;font-weight:800;color:#E06E0A;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
+              <div style="font-size:40px;font-weight:800;color:#F96B05;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
               <div style="font-size:14px;font-weight:700;color:{{ k.corVar }};margin-top:4px">{{ k.variacao }}</div>
             </div>
           </sc-for>
@@ -598,32 +593,32 @@ a{color:#02306E}a:hover{color:#E06E0A}
         <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px;align-items:start">
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
             <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px">
-              <div style="font-size:20px;font-weight:800;color:#02306E">Conversão por vendedora</div>
+              <div style="font-size:20px;font-weight:800;color:#062D7B">Conversão por vendedora</div>
               <div style="font-size:12px;color:#8A9099">toque no nome para abrir o perfil</div>
             </div>
             <sc-for list="{{ ranking }}" as="rk" hint-placeholder-count="5">
               <div style="display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid #EDEFF2">
                 <span style="width:24px;flex:none;font-size:13px;font-weight:800;color:#8A9099;font-variant-numeric:tabular-nums">{{ rk.pos }}</span>
                 <button style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:48px;text-align:left" onClick="{{ rk.abrir }}">
-                  <span style="width:40px;height:40px;flex:none;border-radius:20px;background:#02306E;color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ rk.inicial }}</span>
+                  <span style="width:40px;height:40px;flex:none;border-radius:20px;background:#062D7B;color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ rk.inicial }}</span>
                   <span style="flex:1;min-width:0">
                     <span style="display:flex;align-items:center;gap:8px">
-                      <span style="font-size:16px;font-weight:700;color:#02306E">{{ rk.nome }}</span>
+                      <span style="font-size:16px;font-weight:700;color:#062D7B">{{ rk.nome }}</span>
                       <span style="display:{{ rk.selo }};font-size:11px;font-weight:800;padding:4px 8px;border-radius:12px;background:#FDF6E3;color:#7A5B04">Em formação</span>
                     </span>
                     <span style="display:block;height:8px;border-radius:8px;background:#EDEFF2;margin-top:4px;overflow:hidden"><span style="display:block;height:8px;background:{{ rk.cor }};width:{{ rk.barra }}"></span></span>
                   </span>
                 </button>
-                <span style="font-size:18px;font-weight:800;color:#02306E;font-variant-numeric:tabular-nums">{{ rk.conv }}</span>
+                <span style="font-size:18px;font-weight:800;color:#062D7B;font-variant-numeric:tabular-nums">{{ rk.conv }}</span>
               </div>
             </sc-for>
           </div>
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#02306E;margin-bottom:8px">Últimos atendimentos registrados</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:8px">Últimos atendimentos registrados</div>
             <sc-for list="{{ feed }}" as="fd" hint-placeholder-count="4">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
                 <div>
-                  <div style="font-size:16px;font-weight:700;color:#02306E">{{ fd.vendedora }}</div>
+                  <div style="font-size:16px;font-weight:700;color:#062D7B">{{ fd.vendedora }}</div>
                   <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ fd.cliente }} · há {{ fd.min }} min</div>
                 </div>
                 <span style="font-size:12px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ fd.fundo }};color:{{ fd.cor }}">{{ fd.etapa }}</span>
@@ -632,11 +627,11 @@ a{color:#02306E}a:hover{color:#E06E0A}
           </div>
         </div>
         <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px;margin-top:16px">
-          <div style="font-size:20px;font-weight:800;color:#02306E;margin-bottom:8px">Orçamentos em aberto aguardando retorno</div>
+          <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:8px">Orçamentos em aberto aguardando retorno</div>
           <sc-for list="{{ orcamentosLoja }}" as="o" hint-placeholder-count="4">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2;flex-wrap:wrap">
               <div>
-                <div style="font-size:16px;font-weight:700;color:#02306E">{{ o.cliente }}</div>
+                <div style="font-size:16px;font-weight:700;color:#062D7B">{{ o.cliente }}</div>
                 <div style="font-size:13px;color:#8A9099">{{ o.vendedora }} · {{ o.nivel }}</div>
               </div>
               <div style="display:flex;align-items:center;gap:8px">
@@ -650,7 +645,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
           <sc-for list="{{ alertas }}" as="al" hint-placeholder-count="3">
             <div style="border:1px solid {{ al.cor }};background:{{ al.fundo }};border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center">
               <span style="font-size:20px;font-weight:800;color:{{ al.cor }}">!</span>
-              <div style="flex:1;font-size:16px;line-height:1.4;color:#3A3F47"><strong style="color:#02306E">{{ al.titulo }}</strong> — {{ al.texto }}</div>
+              <div style="flex:1;font-size:16px;line-height:1.4;color:#3A3F47"><strong style="color:#062D7B">{{ al.titulo }}</strong> — {{ al.texto }}</div>
             </div>
           </sc-for>
         </div>
@@ -663,14 +658,14 @@ a{color:#02306E}a:hover{color:#E06E0A}
           </sc-for>
         </div>
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <h1 style="font-size:32px;font-weight:800;color:#02306E;margin:0;line-height:1.1">Equipe</h1>
+          <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0;line-height:1.1">Equipe</h1>
           <div style="font-size:14px;color:#8A9099">{{ lojaSelecionada }}</div>
         </div>
-        <div style="margin-top:8px;border-radius:12px;background:#EDEFF2;padding:16px;font-size:15px;line-height:1.45;font-weight:700;color:#02306E">Quem sai fica inativo. O histórico dela continua nos indicadores.</div>
+        <div style="margin-top:8px;border-radius:12px;background:#EDEFF2;padding:16px;font-size:15px;line-height:1.45;font-weight:700;color:#062D7B">Quem sai fica inativo. O histórico dela continua nos indicadores.</div>
 
         <div style="display:{{ mostrarOkEquipe }};margin-top:16px;border:1px solid #1E9E5A;background:#E9F6EF;border-radius:12px;padding:16px;gap:12px;align-items:center">
           <span style="font-size:18px;font-weight:800;color:#1E9E5A">✓</span>
-          <div style="font-size:16px;font-weight:700;color:#02306E">{{ okEquipe }}</div>
+          <div style="font-size:16px;font-weight:700;color:#062D7B">{{ okEquipe }}</div>
         </div>
         <div style="display:{{ mostrarErroEquipe }};margin-top:16px;border:1px solid #C0392B;background:#FBECEA;border-radius:12px;padding:16px;gap:12px;align-items:center">
           <span style="font-size:18px;font-weight:800;color:#C0392B">!</span>
@@ -682,9 +677,9 @@ a{color:#02306E}a:hover{color:#E06E0A}
         <!-- Cartão de entrega: aparece uma vez, com o código e a mensagem
              pronta de WhatsApp. Se fechar sem anotar, só gerando outro. -->
         <div style="display:{{ mostrarEntrega }};margin-top:16px;border:2px solid #1E9E5A;background:#E9F6EF;border-radius:12px;padding:24px">
-          <div style="font-size:18px;font-weight:800;color:#02306E">{{ entregaNome }} está cadastrada</div>
+          <div style="font-size:18px;font-weight:800;color:#062D7B">{{ entregaNome }} está cadastrada</div>
           <div style="font-size:15px;color:#3A3F47;margin-top:4px;line-height:1.5">Anote o código agora. Ele aparece uma vez só — depois, só gerando outro.</div>
-          <div style="margin-top:16px;padding:20px;border-radius:12px;background:#fff;border:2px solid #1E9E5A;text-align:center;font-size:38px;font-weight:800;color:#02306E;letter-spacing:.22em;font-variant-numeric:tabular-nums">{{ entregaCodigo }}</div>
+          <div style="margin-top:16px;padding:20px;border-radius:12px;background:#fff;border:2px solid #1E9E5A;text-align:center;font-size:38px;font-weight:800;color:#062D7B;letter-spacing:.22em;font-variant-numeric:tabular-nums">{{ entregaCodigo }}</div>
           <button style="width:100%;min-height:56px;margin-top:16px;border-radius:12px;background:{{ fundoCopiar }};color:#fff;font-size:17px;font-weight:800" onClick="{{ copiarEntrega }}">{{ rotuloCopiar }}</button>
           <div style="margin-top:12px;padding:12px 16px;border-radius:12px;background:#fff;border:1px solid #EDEFF2;font-size:13px;color:#3A3F47;line-height:1.5;white-space:pre-wrap">{{ entregaTexto }}</div>
           <button style="min-height:48px;margin-top:12px;padding:12px 16px;font-size:15px;font-weight:700;color:#8A9099" onClick="{{ fecharEntrega }}">Já anotei, fechar</button>
@@ -693,12 +688,12 @@ a{color:#02306E}a:hover{color:#E06E0A}
         <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px">
           <sc-for list="{{ equipe }}" as="p" hint-placeholder-count="6">
             <div style="border:1px solid #EDEFF2;border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px">
-              <span style="width:44px;height:44px;flex:none;border-radius:22px;background:#02306E;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ p.inicial }}</span>
+              <span style="width:44px;height:44px;flex:none;border-radius:22px;background:#062D7B;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ p.inicial }}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:16px;font-weight:700;color:#02306E">{{ p.nome }}</div>
+                <div style="font-size:16px;font-weight:700;color:#062D7B">{{ p.nome }}</div>
                 <div style="font-size:13px;color:#8A9099">{{ p.papelRotulo }}</div>
                 <span style="display:{{ p.avisoSemCodigo }};margin-top:4px;font-size:12px;font-weight:800;padding:4px 8px;border-radius:12px;background:#FDF6E3;color:#7A5B04">sem código — não consegue entrar</span>
-                <button style="display:block;margin-top:6px;min-height:44px;padding:8px 0;font-size:14px;font-weight:700;color:#E06E0A;text-align:left" onClick="{{ p.gerarCodigo }}">Gerar novo código</button>
+                <button style="display:block;margin-top:6px;min-height:44px;padding:8px 0;font-size:14px;font-weight:700;color:#F96B05;text-align:left" onClick="{{ p.gerarCodigo }}">Gerar novo código</button>
               </div>
               <button style="display:flex;align-items:center;gap:8px;min-height:48px;padding:8px" onClick="{{ p.alternar }}">
                 <span style="font-size:13px;font-weight:800;color:{{ p.corEstado }};min-width:52px;text-align:right">{{ p.estado }}</span>
@@ -712,25 +707,25 @@ a{color:#02306E}a:hover{color:#E06E0A}
 
         <sc-if value="{{ formAberto }}" hint-placeholder-val="{{ false }}">
           <div style="margin-top:16px;border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#02306E;margin-bottom:16px">Adicionar pessoa</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Adicionar pessoa</div>
             <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px">
               <div>
-                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Nome</div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Nome</div>
                 <input type="text" placeholder="Nome completo" value="{{ fNome }}" onInput="{{ mudarNome }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;color:#3A3F47;outline:none" />
               </div>
               <div>
-                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">E-mail</div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">E-mail</div>
                 <input type="email" inputmode="email" placeholder="nome@rede.com.br" value="{{ fEmail }}" onInput="{{ mudarEmail }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;color:#3A3F47;outline:none" />
               </div>
               <div>
-                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Loja</div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Loja</div>
                 <div style="min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px;background:#EDEFF2;color:#8A9099;display:flex;align-items:center;gap:8px">
                   <span>{{ lojaSelecionada }}</span>
                   <span style="display:{{ lojaTravada }};font-size:12px;font-weight:800">· travado</span>
                 </div>
               </div>
               <div>
-                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#02306E;margin-bottom:8px">Papel</div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Papel</div>
                 <div style="display:{{ papelTravado }};min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px;background:#EDEFF2;color:#8A9099;align-items:center">Vendedora · fixo</div>
                 <div style="display:{{ papelEscolha }};gap:8px;flex-wrap:wrap">
                   <sc-for list="{{ chipsPapel }}" as="cp" hint-placeholder-count="3">
@@ -740,26 +735,26 @@ a{color:#02306E}a:hover{color:#E06E0A}
               </div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
-              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">Salvar pessoa</button>
-              <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#02306E;font-size:16px;font-weight:700" onClick="{{ fecharForm }}">Cancelar</button>
+              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">Salvar pessoa</button>
+              <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ fecharForm }}">Cancelar</button>
             </div>
           </div>
         </sc-if>
-        <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#E06E0A;color:#fff;font-size:18px;font-weight:800;margin-top:24px" onClick="{{ abrirForm }}">Adicionar pessoa</button>
+        <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800;margin-top:24px" onClick="{{ abrirForm }}">Adicionar pessoa</button>
       </sc-if>
 
       <sc-if value="{{ emPerfil }}" hint-placeholder-val="{{ false }}">
-        <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#02306E;font-size:16px;font-weight:700;margin-bottom:16px" onClick="{{ fecharPerfil }}">‹ Voltar ao painel</button>
+        <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700;margin-bottom:16px" onClick="{{ fecharPerfil }}">‹ Voltar ao painel</button>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-          <span style="width:64px;height:64px;flex:none;border-radius:32px;background:#02306E;color:#fff;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ perfilInicial }}</span>
+          <span style="width:64px;height:64px;flex:none;border-radius:32px;background:#062D7B;color:#fff;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ perfilInicial }}</span>
           <div>
-            <h1 style="font-size:28px;font-weight:800;color:#02306E;margin:0;line-height:1.15">{{ perfilNome }}</h1>
+            <h1 style="font-size:28px;font-weight:800;color:#062D7B;margin:0;line-height:1.15">{{ perfilNome }}</h1>
             <div style="font-size:14px;color:#8A9099">{{ lojaSelecionada }}{{ gerenteSufixo }}</div>
           </div>
         </div>
         <div style="margin-top:16px;border:1px solid #EDEFF2;border-radius:12px;padding:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between">
           <div>
-            <div style="font-size:16px;font-weight:800;color:#02306E">Em formação</div>
+            <div style="font-size:16px;font-weight:800;color:#062D7B">Em formação</div>
             <div style="font-size:14px;color:#8A9099">{{ txt_treinoDiario }}</div>
           </div>
           <button style="min-height:48px;padding:12px 24px;border-radius:12px;border:2px solid {{ perfilBordaSelo }};background:{{ perfilFundoSelo }};color:{{ perfilCorSelo }};font-size:16px;font-weight:800" onClick="{{ alternarFormacao }}">{{ perfilRotuloSelo }}</button>
@@ -768,7 +763,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
           <sc-for list="{{ perfilKpis }}" as="k" hint-placeholder-count="6">
             <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
               <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">{{ k.rotulo }}</div>
-              <div style="font-size:36px;font-weight:800;color:#E06E0A;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
+              <div style="font-size:36px;font-weight:800;color:#F96B05;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
               <div style="font-size:14px;font-weight:700;color:{{ k.corVar }};margin-top:4px">{{ k.variacao }}</div>
             </div>
           </sc-for>
@@ -777,7 +772,7 @@ a{color:#02306E}a:hover{color:#E06E0A}
       </sc-if>
 
       <div style="margin-top:40px;border-top:1px solid #EDEFF2;padding-top:24px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
-        <div style="font-size:22px;font-weight:800;color:#02306E;line-height:1.25;max-width:34ch">{{ txt_lemaOrdem }}</div>
+        <div style="font-size:22px;font-weight:800;color:#062D7B;line-height:1.25;max-width:34ch">{{ txt_lemaOrdem }}</div>
         <div style="font-size:14px;color:#8A9099">Casa do Olhar · Ver bem é viver melhor.</div>
       </div>
     </div>
@@ -1151,8 +1146,8 @@ class Component extends DCLogic {
   }
   componentWillUnmount() { window.removeEventListener('resize', this._r); }
 
-  get AZUL() { return '#02306E'; }
-  get LARANJA() { return '#E06E0A'; }
+  get AZUL() { return '#062D7B'; }
+  get LARANJA() { return '#F96B05'; }
 
 
 
@@ -1355,7 +1350,7 @@ class Component extends DCLogic {
   }
 
   renderVals() {
-    const s = this.state, AZ = '#02306E', LA = '#E06E0A', VD = '#1E9E5A', VM = '#C0392B', BL = '#EDEFF2', CZ = '#8A9099';
+    const s = this.state, AZ = '#062D7B', LA = '#F96B05', VD = '#1E9E5A', VM = '#C0392B', BL = '#EDEFF2', CZ = '#8A9099';
     const desktop = s.w >= 900;
     const leituraDesconto = (d, conv) => d <= 18
       ? 'vende valor: desconto baixo com faturamento alto'
@@ -1419,7 +1414,7 @@ class Component extends DCLogic {
     const tecla = (texto, aoTocar, destaque) => ({
       texto: texto, tocar: aoTocar,
       fundo: destaque ? '#EDEFF2' : '#fff',
-      cor: destaque ? '#8A9099' : '#02306E',
+      cor: destaque ? '#8A9099' : '#062D7B',
       tamanho: destaque ? '18px' : '26px'
     });
     const digitar = d => () => {
