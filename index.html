@@ -381,8 +381,16 @@ a{color:#062D7B}a:hover{color:#F96B05}
       <sc-if value="{{ emTreino }}" hint-placeholder-val="{{ false }}">
         <div style="margin-bottom:24px">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px">
-            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">Treino rápido · rodada sorteada de todo o banco</div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">Treino rápido · {{ origemRodada }}</div>
             <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums"><strong style="color:#062D7B">{{ totalBanco }}</strong> questões no banco · <strong style="color:#062D7B">{{ totalTipos }}</strong> tipos de rodada</div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Bloco da Trilha</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ blocosTreino }}" as="bt" hint-placeholder-count="4">
+                <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ bt.borda }};background:{{ bt.fundo }};color:{{ bt.cor }};font-size:15px;font-weight:700" onClick="{{ bt.escolher }}">{{ bt.texto }}</button>
+              </sc-for>
+            </div>
           </div>
           <div style="display:{{ mostrarTemas }}">
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Dirigir reforço por tema</div>
@@ -434,6 +442,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
             <div style="font-size:72px;font-weight:800;color:#062D7B;line-height:1.05;margin:8px 0">{{ placar }}</div>
             <div style="font-size:18px;font-weight:700;color:{{ corPlacar }}">{{ mensagemPlacar }}</div>
             <p style="font-size:16px;line-height:1.5;margin:16px 0 0">{{ dicaPlacar }}</p>
+            <div style="display:{{ mostrarRodadas30 }};margin-top:12px;font-size:14px;color:#8A9099">{{ textoRodadas30 }}</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
             <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ treinarDeNovo }}">Treinar de novo</button>
@@ -692,6 +701,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
               <div style="flex:1;min-width:0">
                 <div style="font-size:16px;font-weight:700;color:#062D7B">{{ p.nome }}</div>
                 <div style="font-size:13px;color:#8A9099">{{ p.papelRotulo }}</div>
+                <div style="font-size:13px;color:#8A9099">{{ p.rodadasRotulo }}</div>
                 <span style="display:{{ p.avisoSemCodigo }};margin-top:4px;font-size:12px;font-weight:800;padding:4px 8px;border-radius:12px;background:#FDF6E3;color:#7A5B04">sem código — não consegue entrar</span>
                 <button style="display:block;margin-top:6px;min-height:44px;padding:8px 0;font-size:14px;font-weight:700;color:#F96B05;text-align:left" onClick="{{ p.gerarCodigo }}">Gerar novo código</button>
               </div>
@@ -798,6 +808,9 @@ class Component extends DCLogic {
     valorTexto: '', descontoTexto: '0', justificativa: '',
     visao: null, segundoPar: null, armacao: null, orcamento: null,
     tipoTreino: 'Sortear tudo',
+    // Bloco da Trilha escolhido para treinar (Lentes, Armações, Negociação ou tudo). Fica no aparelho.
+    blocoTreino: (function () { try { return window.localStorage.getItem('rdo_bloco') || ''; } catch (e) { return ''; } })(),
+    rodadas30: null,
     rodada: null, iq: 0, escolha: null, acertos: 0, treinoFim: false,
     periodo: 'Hoje', formacao: {}, perfil: null,
     menu: false,
@@ -932,7 +945,8 @@ class Component extends DCLogic {
           loja: String(p.loja || '').trim(),
           papel: String(p.papel || '').toLowerCase().trim(),
           ativo: String(p.ativo).toUpperCase().trim() === 'SIM',
-          temCodigo: String(p.temCodigo || '').toUpperCase().trim() === 'SIM' ? 'SIM' : 'NAO'
+          temCodigo: String(p.temCodigo || '').toUpperCase().trim() === 'SIM' ? 'SIM' : 'NAO',
+          rodadas30: Number(p.rodadas30) || 0
         })),
         carregando: false, erroEquipe: null });
     }, e => this.setState({ carregando: false, equipe: [],
@@ -1173,6 +1187,21 @@ class Component extends DCLogic {
         erroBanco: this.ERROS[codigo] || 'Não consegui carregar o conteúdo dos manuais.' }));
   }
 
+  /**
+   * Fim da rodada: registra no servidor que houve UMA rodada — bloco, tema e
+   * quantas questoes. O acerto NAO vai: o resultado do treino e da vendedora,
+   * e a gerente ve so a quantidade. Se o servidor falhar, o placar aparece
+   * do mesmo jeito; o registro e acessorio, o treino nao.
+   */
+  fecharRodada() {
+    const s = this.state;
+    const n = s.rodada ? s.rodada.length : 0;
+    this.setState({ treinoFim: true, rodadas30: null });
+    this.gs('registrarRodada', [{ bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n }],
+      r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
+      () => {});
+  }
+
   montarRodada(tipoEscolhido) {
     const bancos = this.BANCOS;
     // Sem banco carregado ainda, nao ha rodada. A tela de treino avisa.
@@ -1180,7 +1209,8 @@ class Component extends DCLogic {
     const tipo = tipoEscolhido || this.state.tipoTreino || 'Sortear tudo';
     const girar = (arr, s) => { const k = arr.length ? ((s % arr.length) + arr.length) % arr.length : 0; return arr.slice(k).concat(arr.slice(0, k)); };
     const base = Math.floor(Math.random() * 97);
-    const nomes = Object.keys(bancos);
+    const blocoSel = this.state.blocoTreino || '';
+    const nomes = Object.keys(bancos).filter(k => !blocoSel || bancos[k].bloco === blocoSel);
     if (tipo === 'Sortear tudo') {
       const vistas = this._vistas || {}, erradas = this._erradas || {};
       const mistura = a => { const o = a.slice(); for (let i = o.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); const t = o[i]; o[i] = o[k]; o[k] = t; } return o; };
@@ -1363,7 +1393,8 @@ class Component extends DCLogic {
     const identLoja = id.loja || '';
     const papelRotulo = papel === 'diretoria' ? 'Diretoria da rede'
       : (papel === 'supervisao' ? 'Supervisão da rede'
-      : (papel === 'gerente' ? 'Gerente · ' + identLoja : 'Vendedora · ' + identLoja));
+      : (papel === 'gerente' ? 'Gerente · ' + identLoja : 'Vendedora · ' + identLoja))
+      + (id.teste ? ' · LOJA DE TESTE: nada é gravado' : '');
     const veRede = (papel === 'diretoria' || papel === 'supervisao');
     // Enquanto nao houver identidade confirmada pelo servidor, a unica
     // tela possivel e a do codigo.
@@ -1460,6 +1491,7 @@ class Component extends DCLogic {
     const perfilLinhas = s.perfil ? daLoja.filter(l => String(l['Vendedora iniciou']||'').trim() === s.perfil) : [];
     const RP = this.resumo(perfilLinhas);
     const perfil = s.perfil ? { nome: s.perfil, primeiro: String(s.perfil).split(' ')[0] } : null;
+    const temasDoBloco = Object.keys(this.BANCOS).filter(k => !s.blocoTreino || this.BANCOS[k].bloco === s.blocoTreino);
     const emFormacao = perfil ? !!s.formacao[perfil.nome] : false;
     const desconto = parseInt(s.descontoTexto || '0', 10) || 0;
     const pendencias = [];
@@ -1560,6 +1592,8 @@ class Component extends DCLogic {
         primeiro: String(p.nome).split(' ')[0],
         inicial: String(p.nome).charAt(0),
         papelRotulo: { gerente:'Gerente', diretoria:'Diretoria', supervisao:'Supervisão' }[p.papel] || 'Vendedora',
+        // Quantidade de rodadas de treino, nunca o acerto (regra do CLAUDE.md).
+        rodadasRotulo: p.papel === 'vendedora' ? (p.rodadas30 + (p.rodadas30 === 1 ? ' rodada' : ' rodadas') + ' de treino em 30 dias') : '',
         estado: p.ativo ? 'Ativo' : 'Inativo',
         corEstado: p.ativo ? VD : CZ,
         fundoEstado: p.ativo ? '#E9F6EF' : BL,
@@ -1750,18 +1784,26 @@ class Component extends DCLogic {
       explicacao: q ? q.explicacao : '',
       rotuloProxima: s.rodada && s.iq === s.rodada.length - 1 ? 'Ver placar' : 'Próxima',
       proxima: () => s.iq === s.rodada.length - 1
-        ? this.setState({ treinoFim: true })
+        ? this.fecharRodada()
         : this.setState({ iq: s.iq + 1, escolha: null }),
       placar: s.acertos + '/' + (s.rodada ? s.rodada.length : 6),
       corPlacar: s.acertos >= 5 ? VD : (s.acertos >= 3 ? '#7A5B04' : VM),
       mensagemPlacar: s.acertos >= 5 ? 'Pronta para o salão' : (s.acertos >= 3 ? 'Quase lá' : 'Revise antes do próximo turno'),
       dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia antes de abrir a loja.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
       treinarDeNovo: () => this.setState({ rodada: this.montarRodada(), iq: 0, escolha: null, acertos: 0, treinoFim: false }),
-      totalBanco: Object.keys(this.BANCOS).reduce((a, k) => a + this.BANCOS[k].itens.length, 0),
-      totalTipos: Object.keys(this.BANCOS).length,
-      contagemBanco: Object.keys(this.BANCOS).map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
+      origemRodada: s.blocoTreino ? 'rodada sorteada do bloco ' + s.blocoTreino : 'rodada sorteada de todo o banco',
+      // Blocos na ordem da Trilha do Vendedor: Lentes, Armações, Negociação.
+      blocosTreino: [''].concat(['Lentes', 'Armações', 'Negociação'].filter(b => Object.keys(this.BANCOS).some(k => this.BANCOS[k].bloco === b))).map(b => Object.assign({
+        texto: b || 'Tudo',
+        escolher: () => { this.guardar('rdo_bloco', b); this.setState({ blocoTreino: b, tipoTreino: 'Sortear tudo', iq: 0, escolha: null, acertos: 0, treinoFim: false }, () => this.setState({ rodada: this.montarRodada() })); }
+      }, chip((s.blocoTreino || '') === b))),
+      totalBanco: temasDoBloco.reduce((a, k) => a + this.BANCOS[k].itens.length, 0),
+      totalTipos: temasDoBloco.length,
+      contagemBanco: temasDoBloco.map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
       mostrarTemas: papel === 'vendedora' ? 'none' : 'block',
-      tiposTreino: ['Sortear tudo'].concat(Object.keys(this.BANCOS).filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
+      mostrarRodadas30: s.rodadas30 === null ? 'none' : 'block',
+      textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A gerente vê a quantidade, nunca o acerto.',
+      tiposTreino: ['Sortear tudo'].concat(temasDoBloco.filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
         texto: t,
         selo: (t !== 'Sortear tudo' && this.BANCOS[t].itens.length < 5) ? 'inline' : 'none',
         escolher: () => this.setState({ tipoTreino: t, rodada: this.montarRodada(t), iq: 0, escolha: null, acertos: 0, treinoFim: false })
