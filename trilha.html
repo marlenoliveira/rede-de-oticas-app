@@ -179,7 +179,7 @@
   }
 
   function desenharVideo(c, p) {
-    if (p.estado === 'feito') return;
+    if (p.estado !== 'atual') return; // feito ou ainda trancado: sem botao
     c.appendChild(el('div', 'sub', p.onde));
     var l = el('p'); l.appendChild(link('Abrir o vídeo', p.link)); c.appendChild(l);
     c.appendChild(botao('Assisti. Concluí', '', function (ev) {
