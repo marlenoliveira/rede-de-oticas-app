@@ -284,7 +284,7 @@
   var ERROS_TRILHA = {
     sem_permissao: 'Este código não pode fazer isso.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa.',
     notas_invalidas: 'Preencha as 6 notas, de 0 a 10.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.',
-    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
+    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
     pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.', nao_aguarda_diretoria: 'Esta pessoa não está aguardando a Diretoria.'
   };
   var LISTAS = [['parada', 'Parada', 'tr-parada'], ['pessoa', 'Esperando uma pessoa', 'tr-pessoa-esp'],
@@ -385,7 +385,7 @@
       bl.addEventListener('click', function () { acaoTrilha('liberarNovaSerie', codigo, { loja: p.loja, nome: p.nome }, 'Liberar uma nova série para ' + p.nome + '? Ela refaz as aulas da Trilha antes.'); });
       f.appendChild(bl);
     }
-    if (podeMatricular) {
+    if (podeMatricular && p.podeTirar !== false) {
       var bd = el('button', 'leve', 'Tirar da trilha');
       bd.type = 'button';
       bd.addEventListener('click', function () { acaoTrilha('desmatricular', codigo, { loja: p.loja, nome: p.nome }, 'Tirar ' + p.nome + ' da trilha? Ela volta a ver o app como antes. O que já fez continua gravado.'); });
@@ -405,12 +405,13 @@
   function carregar(codigo, veioDoFormulario) {
     id('mensagem').textContent = '';
     id('quando').textContent = 'Carregando…';
+    // Treino e trilha pedidos ao mesmo tempo (antes, a trilha esperava o treino chegar).
+    carregarTrilha(codigo);
     chamar(codigo, function (r) {
       if (r && r.ok) {
         if (veioDoFormulario) guardar('rdo_codigo', codigo);
         id('entrada').className = 'oculto';
         desenhar(r);
-        carregarTrilha(codigo);
         return;
       }
       id('quando').textContent = '';

@@ -1159,6 +1159,8 @@ class Component extends DCLogic {
 
   sair() {
     this.guardar('rdo_codigo', '');
+    // Tablet da loja: a proxima pessoa matriculada tambem tem de cair na trilha.
+    try { window.sessionStorage.removeItem('rdo_trilha_vista'); } catch (e) {}
     this._codigo = '';
     this.setState({ ident: null, identCarregando: false, entrando: false,
                     codigoDigitado: '', erroLogin: null, menu: false,
