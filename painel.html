@@ -52,6 +52,18 @@
   .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
   .regua { font-size: 15px; color: var(--cinza); margin-top: 32px; border-top: 2px solid var(--linha); padding-top: 14px; }
   .regua li { margin: 4px 0; }
+  /* Resumo no alto: uma barra por loja, dividida pela faixa de cada pessoa. */
+  .barras { margin: 18px 0 6px; }
+  .linha { display: block; width: 100%; text-align: left; background: #fff; color: var(--tinta); border: 0;
+    border-bottom: 2px solid var(--linha); border-radius: 0; padding: 12px 0; min-height: 0; font-weight: 400; }
+  .linha .cab { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .linha .cab b { font-size: 18px; font-weight: 800; color: var(--azul); }
+  .linha .cab span { font-size: 15px; color: var(--cinza); white-space: nowrap; }
+  .barra { display: flex; height: 22px; border-radius: 8px; overflow: hidden; margin-top: 8px; background: #EDEFF2; }
+  .barra.sem { background: none; border: 2px dashed var(--linha); height: 18px; }
+  .seg { height: 100%; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: var(--cinza); margin: 10px 0 0; }
+  .legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
   .oculto { display: none; }
 </style>
 </head>
@@ -163,8 +175,51 @@
     id('quando').textContent = 'Atualizado em ' + r.geradoEm + ' · semana = últimos 7 dias';
     var raiz = id('lojas');
     raiz.textContent = '';
-    (r.lojas || []).forEach(function (lj) {
-      raiz.appendChild(el('h2', '', lj.nome));
+
+    // Resumo: uma barra por loja, uma cor por faixa. Tocar leva aos cartoes da loja.
+    var ORDEM = ['em_dia', 'lembrete', 'conversa', 'advertencia', 'diretoria', 'nunca'];
+    var COR = { em_dia: '#1E9E5A', lembrete: '#E8B027', conversa: '#E06E0A',
+                advertencia: '#C0392B', diretoria: '#6E1A12', nunca: '#4A4F57' };
+    var barras = el('div', 'barras');
+    (r.lojas || []).forEach(function (lj, k) {
+      var b = el('button', 'linha');
+      b.type = 'button';
+      var cab = el('div', 'cab');
+      cab.appendChild(el('b', '', lj.nome));
+      cab.appendChild(el('span', '', lj.pessoas.length ? (lj.treinaram7 + ' de ' + lj.ativos + ' treinando') : 'ninguém cadastrado'));
+      b.appendChild(cab);
+      var barra = el('div', lj.pessoas.length ? 'barra' : 'barra sem');
+      ORDEM.forEach(function (f) {
+        var n = lj.pessoas.filter(function (p) { return p.faixa === f; }).length;
+        if (!n) return;
+        var s = el('div', 'seg');
+        s.style.width = (100 * n / lj.pessoas.length) + '%';
+        s.style.background = COR[f];
+        s.title = n + ' · ' + (ROTULO[f] || f);
+        barra.appendChild(s);
+      });
+      b.appendChild(barra);
+      b.addEventListener('click', function () {
+        var alvo = id('loja-' + k);
+        if (alvo && alvo.scrollIntoView) alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      barras.appendChild(b);
+    });
+    var leg = el('div', 'legenda');
+    ORDEM.forEach(function (f) {
+      var item = el('span');
+      var q = el('i'); q.style.background = COR[f];
+      item.appendChild(q);
+      item.appendChild(document.createTextNode(ROTULO[f] || f));
+      leg.appendChild(item);
+    });
+    barras.appendChild(leg);
+    raiz.appendChild(barras);
+
+    (r.lojas || []).forEach(function (lj, k) {
+      var titulo = el('h2', '', lj.nome);
+      titulo.id = 'loja-' + k;
+      raiz.appendChild(titulo);
       if (!lj.pessoas.length) {
         raiz.appendChild(el('div', 'vazia', 'Ninguém cadastrado nesta loja dentro do app.'));
         return;
