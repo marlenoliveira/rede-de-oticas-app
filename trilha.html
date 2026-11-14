@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
 <title>Minha trilha</title>
 <!--
   MINHA TRILHA — etapa 1 da trilha do treinamento (14/11/2026).
@@ -75,6 +76,7 @@
   .video { position: relative; width: 100%; padding-top: 56.25%; margin: 10px 0; border-radius: 12px; overflow: hidden; background: #000; }
   .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .ap { margin-top: 8px; }
+  audio.audio { width: 100%; margin: 8px 0; }
   .ap-h2 { font-size: 22px; color: var(--azul); margin: 22px 0 6px; line-height: 1.25; }
   .ap-h3 { font-size: 19px; color: var(--azul); margin: 18px 0 4px; }
   .ap-parte { font-size: 14px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--laranja); margin: 18px 0 4px; }
@@ -507,26 +509,24 @@
     return n;
   }
 
-  /** Busca as figuras uma a uma, sem travar a leitura. */
-  var filaFiguras = [];
-  function pedirFigura(nome, img) {
-    filaFiguras.push([nome, img]);
-    if (filaFiguras.length === 1) proximaFigura();
-  }
-  function proximaFigura() {
-    if (!filaFiguras.length) return;
-    var item = filaFiguras[0];
-    chamar('figuraApostila', { nome: item[0] }, function (r) {
-      if (r && r.ok) { item[1].src = r.src; item[1].className = 'figura'; }
-      else { item[1].alt = 'Figura não carregou'; item[1].className = 'figura falhou'; }
-      filaFiguras.shift();
-      proximaFigura();
-    }, true);
+  /**
+   * Figura da apostila, direto do Drive da Universidade (pasta aberta por link).
+   * Sem mandar o endereco desta pagina: com ele o Google recusa a imagem.
+   */
+  function figuraDoDrive(id, alt) {
+    var img = el('img', 'figura carregando');
+    img.alt = alt || 'Figura';
+    img.referrerPolicy = 'no-referrer';
+    img.setAttribute('referrerpolicy', 'no-referrer');
+    img.loading = 'lazy';
+    img.addEventListener('load', function () { img.className = 'figura'; });
+    img.addEventListener('error', function () { img.className = 'figura falhou'; img.alt = 'A figura não carregou. Confira a internet.'; });
+    if (id) img.src = 'https://lh3.googleusercontent.com/d/' + id + '=w1000';
+    return img;
   }
 
   /** Desenha os blocos da apostila: titulos, paragrafos, itens, tabelas, quadros e figuras. */
   function desenharTexto(destino, blocos) {
-    filaFiguras = [];
     blocos.forEach(function (b) {
       if (b.t === 'h2') destino.appendChild(el('h2', 'ap-h2', b.x));
       else if (b.t === 'h3') destino.appendChild(el('h3', 'ap-h3', b.x));
@@ -549,11 +549,8 @@
         var f = el('div', 'ap-fig');
         if (b.x) f.appendChild(el('div', 'ap-fig-t', b.x));
         b.imgs.forEach(function (im) {
-          var img = el('img', 'figura carregando');
-          img.alt = im.leg || b.x || 'Figura';
-          f.appendChild(img);
+          f.appendChild(figuraDoDrive(im.id, im.leg || b.x));
           if (im.leg) f.appendChild(el('div', 'ap-leg', im.leg));
-          pedirFigura(im.f, img);
         });
         if (b.cap) f.appendChild(rico('div', 'ap-cap', b.cap));
         destino.appendChild(f);
@@ -578,8 +575,17 @@
       return d;
     }
     var e1 = etapa(1, 'Ouvir', 'A aula em áudio, de 3 a 8 minutos.');
-    // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
-    e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
+    if (a.audio.noApp) {
+      // O audio toca aqui mesmo (download liberado no Drive). Sem mandar o endereco da pagina.
+      var au = document.createElement('audio');
+      au.controls = true; au.preload = 'none'; au.className = 'audio';
+      au.setAttribute('referrerpolicy', 'no-referrer');
+      au.src = 'https://drive.usercontent.google.com/download?id=' + a.audio.id + '&export=download';
+      e1.appendChild(au);
+    } else {
+      // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
+      e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
+    }
     if (a.video) {
       var ev = etapa('▶', a.video.nome, '');
       ev.appendChild(videoNaTela(a.video.id, a.video.nome));
