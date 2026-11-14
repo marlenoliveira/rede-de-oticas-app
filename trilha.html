@@ -76,7 +76,8 @@
   .video { position: relative; width: 100%; padding-top: 56.25%; margin: 10px 0; border-radius: 12px; overflow: hidden; background: #000; }
   .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .ap { margin-top: 8px; }
-  audio.audio { width: 100%; margin: 8px 0; }
+  .audio-drive { width: 100%; height: 150px; margin: 8px 0; border-radius: 12px; overflow: hidden; background: #2A2B2E; }
+  .audio-drive iframe { width: 100%; height: 100%; border: 0; }
   .ap-h2 { font-size: 22px; color: var(--azul); margin: 22px 0 6px; line-height: 1.25; }
   .ap-h3 { font-size: 19px; color: var(--azul); margin: 18px 0 4px; }
   .ap-parte { font-size: 14px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--laranja); margin: 18px 0 4px; }
@@ -576,12 +577,14 @@
     }
     var e1 = etapa(1, 'Ouvir', 'A aula em áudio, de 3 a 8 minutos.');
     if (a.audio.noApp) {
-      // O audio toca aqui mesmo (download liberado no Drive). Sem mandar o endereco da pagina.
-      var au = document.createElement('audio');
-      au.controls = true; au.preload = 'none'; au.className = 'audio';
-      au.setAttribute('referrerpolicy', 'no-referrer');
-      au.src = 'https://drive.usercontent.google.com/download?id=' + a.audio.id + '&export=download';
-      e1.appendChild(au);
+      // O tocador do proprio Drive, dentro da aula (download liberado; ver AUDIO_NO_APP em Trilha.gs).
+      var caixaAudio = el('div', 'audio-drive');
+      var fa = document.createElement('iframe');
+      fa.src = 'https://drive.google.com/file/d/' + a.audio.id + '/preview';
+      fa.title = 'Áudio da aula';
+      fa.setAttribute('allow', 'autoplay');
+      caixaAudio.appendChild(fa);
+      e1.appendChild(caixaAudio);
     } else {
       // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
       e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
