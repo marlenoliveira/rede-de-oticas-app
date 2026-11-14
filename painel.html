@@ -64,9 +64,10 @@
   </div>
   <button class="leve oculto" id="atualizar">Atualizar</button>
 </div>
+<p style="margin:12px 0 0"><a href="./" style="color:#02306E;font-weight:800;font-size:17px">← Voltar ao app</a></p>
 
 <div id="entrada" class="oculto">
-  <div class="aviso">Este painel é só da Diretoria e da supervisão. Digite o seu código do app.</div>
+  <div class="aviso">Este painel é da Diretoria, da supervisão e da gerência. Digite o seu código do app.</div>
   <form id="formulario">
     <input id="codigo" type="password" inputmode="numeric" autocomplete="off" placeholder="Seu código">
     <button type="submit">Entrar</button>
@@ -88,7 +89,7 @@
     advertencia: 'Advertência', diretoria: 'Decisão da Diretoria', nunca: 'Nunca treinou'
   };
   var ERROS = {
-    sem_permissao: 'Este código não é da Diretoria nem da supervisão. O painel não abre para ele.',
+    sem_permissao: 'Este código não é da Diretoria, da supervisão nem da gerência. O painel não abre para ele.',
     codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
     sem_codigo: 'Digite o seu código.',
     muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos e tente de novo.',

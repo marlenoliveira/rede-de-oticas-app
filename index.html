@@ -1320,6 +1320,16 @@ class Component extends DCLogic {
     };
   }
 
+  /**
+   * Painel do treino: pagina solta (painel.html), no mesmo endereco do app.
+   * Garante o codigo guardado no aparelho antes de ir, para o painel entrar
+   * direto. Quem decide o que cada papel ve continua sendo o servidor.
+   */
+  abrirPainel() {
+    if (this._codigo) this.guardar('rdo_codigo', this._codigo);
+    try { window.location.href = 'painel.html'; } catch (e) {}
+  }
+
   ir(tela) {
     // O relogio do atendimento comeca quando a vendedora entra na tela,
     // nao quando ela salva. Sem campo para digitar: menos erro no balcao.
@@ -1460,7 +1470,8 @@ class Component extends DCLogic {
     };
     // Vendedora nao entra em Loja, Equipe nem Perfil.
     // Supervisao le tudo, mas nao entra em Equipe (nao cadastra ninguem).
-    const escondeAba = id => (papel === 'vendedora' && (id === 'equipe' || id === 'loja'))
+    // Painel do treino: Diretoria, supervisao e gerencia (decisao do Marlen em 14/11/2026).
+    const escondeAba = id => (papel === 'vendedora' && (id === 'equipe' || id === 'loja' || id === 'painel'))
                           || (papel === 'supervisao' && id === 'equipe');
     const telaBloqueada = escondeAba(s.tela)
                        || (papel === 'vendedora' && s.tela === 'perfil');
@@ -1475,14 +1486,17 @@ class Component extends DCLogic {
       { id: 'consulta', rotulo: 'Consulta', d: 'M4 5h7a2 2 0 012 2v12a2 2 0 00-2-2H4V5zm16 0h-7a2 2 0 00-2 2v12a2 2 0 012-2h7V5z' },
       { id: 'desempenho', rotulo: 'Desempenho', d: 'M4 19h16M7 15l4-5 3 3 4-6' },
       { id: 'loja', rotulo: 'Loja', selo: 'gerente', d: 'M4 4h7v7H4V4zm9 0h7v4h-7V4zM4 13h7v7H4v-7zm9 3h7v4h-7v-4z' },
-      { id: 'equipe', rotulo: 'Equipe', selo: 'gerente', d: 'M9 11a3 3 0 100-6 3 3 0 000 6zm7 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM3 20v-1a5 5 0 015-5h2a5 5 0 015 5v1M17 14a4 4 0 014 4v2' }
+      { id: 'equipe', rotulo: 'Equipe', selo: 'gerente', d: 'M9 11a3 3 0 100-6 3 3 0 000 6zm7 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM3 20v-1a5 5 0 015-5h2a5 5 0 015 5v1M17 14a4 4 0 014 4v2' },
+      // Nao e uma tela deste app: abre a pagina painel.html, no mesmo endereco.
+      // Ela usa o codigo que o app ja guarda no aparelho, entao nao pede de novo.
+      { id: 'painel', rotulo: 'Painel', selo: 'gerente', d: 'M4 20V10M10 20V4M16 20v-7M22 20H2' }
     ];
     const mapNav = n => ({
       rotulo: n.rotulo, d: n.d, selo: n.selo || '',
       cor: s.tela === n.id ? AZ : CZ,
       fundo: s.tela === n.id ? BL : 'transparent',
       peso: s.tela === n.id ? 800 : 600,
-      ir: () => this.ir(n.id)
+      ir: () => n.id === 'painel' ? this.abrirPainel() : this.ir(n.id)
     });
 
     const feitosCount = Object.keys(s.feitos).filter(k => s.feitos[k]).length;
@@ -1810,7 +1824,7 @@ class Component extends DCLogic {
       contagemBanco: temasDoBloco.map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
       mostrarTemas: papel === 'vendedora' ? 'none' : 'block',
       mostrarRodadas30: s.rodadas30 === null ? 'none' : 'block',
-      textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A Diretoria acompanha os dias de treino, a nota e o tempo de cada rodada.',
+      textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A Diretoria e a gerência acompanham os dias de treino, a nota e o tempo de cada rodada.',
       mostrarLembrete: (s.conteudo && s.conteudo.lembrete && !s.treinouHoje) ? 'block' : 'none',
       textoLembrete: (s.conteudo && s.conteudo.lembrete) || '',
       tiposTreino: ['Sortear tudo'].concat(temasDoBloco.filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
