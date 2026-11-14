@@ -521,7 +521,7 @@
     img.loading = 'lazy';
     img.addEventListener('load', function () { img.className = 'figura'; });
     img.addEventListener('error', function () { img.className = 'figura falhou'; img.alt = 'A figura não carregou. Confira a internet.'; });
-    if (id) img.src = 'https://lh3.googleusercontent.com/d/' + id + '=w1000';
+    if (id) img.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
     return img;
   }
 
