@@ -1122,6 +1122,11 @@ class Component extends DCLogic {
     this.gs('quemSouEu', [],
       r => {
         if (guardarDepois) this.guardar('rdo_codigo', this._codigo);
+        // Trilha do treinamento (14/11/2026): so quem esta matriculada recebe
+        // `trilha` do servidor. Ao entrar, a primeira tela dela passa a ser
+        // "Minha trilha" (trilha.html), uma vez por sessao do navegador. Para
+        // todo o resto, nada muda.
+        if (r && r.trilha && this.primeiraVezNaSessao()) { this.abrirTrilha(); return; }
         this.setState({ identCarregando: false, entrando: false, ident: r,
                         erroLogin: null, codigoDigitado: '' },
           () => { this.carregarLojas(); this.carregarAtendimentos(); this.carregarBanco(); });
@@ -1330,6 +1335,21 @@ class Component extends DCLogic {
     try { window.location.href = 'painel.html'; } catch (e) {}
   }
 
+  /** Minha trilha: pagina solta (trilha.html), no mesmo endereco do app. */
+  abrirTrilha() {
+    if (this._codigo) this.guardar('rdo_codigo', this._codigo);
+    try { window.location.href = 'trilha.html'; } catch (e) {}
+  }
+
+  /** Verdadeiro so na primeira entrada desta sessao do navegador. */
+  primeiraVezNaSessao() {
+    try {
+      if (window.sessionStorage.getItem('rdo_trilha_vista')) return false;
+      window.sessionStorage.setItem('rdo_trilha_vista', '1');
+      return true;
+    } catch (e) { return false; }
+  }
+
   ir(tela) {
     // O relogio do atendimento comeca quando a vendedora entra na tela,
     // nao quando ela salva. Sem campo para digitar: menos erro no balcao.
@@ -1472,7 +1492,8 @@ class Component extends DCLogic {
     // Supervisao le tudo, mas nao entra em Equipe (nao cadastra ninguem).
     // Painel do treino: Diretoria, supervisao e gerencia (decisao do Marlen em 14/11/2026).
     const escondeAba = id => (papel === 'vendedora' && (id === 'equipe' || id === 'loja' || id === 'painel'))
-                          || (papel === 'supervisao' && id === 'equipe');
+                          || (papel === 'supervisao' && id === 'equipe')
+                          || (id === 'trilha' && !(s.ident && s.ident.trilha));
     const telaBloqueada = escondeAba(s.tela)
                        || (papel === 'vendedora' && s.tela === 'perfil');
     const telaAtiva = telaBloqueada ? 'desempenho' : s.tela;
@@ -1489,14 +1510,16 @@ class Component extends DCLogic {
       { id: 'equipe', rotulo: 'Equipe', selo: 'gerente', d: 'M9 11a3 3 0 100-6 3 3 0 000 6zm7 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM3 20v-1a5 5 0 015-5h2a5 5 0 015 5v1M17 14a4 4 0 014 4v2' },
       // Nao e uma tela deste app: abre a pagina painel.html, no mesmo endereco.
       // Ela usa o codigo que o app ja guarda no aparelho, entao nao pede de novo.
-      { id: 'painel', rotulo: 'Painel', selo: 'gerente', d: 'M4 20V10M10 20V4M16 20v-7M22 20H2' }
+      { id: 'painel', rotulo: 'Painel', selo: 'gerente', d: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
+      // So aparece para quem esta matriculada na trilha (o servidor diz quem).
+      { id: 'trilha', rotulo: 'Minha trilha', d: 'M5 20V4l7 4 7-4v16l-7-4-7 4z' }
     ];
     const mapNav = n => ({
       rotulo: n.rotulo, d: n.d, selo: n.selo || '',
       cor: s.tela === n.id ? AZ : CZ,
       fundo: s.tela === n.id ? BL : 'transparent',
       peso: s.tela === n.id ? 800 : 600,
-      ir: () => n.id === 'painel' ? this.abrirPainel() : this.ir(n.id)
+      ir: () => n.id === 'painel' ? this.abrirPainel() : (n.id === 'trilha' ? this.abrirTrilha() : this.ir(n.id))
     });
 
     const feitosCount = Object.keys(s.feitos).filter(k => s.feitos[k]).length;
@@ -1586,7 +1609,7 @@ class Component extends DCLogic {
       grid3: desktop ? 'repeat(3,1fr)' : '1fr',
       gridKpi: s.w >= 1000 ? 'repeat(3,1fr)' : (s.w >= 700 ? 'repeat(2,1fr)' : '1fr'),
       navegacao: itensNav.filter(n => !escondeAba(n.id)).map(mapNav),
-      abas: itensNav.filter(n => !escondeAba(n.id)).map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : n.rotulo), selo: '' })),
+      abas: itensNav.filter(n => !escondeAba(n.id)).map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '' })),
 
       emNiveis: telaAtiva === 'niveis', emAtendimento: telaAtiva === 'atendimento',
       emTreino: telaAtiva === 'treino', emConsulta: telaAtiva === 'consulta',

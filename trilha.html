@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>Minha trilha</title>
+<!--
+  MINHA TRILHA — etapa 1 da trilha do treinamento (14/11/2026).
+
+  Pagina solta, sem o motor do app, no mesmo molde do painel.html: so desenha.
+  Quem decide e o servidor (src/Trilha.gs): o que esta aberto, as perguntas,
+  a correcao, o relogio da prova e as tentativas. O gabarito da prova nunca
+  chega aqui. Aqui nao mora regra de manual nem conteudo: tudo desce depois
+  do codigo validado. Texto vindo do servidor entra sempre como texto.
+
+  Usa o codigo que o app ja guarda no aparelho (rdo_codigo). O app manda para
+  ca, ao entrar, quem esta matriculada; quem nao esta nunca chega aqui.
+-->
+<style>
+  :root { --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6; }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 680px; padding: 18px 16px 64px; color: var(--tinta); background: #fff;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 27px; line-height: 1.2; margin: 0; color: var(--azul); font-weight: 800; }
+  h2 { font-size: 21px; margin: 24px 0 6px; color: var(--azul); }
+  .sub { color: var(--cinza); font-size: 16px; margin: 4px 0 0; }
+  a { color: var(--azul); font-weight: 800; }
+  button { font: inherit; font-weight: 800; min-height: 52px; padding: 10px 18px; border-radius: 12px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; width: 100%; margin: 8px 0; }
+  button.leve { background: #fff; color: var(--azul); }
+  button.laranja { background: var(--laranja); border-color: var(--laranja); }
+  button:disabled { opacity: .5; }
+  .caixa { border: 2px solid var(--linha); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+  .passo { border: 2px solid var(--linha); border-left-width: 10px; border-radius: 12px; padding: 10px 14px; margin: 10px 0; }
+  .passo.feito { border-left-color: var(--verde); }
+  .passo.atual { border-left-color: var(--laranja); }
+  .passo.fechado { border-left-color: #B8BEC6; color: var(--cinza); }
+  .passo .t { font-weight: 800; }
+  .aula { display: block; width: 100%; text-align: left; background: #fff; color: var(--tinta); border: 0;
+    border-top: 1px solid var(--linha); border-radius: 0; padding: 10px 0; min-height: 0; margin: 0; font-weight: 400; }
+  .aula b { font-weight: 800; }
+  .aula .e { display: block; font-size: 15px; color: var(--cinza); }
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .bom { border-left: 8px solid var(--verde); background: #E8F6EE; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .q { border-top: 2px solid var(--linha); padding: 12px 0 4px; }
+  .q .en { font-weight: 800; margin: 0 0 8px; }
+  .q .ins { font-size: 15px; color: var(--cinza); margin: 0 0 6px; }
+  .alt { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--linha); border-radius: 10px;
+    padding: 10px 12px; margin: 6px 0; cursor: pointer; }
+  .alt input { width: 22px; height: 22px; margin-top: 2px; flex: 0 0 auto; }
+  .alt.certa { border-color: var(--verde); background: #E8F6EE; }
+  .alt.errada { border-color: var(--vermelho); background: #FBECEA; }
+  .exp { font-size: 16px; color: var(--cinza); margin: 4px 0 8px; }
+  .relogio { position: sticky; top: 0; background: #fff; border-bottom: 2px solid var(--linha); padding: 8px 0;
+    font-size: 20px; font-weight: 800; color: var(--azul); display: flex; justify-content: space-between; z-index: 2; }
+  .relogio.pouco { color: var(--vermelho); }
+  .quem { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .quem button { width: auto; min-height: 44px; margin: 0; }
+  .grande { font-size: 30px; font-weight: 800; color: var(--azul); margin: 6px 0; }
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+<div id="raiz"><p class="sub">Carregando…</p></div>
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbw8TGcUb7K76IvyTI3DNCwneXfj4jSt9_838rnR9CnbhLtW3XQQ8ITiP6liBdQEEOLeuw/exec';
+
+  var ERROS = {
+    nao_matriculada: 'Você não está na trilha. Use o app normalmente.',
+    loja_de_teste: 'A trilha não funciona na loja de teste.',
+    fechada: 'Esta aula ainda está fechada: termine a anterior.',
+    amanha: 'Você já começou hoje o conteúdo de um dia. Esta aula abre no próximo dia.',
+    perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
+    sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
+    aula_expirada: 'As perguntas expiraram. Abra a aula de novo.',
+    aulas_abertas: 'A Prova Final abre quando todas as aulas estiverem fechadas.',
+    refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da Trilha.',
+    aguardando_data: 'A próxima tentativa ainda não abriu.',
+    aguarda_diretoria: 'Sua trilha está parada aqui até a Diretoria decidir.',
+    aprovada: 'Você já passou nesta prova.',
+    prova_encerrada: 'Esta prova já foi encerrada.',
+    tempo_esgotado: 'O tempo da prova acabou.',
+    prova_perdida: 'Não encontrei a sua prova em andamento. Avise quem acompanha a loja.',
+    codigo_invalido: 'Seu código não foi reconhecido. Entre de novo pelo app.',
+    inativo: 'Seu acesso está desativado. Fale com quem acompanha a loja.',
+    sem_conexao: 'Sem conexão com o servidor. Confira a internet e tente de novo.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
+  };
+
+  function guardado(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { if (v) window.localStorage.setItem(k, v); else window.localStorage.removeItem(k); } catch (e) {} }
+  function aparelho() {
+    var a = guardado('rdo_aparelho');
+    if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); guardar('rdo_aparelho', a); }
+    return a;
+  }
+  function el(tag, classe, texto) {
+    var n = document.createElement(tag);
+    if (classe) n.className = classe;
+    if (texto !== undefined && texto !== null) n.textContent = texto;
+    return n;
+  }
+  function botao(texto, classe, acao) {
+    var b = el('button', classe || '', texto);
+    b.type = 'button';
+    b.addEventListener('click', acao);
+    return b;
+  }
+  function link(texto, href) {
+    var a = el('a', '', texto);
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    return a;
+  }
+  function raiz() { var r = document.getElementById('raiz'); r.textContent = ''; window.scrollTo && window.scrollTo(0, 0); return r; }
+
+  var CODIGO = guardado('rdo_codigo');
+  function chamar(fn, extra, pronto) {
+    var args = [CODIGO, aparelho()];
+    if (extra !== undefined) args.push(extra);
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+  function msgErro(r) { return ERROS[(r && r.erro) || ''] || 'Algo deu errado. Tente de novo em alguns segundos.'; }
+  function voltarAoApp() { try { window.location.href = './'; } catch (e) {} }
+  function rodape(r) {
+    var p = el('p', '', '');
+    p.style.marginTop = '28px';
+    var a = el('a', '', 'Ir para o app de treino');
+    a.href = './'; p.appendChild(a);
+    r.appendChild(p);
+  }
+
+  var ESTADO = null, REGRAS = null, NOME = '';
+
+  // ---------------- Minha trilha ----------------
+  function carregar() {
+    raiz().appendChild(el('p', 'sub', 'Carregando…'));
+    chamar('estadoTrilha', undefined, function (r) {
+      if (!r.ok) { var x = raiz(); x.appendChild(el('div', 'erro', msgErro(r))); rodape(x); return; }
+      if (!r.matriculada) { var y = raiz(); y.appendChild(el('div', 'aviso', ERROS.nao_matriculada)); rodape(y); return; }
+      ESTADO = r.estado; REGRAS = r.regras; NOME = r.nome;
+      desenharTrilha();
+    });
+  }
+
+  var ICONE = { feito: '✔', atual: '▶', fechado: '🔒' };
+  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia',
+    perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
+
+  function desenharTrilha() {
+    var e = ESTADO, r = raiz();
+    r.appendChild(el('h1', '', 'Minha trilha'));
+    if (e.concluida) {
+      r.appendChild(el('div', 'bom', 'Você concluiu esta parte da trilha: abertura, Ponte, Trilha do Vendedor, Prova Final e simulações. A próxima parte é o Bloco Lentes.'));
+    } else {
+      r.appendChild(el('p', 'sub', e.atual.fase + ' · você está no passo ' + e.atual.n + ' de ' + e.totalJornada + '.'));
+      var faltam = e.aulas.filter(function (a) { return a.estado !== 'feita'; }).length;
+      if (faltam && e.atual.tipo === 'aulas') r.appendChild(el('p', 'sub', 'Faltam ' + faltam + (faltam === 1 ? ' aula' : ' aulas') + ' para a Prova Final.'));
+    }
+    e.passos.forEach(function (p) {
+      var c = el('div', 'passo ' + p.estado);
+      c.appendChild(el('div', 't', ICONE[p.estado] + ' ' + p.titulo));
+      if (p.tipo === 'video') desenharVideo(c, p);
+      else if (p.tipo === 'pessoa') desenharPessoa(c, p);
+      else if (p.tipo === 'aulas') desenharAulas(c, p);
+      else if (p.tipo === 'prova') desenharProvaPasso(c, p);
+      r.appendChild(c);
+    });
+    rodape(r);
+  }
+
+  function desenharVideo(c, p) {
+    if (p.estado === 'feito') return;
+    c.appendChild(el('div', 'sub', p.onde));
+    var l = el('p'); l.appendChild(link('Abrir o vídeo', p.link)); c.appendChild(l);
+    c.appendChild(botao('Assisti. Concluí', '', function (ev) {
+      ev.target.disabled = true;
+      chamar('concluirVideo', { video: p.id }, function (r) {
+        if (!r.ok) { ev.target.disabled = false; c.appendChild(el('div', 'erro', msgErro(r))); return; }
+        carregar();
+      });
+    }));
+  }
+
+  function desenharPessoa(c, p) {
+    if (p.explica) c.appendChild(el('div', 'sub', p.explica));
+    if (p.estado === 'atual') c.appendChild(el('div', 'aviso', 'Aguardando quem aplica lançar o resultado. Não depende de você.'));
+    if (p.id === 'simulacoes' && ESTADO.simulacoes.length) {
+      ESTADO.simulacoes.forEach(function (s) {
+        c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + ' (' + String(s.notas).split(';').join(', ') + ')'));
+      });
+    }
+  }
+
+  function desenharAulas(c, p) {
+    ESTADO.aulas.filter(function (a) { return a.passo === p.n; }).forEach(function (a) {
+      var b = el('button', 'aula');
+      b.type = 'button';
+      var ic = a.refazer ? '↻ ' : (a.estado === 'feita' ? '✔ ' : (a.estado === 'aberta' ? '▶ ' : '🔒 '));
+      b.appendChild(el('b', '', ic + a.titulo));
+      b.appendChild(el('span', 'e', a.refazer ? 'refazer as perguntas antes da próxima tentativa'
+        : (a.estado === 'feita' ? 'feita em ' + a.feitaEm + ' · toque para rever' : ROTULO_AULA[a.estado] || a.estado)));
+      if (a.estado === 'aberta' || a.estado === 'feita') b.addEventListener('click', function () { telaAula(a); });
+      c.appendChild(b);
+    });
+  }
+
+  function desenharProvaPasso(c, p) {
+    var pr = ESTADO.prova, regra = REGRAS.prova;
+    c.appendChild(el('div', 'sub', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · até ' + regra.tentativas + ' tentativas'));
+    (pr.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
+      c.appendChild(el('div', '', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
+    });
+    var txt = {
+      aulas_abertas: 'Abre quando as aulas fecharem.',
+      refazer_aulas: 'Refaça as perguntas das aulas da Trilha para liberar a ' + (pr.tentativa || '') + 'ª tentativa.',
+      aguardando_data: 'A ' + (pr.tentativa || '') + 'ª tentativa abre em ' + (pr.abreEm || '') + '.',
+      aguarda_diretoria: 'Não passou na 3ª tentativa. A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.',
+      aprovada: 'Aprovada.'
+    }[pr.estado];
+    if (txt) c.appendChild(el('div', pr.estado === 'aprovada' ? 'bom' : 'aviso', txt));
+    if (pr.estado === 'liberada' || pr.estado === 'em_andamento') {
+      c.appendChild(botao(pr.estado === 'em_andamento' ? 'Voltar à prova em andamento' : 'Abrir a Prova Final', 'laranja', telaProvaIntro));
+    }
+  }
+
+  // ---------------- Aula ----------------
+  function telaAula(a) {
+    var r = raiz();
+    r.appendChild(el('p', 'sub', 'Aula'));
+    r.appendChild(el('h1', '', a.titulo));
+    var c1 = el('div', 'caixa');
+    c1.appendChild(el('div', '', '1. Ouvir · mini-aula'));
+    c1.appendChild(el('div', 'sub', 'Faixa ' + a.audio.faixa));
+    var l1 = el('p'); l1.appendChild(link('Abrir a pasta do áudio', a.audio.link)); c1.appendChild(l1);
+    r.appendChild(c1);
+    var c2 = el('div', 'caixa');
+    c2.appendChild(el('div', '', '2. Ler'));
+    c2.appendChild(el('div', 'sub', a.leitura.onde));
+    var l2 = el('p'); l2.appendChild(link('Abrir a pasta da apostila', a.leitura.link)); c2.appendChild(l2);
+    if (a.video) { var l3 = el('p'); l3.appendChild(link(a.video.nome, a.video.link)); c2.appendChild(l3); }
+    r.appendChild(c2);
+    var c3 = el('div', 'caixa');
+    c3.appendChild(el('div', '', '3. Responder · ' + REGRAS.aula.perguntas + ' perguntas; com ' + REGRAS.aula.abre + ' certas a próxima abre'));
+    c3.appendChild(botao('Responder as perguntas', 'laranja', function () { perguntasAula(a); }));
+    r.appendChild(c3);
+    r.appendChild(botao('Voltar à trilha', 'leve', carregar));
+  }
+
+  function alternativas(nome, lista, aoEscolher) {
+    var box = el('div');
+    lista.forEach(function (t, j) {
+      var lab = el('label', 'alt');
+      var inp = document.createElement('input');
+      inp.type = 'radio'; inp.name = nome; inp.value = String(j);
+      inp.addEventListener('change', function () { aoEscolher(j); });
+      lab.appendChild(inp);
+      lab.appendChild(el('span', '', t));
+      box.appendChild(lab);
+    });
+    return box;
+  }
+
+  function perguntasAula(a) {
+    var r = raiz();
+    r.appendChild(el('p', 'sub', 'Carregando as perguntas…'));
+    chamar('abrirAula', { aula: a.id }, function (res) {
+      var x = raiz();
+      x.appendChild(el('p', 'sub', a.titulo));
+      if (!res.ok) { x.appendChild(el('div', 'erro', msgErro(res))); x.appendChild(botao('Voltar à trilha', 'leve', carregar)); return; }
+      var resp = [];
+      var blocos = [];
+      res.perguntas.forEach(function (q, i) {
+        var d = el('div', 'q');
+        if (q.instrucao) d.appendChild(el('p', 'ins', q.instrucao));
+        d.appendChild(el('p', 'en', (i + 1) + '. ' + q.enunciado));
+        d.appendChild(alternativas('a' + i, q.alternativas, function (j) { resp[i] = j; }));
+        blocos.push(d);
+        x.appendChild(d);
+      });
+      var msg = el('div');
+      x.appendChild(msg);
+      var enviar = botao('Corrigir', '', function () {
+        for (var i = 0; i < res.perguntas.length; i++) if (resp[i] === undefined) { msg.className = 'aviso'; msg.textContent = 'Responda todas as perguntas.'; return; }
+        enviar.disabled = true;
+        chamar('responderAula', { aula: a.id, respostas: resp }, function (c) {
+          if (!c.ok) { enviar.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(c); return; }
+          enviar.className = 'oculto';
+          c.correcao.forEach(function (k, i) {
+            var labs = blocos[i].querySelectorAll('.alt');
+            for (var j = 0; j < labs.length; j++) {
+              labs[j].querySelector('input').disabled = true;
+              if (j === k.certa) labs[j].className = 'alt certa';
+              else if (j === resp[i]) labs[j].className = 'alt errada';
+            }
+            blocos[i].appendChild(el('p', 'exp', (k.acertou ? '✔ ' : '✘ ') + k.explicacao));
+          });
+          msg.className = c.passou ? 'bom' : 'aviso';
+          msg.textContent = c.passou ? (c.acertos + ' de ' + c.questoes + '. Aula concluída. A próxima abriu.')
+            : (c.acertos + ' de ' + c.questoes + '. Leia as explicações e tente de novo: as perguntas mudam a cada vez.');
+          if (!c.passou) x.appendChild(botao('Tentar de novo', 'laranja', function () { perguntasAula(a); }));
+          x.appendChild(botao('Voltar à trilha', c.passou ? '' : 'leve', carregar));
+        });
+      });
+      x.appendChild(enviar);
+    });
+  }
+
+  // ---------------- Prova ----------------
+  function telaProvaIntro() {
+    var pr = ESTADO.prova, regra = REGRAS.prova, r = raiz();
+    r.appendChild(el('h1', '', 'Prova Final · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
+    var q = el('div', 'quem caixa');
+    q.appendChild(el('div', '', 'Prova de ' + NOME));
+    q.appendChild(botao('Não sou eu', 'leve', function () { guardar('rdo_codigo', ''); voltarAoApp(); }));
+    r.appendChild(q);
+    r.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta'));
+    r.appendChild(el('div', 'aviso', pr.estado === 'em_andamento' ? 'Sua prova já começou e o relógio está correndo.' : 'Depois que começar, o relógio não para, mesmo se você fechar o app.'));
+    r.appendChild(botao(pr.estado === 'em_andamento' ? 'Voltar à prova' : 'Começar a prova', 'laranja', function (ev) {
+      ev.target.disabled = true;
+      chamar('iniciarProva', undefined, function (res) {
+        if (!res.ok) { ev.target.disabled = false; r.appendChild(el('div', 'erro', msgErro(res))); return; }
+        telaProva(res);
+      });
+    }));
+    r.appendChild(botao('Voltar à trilha', 'leve', carregar));
+  }
+
+  var relogioId = null;
+  function telaProva(p) {
+    var r = raiz();
+    var chaveLocal = 'rdo_prova_' + p.id;
+    var resp = {};
+    Object.keys(p.respostas || {}).forEach(function (k) { resp[k] = p.respostas[k]; });
+    try { var loc = JSON.parse(guardado(chaveLocal) || '{}'); Object.keys(loc).forEach(function (k) { resp[k] = loc[k]; }); } catch (e) {}
+    var fim = Date.now() + p.segundosRestantes * 1000;
+    var topo = el('div', 'relogio');
+    var tTempo = el('span', '', ''), tConta = el('span', '', '');
+    topo.appendChild(tTempo); topo.appendChild(tConta);
+    r.appendChild(topo);
+    r.appendChild(el('p', 'sub', 'Prova de ' + NOME + ' · ' + p.perguntas.length + ' questões · passa com ' + p.corte));
+    function conta() { var n = Object.keys(resp).length; tConta.textContent = n + ' de ' + p.perguntas.length; }
+    var salvarId = null;
+    function salvar() {
+      guardar(chaveLocal, JSON.stringify(resp));
+      if (salvarId) clearTimeout(salvarId);
+      salvarId = setTimeout(function () { chamar('salvarRespostasProva', { id: p.id, respostas: resp }, function () {}); }, 1500);
+    }
+    p.perguntas.forEach(function (q, i) {
+      var d = el('div', 'q');
+      d.appendChild(el('p', 'en', (i + 1) + '. ' + q.enunciado));
+      var box = alternativas('p' + i, q.alternativas, function (j) { resp[i] = j; conta(); salvar(); });
+      if (resp[i] !== undefined) { var inp = box.querySelectorAll('input')[resp[i]]; if (inp) inp.checked = true; }
+      d.appendChild(box);
+      r.appendChild(d);
+    });
+    conta();
+    var msg = el('div'); r.appendChild(msg);
+    var entregue = false;
+    function entregar() {
+      if (entregue) return;
+      entregue = true;
+      if (relogioId) clearInterval(relogioId);
+      if (salvarId) clearTimeout(salvarId);
+      msg.className = 'aviso'; msg.textContent = 'Corrigindo…';
+      chamar('entregarProva', { id: p.id, respostas: resp }, function (res) {
+        if (!res.ok) { entregue = false; msg.className = 'erro'; msg.textContent = msgErro(res); return; }
+        guardar(chaveLocal, '');
+        telaResultado(res);
+      });
+    }
+    var b = botao('Entregar a prova', 'laranja', function () {
+      var faltam = p.perguntas.length - Object.keys(resp).length;
+      if (faltam && !window.confirm('Faltam ' + faltam + ' questões sem resposta. Entregar assim mesmo?')) return;
+      entregar();
+    });
+    r.appendChild(b);
+    function tique() {
+      var s = Math.max(0, Math.round((fim - Date.now()) / 1000));
+      tTempo.textContent = '⏱ ' + Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+      topo.className = 'relogio' + (s <= 300 ? ' pouco' : '');
+      if (s <= 0) entregar();
+    }
+    tique();
+    if (relogioId) clearInterval(relogioId);
+    relogioId = setInterval(tique, 1000);
+  }
+
+  function telaResultado(res) {
+    var r = raiz();
+    r.appendChild(el('h1', '', 'Resultado'));
+    r.appendChild(el('div', 'grande', res.acertos + ' de ' + res.questoes));
+    var proximo = {
+      aprovada: 'Agora vêm as 6 simulações, com quem aplica.',
+      refazer_aulas: 'Refaça as perguntas das aulas da Trilha. A próxima tentativa abre a partir do próximo dia útil depois disso.',
+      aguarda_diretoria: 'A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.'
+    }[res.proxima] || '';
+    r.appendChild(el('div', res.passou ? 'bom' : 'aviso', (res.passou ? 'Passou.' : 'Não passou desta vez.') + (proximo ? ' ' + proximo : '')));
+    r.appendChild(botao('Voltar à trilha', '', carregar));
+  }
+
+  if (!CODIGO) { var x = raiz(); x.appendChild(el('div', 'aviso', 'Entre primeiro no app com o seu código.')); rodape(x); }
+  else carregar();
+})();
+</script>
+</body>
+</html>

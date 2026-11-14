@@ -65,6 +65,16 @@
   .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: var(--cinza); margin: 10px 0 0; }
   .legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
   .oculto { display: none; }
+  /* Trilha do treinamento (desde 14/11/2026) */
+  .tr-lista { margin: 6px 0 16px; }
+  .tr-pessoa { border: 2px solid var(--linha); border-left-width: 10px; border-radius: 12px; padding: 10px 14px; margin: 8px 0; }
+  .tr-parada { border-left-color: var(--laranja); } .tr-pessoa-esp { border-left-color: var(--amarelo); }
+  .tr-diretoria { border-left-color: #6E1A12; } .tr-em_dia { border-left-color: var(--verde); }
+  .tr-ficha { margin-top: 8px; font-size: 16px; }
+  .tr-ficha div { margin: 3px 0; }
+  .tr-notas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tr-notas input { margin: 0; }
+  select { font: inherit; width: 100%; min-height: 52px; border-radius: 12px; border: 2px solid var(--linha); padding: 8px 10px; margin: 8px 0; background: #fff; }
 </style>
 </head>
 <body>
@@ -88,6 +98,7 @@
 
 <div id="mensagem"></div>
 <div id="lojas"></div>
+<div id="trilha"></div>
 
 <div class="regua oculto" id="regua"></div>
 
@@ -255,6 +266,135 @@
     id('atualizar').className = 'leve';
   }
 
+  // ------------------------------------------------------------
+  // Trilha do treinamento (desde 14/11/2026). O servidor decide quem ve quem
+  // (painelTrilha): a gerente so a propria loja. Sem ninguem para ver e sem
+  // poder matricular, esta parte nao aparece e o Painel fica como era.
+  // ------------------------------------------------------------
+  function chamarFn(fn, codigo, extra, pronto) {
+    var args = [codigo, aparelho()];
+    if (extra !== undefined) args.push(extra);
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+  var ERROS_TRILHA = {
+    sem_permissao: 'Este código não pode fazer isso.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa.',
+    notas_invalidas: 'Preencha as 6 notas, de 0 a 10.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.',
+    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
+    pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.', nao_aguarda_diretoria: 'Esta pessoa não está aguardando a Diretoria.'
+  };
+  var LISTAS = [['parada', 'Parada', 'tr-parada'], ['pessoa', 'Esperando uma pessoa', 'tr-pessoa-esp'],
+                ['diretoria', 'Aguarda a Diretoria', 'tr-diretoria'], ['em_dia', 'Em dia', 'tr-em_dia']];
+
+  function carregarTrilha(codigo) {
+    chamarFn('painelTrilha', codigo, undefined, function (r) {
+      var box = id('trilha');
+      box.textContent = '';
+      if (!r || !r.ok || !Array.isArray(r.pessoas)) return; // servidor antigo ou sem permissao: o Painel continua como era
+      if (!r.pessoas.length && !(r.podeMatricular && r.candidatas.length)) return;
+      desenharTrilha(box, r, codigo);
+    });
+  }
+
+  function acaoTrilha(fn, codigo, extra, aviso) {
+    if (aviso && !window.confirm(aviso)) return;
+    chamarFn(fn, codigo, extra, function (r) {
+      if (!r || !r.ok) { window.alert(ERROS_TRILHA[(r && r.erro) || ''] || 'Não deu certo. Tente de novo.'); return; }
+      carregarTrilha(codigo);
+    });
+  }
+
+  function desenharTrilha(box, r, codigo) {
+    box.appendChild(el('h2', '', 'Trilha do treinamento'));
+    box.appendChild(el('p', 'resumo', 'Só quem está matriculada na trilha. Toque no nome para abrir a ficha.'));
+    LISTAS.forEach(function (L) {
+      var doGrupo = r.pessoas.filter(function (p) { return p.lista === L[0]; });
+      if (!doGrupo.length) return;
+      box.appendChild(el('h2', '', L[1] + ' (' + doGrupo.length + ')'));
+      var lista = el('div', 'tr-lista');
+      doGrupo.forEach(function (p) { lista.appendChild(cartaoTrilha(p, L[2], codigo, r.podeMatricular)); });
+      box.appendChild(lista);
+    });
+    if (r.podeMatricular && r.candidatas.length) {
+      box.appendChild(el('h2', '', 'Matricular na trilha'));
+      box.appendChild(el('p', 'resumo', 'Só vendedora que já trabalha na loja. Lojas do piloto não aparecem.'));
+      var sel = el('select');
+      r.candidatas.forEach(function (c, i) { var o = el('option', '', c.loja + ' · ' + c.nome); o.value = String(i); sel.appendChild(o); });
+      box.appendChild(sel);
+      var b = el('button', '', 'Matricular');
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        var c = r.candidatas[Number(sel.value)];
+        acaoTrilha('matricular', codigo, { loja: c.loja, nome: c.nome, tipo: 'ja_trabalha' },
+          'Matricular ' + c.nome + ' (' + c.loja + ') na trilha? Ela passa a ver "Minha trilha" ao entrar no app.');
+      });
+      box.appendChild(b);
+    }
+  }
+
+  function cartaoTrilha(p, classe, codigo, podeMatricular) {
+    var c = el('div', 'tr-pessoa ' + classe);
+    var cab = el('button', 'linha');
+    cab.type = 'button';
+    var linha1 = el('div', 'cab');
+    linha1.appendChild(el('b', '', p.nome));
+    linha1.appendChild(el('span', '', p.loja));
+    cab.appendChild(linha1);
+    var onde = p.concluida ? 'Etapa 1 concluída' : (p.atual.fase + ' · passo ' + p.atual.n + ' de ' + p.totalJornada + ' · ' + p.atual.titulo);
+    cab.appendChild(el('div', 'resumo', onde));
+    if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
+    c.appendChild(cab);
+    var f = el('div', 'tr-ficha oculto');
+    f.appendChild(el('div', '', 'Começou em ' + p.desde + ' · ' + (p.tipo === 'ja_trabalha' ? 'já trabalhava na loja' : 'vendedora nova')));
+    f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada !== null && p.parada !== undefined ? ' · ' + p.parada + ' dias úteis' : '')));
+    f.appendChild(el('div', '', 'Aulas fechadas: ' + p.aulasFeitas + ' de ' + p.aulasTotal + ' · vídeos: ' + p.videosFeitos + ' de ' + p.videosTotal));
+    var t = (p.prova.tentativas || []).filter(function (x) { return x.estado === 'corrigida'; });
+    f.appendChild(el('div', '', 'Prova Final: ' + (t.length ? t.map(function (x) {
+      return x.n + 'ª ' + x.acertos + ' de ' + x.questoes + ' (' + x.data + (x.minutos !== null ? ', ' + x.minutos + ' min' : '') + ')';
+    }).join(' · ') + (p.prova.estado === 'aprovada' ? ' · aprovada' : '') : 'ainda não fez')));
+    if (p.simulacoes.length) f.appendChild(el('div', '', '6 simulações: ' + p.simulacoes.map(function (s) {
+      return s.data + ' ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + ' (' + String(s.notas).split(';').join(', ') + ')';
+    }).join(' · ')));
+    if (p.podeLancar && p.atual.id === 'ponte') {
+      var bp = el('button', '', 'Lançar: Ponte feita');
+      bp.type = 'button';
+      bp.addEventListener('click', function () { acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, passo: 'ponte' }, 'Confirmar que a conversa da Ponte com ' + p.nome + ' foi feita?'); });
+      f.appendChild(bp);
+    }
+    if (p.podeLancar && p.atual.id === 'simulacoes') {
+      f.appendChild(el('div', '', 'Notas das 6 simulações (0 a 10; passa com 8 em cada):'));
+      var g = el('div', 'tr-notas'), ins = [];
+      for (var i = 0; i < 6; i++) { var inp = el('input'); inp.type = 'number'; inp.min = '0'; inp.max = '10'; inp.inputMode = 'numeric'; inp.placeholder = String(i + 1); ins.push(inp); g.appendChild(inp); }
+      f.appendChild(g);
+      var bs = el('button', '', 'Lançar as 6 simulações');
+      bs.type = 'button';
+      bs.addEventListener('click', function () {
+        var notas = ins.map(function (x) { return x.value === '' ? NaN : Number(x.value); });
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, passo: 'simulacoes', notas: notas },
+          'Lançar as notas ' + notas.join(', ') + ' para ' + p.nome + '?');
+      });
+      f.appendChild(bs);
+    }
+    if (p.podeLiberar) {
+      var bl = el('button', 'leve', 'Liberar nova série da Prova Final');
+      bl.type = 'button';
+      bl.addEventListener('click', function () { acaoTrilha('liberarNovaSerie', codigo, { loja: p.loja, nome: p.nome }, 'Liberar uma nova série para ' + p.nome + '? Ela refaz as aulas da Trilha antes.'); });
+      f.appendChild(bl);
+    }
+    if (podeMatricular) {
+      var bd = el('button', 'leve', 'Tirar da trilha');
+      bd.type = 'button';
+      bd.addEventListener('click', function () { acaoTrilha('desmatricular', codigo, { loja: p.loja, nome: p.nome }, 'Tirar ' + p.nome + ' da trilha? Ela volta a ver o app como antes. O que já fez continua gravado.'); });
+      f.appendChild(bd);
+    }
+    c.appendChild(f);
+    cab.addEventListener('click', function () { f.className = f.className.indexOf('oculto') > -1 ? 'tr-ficha' : 'tr-ficha oculto'; });
+    return c;
+  }
+
   function mostrarErro(codigoErro) {
     var m = id('mensagem');
     m.textContent = '';
@@ -269,6 +409,7 @@
         if (veioDoFormulario) guardar('rdo_codigo', codigo);
         id('entrada').className = 'oculto';
         desenhar(r);
+        carregarTrilha(codigo);
         return;
       }
       id('quando').textContent = '';
