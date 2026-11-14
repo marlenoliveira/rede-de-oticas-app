@@ -71,6 +71,27 @@
   .rever-lista .aula { border-bottom: 1px solid var(--linha); text-decoration: none; }
   .rever-lista .aula:last-child { border-bottom: 0; }
   a.aula { display: block; color: var(--tinta); font-weight: 700; padding: 10px 0 10px 14px; }
+  /* Video e apostila dentro do app */
+  .video { position: relative; width: 100%; padding-top: 56.25%; margin: 10px 0; border-radius: 12px; overflow: hidden; background: #000; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .ap { margin-top: 8px; }
+  .ap-h2 { font-size: 22px; color: var(--azul); margin: 22px 0 6px; line-height: 1.25; }
+  .ap-h3 { font-size: 19px; color: var(--azul); margin: 18px 0 4px; }
+  .ap-parte { font-size: 14px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--laranja); margin: 18px 0 4px; }
+  .ap-p { margin: 8px 0; }
+  .ap-li { margin: 6px 0 6px 6px; }
+  .ap-quadro { border-left: 6px solid var(--azul); background: #EEF3FA; border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+  .ap-tab { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
+  .ap-tab table { border-collapse: collapse; font-size: 16px; min-width: 100%; }
+  .ap-tab th, .ap-tab td { border: 1px solid var(--linha); padding: 8px; text-align: left; vertical-align: top; }
+  .ap-tab th { background: #F3F5F8; }
+  .ap-fig { margin: 14px 0; }
+  .ap-fig-t { font-size: 14px; font-weight: 800; color: var(--cinza); margin-bottom: 6px; }
+  .ap-leg { font-size: 15px; color: var(--cinza); margin: 2px 0 10px; }
+  .ap-cap { font-size: 15px; color: var(--cinza); margin-top: 6px; }
+  img.figura { display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 6px 0; }
+  img.figura.carregando { min-height: 120px; background: #EDEFF2; }
+  img.figura.falhou { min-height: 40px; background: #FBECEA; }
   /* Mensagens */
   .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
   .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
@@ -263,8 +284,7 @@
       c.appendChild(el('div', 't', ICONE[p.estado] + ' ' + p.titulo));
       if (p.tipo === 'aulas') listaAulas(c, p);
       if (p.tipo === 'video' && p.estado === 'feito') {
-        var a = el('a', '', 'Rever o vídeo'); a.href = p.link; a.target = '_blank'; a.rel = 'noopener';
-        c.appendChild(a);
+        c.appendChild(botao('Assistir de novo', 'leve', function () { telaVideo(p); }));
       }
       if (p.tipo === 'prova') {
         if (e.prova.estado === 'liberada' || e.prova.estado === 'em_andamento') c.appendChild(botao('Abrir a Prova Final', 'laranja', telaProvaIntro));
@@ -295,9 +315,12 @@
     box.appendChild(el('div', 'rot rever', 'Rever o que você já fez'));
     var lista = el('div', 'rever-lista');
     videos.forEach(function (p) {
-      var a = el('a', 'aula', '✔ ' + p.titulo);
-      a.href = p.link; a.target = '_blank'; a.rel = 'noopener';
-      lista.appendChild(a);
+      var b = el('button', 'aula');
+      b.type = 'button';
+      b.appendChild(el('b', '', '✔ ' + p.titulo));
+      b.appendChild(el('span', 'e', 'toque para assistir de novo'));
+      b.addEventListener('click', function () { telaVideo(p); });
+      lista.appendChild(b);
     });
     feitas.forEach(function (a) {
       var b = el('button', 'aula');
@@ -324,6 +347,15 @@
     });
   }
 
+  /** Video ja feito, para assistir de novo, sem sair do app. */
+  function telaVideo(p) {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
+    r.appendChild(el('h1', '', p.titulo));
+    r.appendChild(videoNaTela(p.videoId, p.titulo));
+  }
+
   /** O cartao grande: a UMA coisa que a pessoa tem de fazer agora. */
   function cartaoAgora(e) {
     var c = el('div', 'agora');
@@ -343,9 +375,8 @@
       var p = e.passos.filter(function (x) { return x.id === at.id; })[0];
       rot('Agora');
       tit(p.titulo);
-      txt('Assista ao vídeo e depois toque em "Assisti. Concluí".');
-      c.appendChild(linkBotao('▶ Abrir o vídeo', p.link));
-      c.appendChild(el('p', 'sub', p.onde));
+      txt('Assista ao vídeo aqui e depois toque em "Assisti. Concluí".');
+      c.appendChild(videoNaTela(p.videoId, p.titulo));
       c.appendChild(botao('Assisti. Concluí', 'laranja', function (ev) {
         ev.target.disabled = true;
         chamar('concluirVideo', { video: at.id }, function (res) {
@@ -453,6 +484,83 @@
     return null;
   }
 
+  /** Video do Drive tocando dentro da tela (a pasta 1 esta "qualquer pessoa com o link"). */
+  function videoNaTela(id, titulo) {
+    var caixa = el('div', 'video');
+    var f = document.createElement('iframe');
+    f.src = 'https://drive.google.com/file/d/' + id + '/preview';
+    f.title = titulo || 'Vídeo';
+    f.setAttribute('allow', 'autoplay; fullscreen');
+    f.setAttribute('allowfullscreen', '');
+    f.loading = 'lazy';
+    caixa.appendChild(f);
+    return caixa;
+  }
+
+  /** Texto com **negrito**: vira texto + <b>, nunca marcacao vinda de fora. */
+  function rico(tag, classe, texto) {
+    var n = el(tag, classe);
+    String(texto || '').split('**').forEach(function (parte, i) {
+      if (!parte) return;
+      if (i % 2) n.appendChild(el('b', '', parte)); else n.appendChild(document.createTextNode(parte));
+    });
+    return n;
+  }
+
+  /** Busca as figuras uma a uma, sem travar a leitura. */
+  var filaFiguras = [];
+  function pedirFigura(nome, img) {
+    filaFiguras.push([nome, img]);
+    if (filaFiguras.length === 1) proximaFigura();
+  }
+  function proximaFigura() {
+    if (!filaFiguras.length) return;
+    var item = filaFiguras[0];
+    chamar('figuraApostila', { nome: item[0] }, function (r) {
+      if (r && r.ok) { item[1].src = r.src; item[1].className = 'figura'; }
+      else { item[1].alt = 'Figura não carregou'; item[1].className = 'figura falhou'; }
+      filaFiguras.shift();
+      proximaFigura();
+    }, true);
+  }
+
+  /** Desenha os blocos da apostila: titulos, paragrafos, itens, tabelas, quadros e figuras. */
+  function desenharTexto(destino, blocos) {
+    filaFiguras = [];
+    blocos.forEach(function (b) {
+      if (b.t === 'h2') destino.appendChild(el('h2', 'ap-h2', b.x));
+      else if (b.t === 'h3') destino.appendChild(el('h3', 'ap-h3', b.x));
+      else if (b.t === 'parte') destino.appendChild(el('div', 'ap-parte', b.x));
+      else if (b.t === 'p') destino.appendChild(rico('p', 'ap-p', b.x));
+      else if (b.t === 'li') destino.appendChild(rico('div', 'ap-li', (b.n ? b.n + '. ' : '• ') + b.x));
+      else if (b.t === 'chk') destino.appendChild(rico('div', 'ap-li', '☐ ' + b.x));
+      else if (b.t === 'q') destino.appendChild(rico('div', 'ap-quadro', b.x));
+      else if (b.t === 'tab') {
+        var rolar = el('div', 'ap-tab');
+        var t = el('table');
+        b.l.forEach(function (linha, k) {
+          var tr = el('tr');
+          linha.forEach(function (c) { tr.appendChild(rico(k === 0 ? 'th' : 'td', '', c)); });
+          t.appendChild(tr);
+        });
+        rolar.appendChild(t);
+        destino.appendChild(rolar);
+      } else if (b.t === 'fig') {
+        var f = el('div', 'ap-fig');
+        if (b.x) f.appendChild(el('div', 'ap-fig-t', b.x));
+        b.imgs.forEach(function (im) {
+          var img = el('img', 'figura carregando');
+          img.alt = im.leg || b.x || 'Figura';
+          f.appendChild(img);
+          if (im.leg) f.appendChild(el('div', 'ap-leg', im.leg));
+          pedirFigura(im.f, img);
+        });
+        if (b.cap) f.appendChild(rico('div', 'ap-cap', b.cap));
+        destino.appendChild(f);
+      }
+    });
+  }
+
   function telaAula(a) {
     var r = raiz();
     barraQuem(r);
@@ -469,11 +577,27 @@
       r.appendChild(d);
       return d;
     }
-    var e1 = etapa(1, 'Ouvir', 'Faixa ' + a.audio.faixa);
-    e1.appendChild(linkBotao('🎧 Abrir o áudio', a.audio.link));
+    var e1 = etapa(1, 'Ouvir', 'A aula em áudio, de 3 a 8 minutos.');
+    // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
+    e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
+    if (a.video) {
+      var ev = etapa('▶', a.video.nome, '');
+      ev.appendChild(videoNaTela(a.video.id, a.video.nome));
+    }
     var e2 = etapa(2, 'Ler', a.leitura.onde);
-    e2.appendChild(linkBotao('📖 Abrir a apostila', a.leitura.link));
-    if (a.video) e2.appendChild(linkBotao('▶ ' + a.video.nome, a.video.link));
+    var texto = el('div', 'ap oculto');
+    var bLer = botao('📖 Ler a aula aqui', '', function () {
+      bLer.disabled = true;
+      chamar('lerAula', { aula: a.id }, function (res) {
+        bLer.className = 'oculto';
+        if (!res.ok) { e2.appendChild(el('div', 'erro', msgErro(res))); return; }
+        texto.className = 'ap';
+        desenharTexto(texto, res.blocos);
+        texto.appendChild(botao('Terminei de ler: responder as perguntas', 'laranja', function () { perguntasAula(a); }));
+      });
+    });
+    e2.appendChild(bLer);
+    e2.appendChild(texto);
     var e3 = etapa(3, 'Responder', REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
     e3.appendChild(botao('Responder as perguntas', 'laranja', function () { perguntasAula(a); }));
   }
