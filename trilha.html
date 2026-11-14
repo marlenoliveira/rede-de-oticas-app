@@ -66,6 +66,11 @@
     border-radius: 0; padding: 8px 0 8px 14px; min-height: 0; margin: 0; font-weight: 400; }
   .aula b { font-weight: 700; }
   .aula .e { display: block; font-size: 15px; color: var(--cinza); }
+  .rot.rever { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--azul); margin: 18px 0 4px; }
+  .rever-lista { border: 2px solid var(--linha); border-radius: 14px; padding: 4px 6px; }
+  .rever-lista .aula { border-bottom: 1px solid var(--linha); text-decoration: none; }
+  .rever-lista .aula:last-child { border-bottom: 0; }
+  a.aula { display: block; color: var(--tinta); font-weight: 700; padding: 10px 0 10px 14px; }
   /* Mensagens */
   .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
   .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
@@ -246,7 +251,11 @@
     if (HORARIO && !HORARIO.aberto && !e.concluida) {
       r.appendChild(el('div', 'aviso', 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
     }
+    if (e.modoTeste) {
+      r.appendChild(el('div', 'aviso', 'Modo de teste: tudo liberado para você ver o app inteiro, fora de ordem e fora do horário. As vendedoras seguem a ordem: uma aula depois da outra e o conteúdo de um dia por dia.'));
+    }
     r.appendChild(cartaoAgora(e));
+    r.appendChild(blocoRever(e));
     var det = el('details');
     det.appendChild(el('summary', '', 'Ver o caminho todo'));
     e.passos.forEach(function (p) {
@@ -258,6 +267,7 @@
         c.appendChild(a);
       }
       if (p.tipo === 'prova') {
+        if (e.prova.estado === 'liberada' || e.prova.estado === 'em_andamento') c.appendChild(botao('Abrir a Prova Final', 'laranja', telaProvaIntro));
         (e.prova.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
           c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
         });
@@ -271,6 +281,34 @@
     });
     r.appendChild(det);
     rodape(r);
+  }
+
+  /**
+   * "Rever o que voce ja fez", sempre a vista (o Marlen, 14/11/2026: "o que a
+   * pessoa ja fez tem que estar liberado para ela"). Um toque abre a aula de novo.
+   */
+  function blocoRever(e) {
+    var box = el('div');
+    var feitas = e.aulas.filter(function (a) { return a.estado === 'feita'; });
+    var videos = e.passos.filter(function (p) { return p.tipo === 'video' && p.estado === 'feito'; });
+    if (!feitas.length && !videos.length) return box;
+    box.appendChild(el('div', 'rot rever', 'Rever o que você já fez'));
+    var lista = el('div', 'rever-lista');
+    videos.forEach(function (p) {
+      var a = el('a', 'aula', '✔ ' + p.titulo);
+      a.href = p.link; a.target = '_blank'; a.rel = 'noopener';
+      lista.appendChild(a);
+    });
+    feitas.forEach(function (a) {
+      var b = el('button', 'aula');
+      b.type = 'button';
+      b.appendChild(el('b', '', (a.refazer ? '↻ ' : '✔ ') + a.titulo));
+      b.appendChild(el('span', 'e', a.refazer ? 'refazer as perguntas antes da próxima tentativa' : 'feita em ' + a.feitaEm + ' · toque para abrir de novo'));
+      b.addEventListener('click', function () { telaAula(a); });
+      lista.appendChild(b);
+    });
+    box.appendChild(lista);
+    return box;
   }
 
   function listaAulas(c, p) {
