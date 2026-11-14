@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>Painel do treino</title>
+<!--
+  PAINEL DO TREINO — desde 13/11/2026 (pedido do Marlen).
+
+  Pagina solta, sem o motor do app: so desenha. Quem decide e o servidor:
+  esta pagina entrega o codigo e o servidor responde so para a Diretoria e a
+  supervisao (painelTreino, em src/Codigo.gs). Aqui nao mora nome de pessoa,
+  dado de loja, regra nem codigo: tudo desce depois do codigo validado.
+
+  Usa o mesmo codigo que o app ja guarda no aparelho (rdo_codigo), entao quem
+  ja entrou no app como Diretoria abre o painel direto.
+-->
+<style>
+  :root {
+    --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6;
+  }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 720px; padding: 20px 16px 56px; color: var(--tinta); background: #fff;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; color: var(--azul); font-weight: 800; }
+  h2 { font-size: 22px; margin: 28px 0 4px; color: var(--azul); font-weight: 800; }
+  .sub { color: var(--cinza); font-size: 15px; margin: 4px 0 0; }
+  .topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  button { font: inherit; font-weight: 800; min-height: 48px; padding: 10px 18px; border-radius: 12px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; }
+  button.leve { background: #fff; color: var(--azul); }
+  input { font: inherit; width: 100%; box-sizing: border-box; min-height: 52px; padding: 10px 14px;
+    border-radius: 12px; border: 2px solid var(--linha); margin: 8px 0 12px; }
+  .resumo { font-size: 16px; color: var(--cinza); margin: 0 0 10px; }
+  .vazia { border: 2px dashed var(--linha); border-radius: 12px; padding: 14px 16px; color: var(--cinza); }
+  .pessoa { border: 2px solid var(--linha); border-left-width: 10px; border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+  .pessoa .nome { font-size: 20px; font-weight: 800; line-height: 1.25; }
+  .pessoa .papel { font-size: 14px; color: var(--cinza); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .selo { display: inline-block; font-size: 14px; font-weight: 800; padding: 2px 10px; border-radius: 999px; margin-top: 6px; color: #fff; }
+  .dados { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-top: 10px; font-size: 16px; }
+  .dados b { display: block; font-size: 13px; color: var(--cinza); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+  .f-em_dia      { border-left-color: var(--verde); }    .s-em_dia      { background: var(--verde); }
+  .f-lembrete    { border-left-color: var(--amarelo); }  .s-lembrete    { background: #8A6400; }
+  .f-conversa    { border-left-color: var(--laranja); }  .s-conversa    { background: var(--laranja); }
+  .f-advertencia { border-left-color: var(--vermelho); } .s-advertencia { background: var(--vermelho); }
+  .f-diretoria   { border-left-color: #6E1A12; }         .s-diretoria   { background: #6E1A12; }
+  .f-nunca       { border-left-color: #4A4F57; }         .s-nunca       { background: #4A4F57; }
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .regua { font-size: 15px; color: var(--cinza); margin-top: 32px; border-top: 2px solid var(--linha); padding-top: 14px; }
+  .regua li { margin: 4px 0; }
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <div>
+    <h1>Painel do treino</h1>
+    <p class="sub" id="quando">Carregando…</p>
+  </div>
+  <button class="leve oculto" id="atualizar">Atualizar</button>
+</div>
+
+<div id="entrada" class="oculto">
+  <div class="aviso">Este painel é só da Diretoria e da supervisão. Digite o seu código do app.</div>
+  <form id="formulario">
+    <input id="codigo" type="password" inputmode="numeric" autocomplete="off" placeholder="Seu código">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="mensagem"></div>
+<div id="lojas"></div>
+
+<div class="regua oculto" id="regua"></div>
+
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbw8TGcUb7K76IvyTI3DNCwneXfj4jSt9_838rnR9CnbhLtW3XQQ8ITiP6liBdQEEOLeuw/exec';
+
+  var ROTULO = {
+    em_dia: 'Em dia', lembrete: 'Lembrete', conversa: 'Conversa',
+    advertencia: 'Advertência', diretoria: 'Decisão da Diretoria', nunca: 'Nunca treinou'
+  };
+  var ERROS = {
+    sem_permissao: 'Este código não é da Diretoria nem da supervisão. O painel não abre para ele.',
+    codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
+    sem_codigo: 'Digite o seu código.',
+    muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos e tente de novo.',
+    codigo_duplicado: 'Este código está repetido na planilha. Avise a Diretoria.',
+    sem_conexao: 'Sem conexão com o servidor. Confira a internet e toque em Atualizar.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
+  };
+
+  function id(x) { return document.getElementById(x); }
+  function guardado(chave) { try { return window.localStorage.getItem(chave) || ''; } catch (e) { return ''; } }
+  function guardar(chave, valor) {
+    try { if (valor) window.localStorage.setItem(chave, valor); else window.localStorage.removeItem(chave); } catch (e) {}
+  }
+  function aparelho() {
+    var a = guardado('rdo_aparelho');
+    if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); guardar('rdo_aparelho', a); }
+    return a;
+  }
+  // Texto vindo do servidor entra sempre como texto, nunca como marcacao.
+  function el(tag, classe, texto) {
+    var n = document.createElement(tag);
+    if (classe) n.className = classe;
+    if (texto !== undefined && texto !== null) n.textContent = texto;
+    return n;
+  }
+
+  function chamar(codigo, pronto) {
+    fetch(URL_SERVIDOR, {
+      method: 'POST',
+      // text/plain de proposito: com application/json o navegador faz uma
+      // checagem previa que o Apps Script nao responde (igual ao app).
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: 'painelTreino', args: [codigo, aparelho()] })
+    })
+      .then(function (r) { return r.text(); })
+      .then(function (t) {
+        var d = null;
+        try { d = JSON.parse(t); } catch (e) {}
+        pronto(d || { ok: false, erro: 'resposta_invalida' });
+      })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+
+  function tempo(seg) {
+    if (seg === null || seg === undefined) return 'sem registro';
+    var m = Math.floor(seg / 60), s = seg % 60;
+    return (m ? m + ' min ' : '') + s + ' s';
+  }
+  function nota(p) {
+    if (p.nota7 === null || p.nota7 === undefined) return 'sem registro';
+    var t = p.nota7 + '%';
+    if (p.notaAntes !== null && p.notaAntes !== undefined) {
+      var dif = p.nota7 - p.notaAntes;
+      t += dif > 0 ? ' (subiu ' + dif + ')' : (dif < 0 ? ' (caiu ' + (-dif) + ')' : ' (igual)');
+    }
+    return t;
+  }
+  function parado(p) {
+    if (p.faixa === 'nunca') return 'nunca treinou';
+    if (!p.semTreino) return 'nenhum dia';
+    return p.semTreino + (p.semTreino === 1 ? ' dia útil' : ' dias úteis');
+  }
+  function dado(rotulo, valor) {
+    var d = el('div');
+    d.appendChild(el('b', '', rotulo));
+    d.appendChild(document.createTextNode(valor));
+    return d;
+  }
+
+  function desenhar(r) {
+    id('quando').textContent = 'Atualizado em ' + r.geradoEm + ' · semana = últimos 7 dias';
+    var raiz = id('lojas');
+    raiz.textContent = '';
+    (r.lojas || []).forEach(function (lj) {
+      raiz.appendChild(el('h2', '', lj.nome));
+      if (!lj.pessoas.length) {
+        raiz.appendChild(el('div', 'vazia', 'Ninguém cadastrado nesta loja dentro do app.'));
+        return;
+      }
+      raiz.appendChild(el('p', 'resumo', lj.treinaram7 + ' de ' + lj.ativos + ' treinaram na semana'));
+      lj.pessoas.forEach(function (p) {
+        var c = el('div', 'pessoa f-' + p.faixa);
+        c.appendChild(el('div', 'papel', p.papel));
+        c.appendChild(el('div', 'nome', p.nome));
+        c.appendChild(el('span', 'selo s-' + p.faixa, ROTULO[p.faixa] || p.faixa));
+        var g = el('div', 'dados');
+        g.appendChild(dado('Dias com treino na semana', String(p.dias7)));
+        g.appendChild(dado('Rodadas na semana', String(p.rodadas7)));
+        g.appendChild(dado('Último treino', p.ultimo || 'nunca'));
+        g.appendChild(dado('Parada há', parado(p)));
+        g.appendChild(dado('Nota da semana', nota(p)));
+        g.appendChild(dado('Tempo médio da rodada', tempo(p.segundos7)));
+        c.appendChild(g);
+        raiz.appendChild(c);
+      });
+    });
+    var rg = r.regua || {};
+    var caixa = id('regua');
+    caixa.textContent = '';
+    caixa.appendChild(el('div', '', 'Régua de dias úteis sem treino:'));
+    var ul = el('ul');
+    [[rg.lembrete, 'lembrete na tela da própria pessoa'], [rg.conversa, 'conversa, com registro'],
+     [rg.advertencia, 'advertência por escrito'], [rg.diretoria, 'sobe para a Diretoria decidir']]
+      .forEach(function (x) { ul.appendChild(el('li', '', x[0] + ' dias: ' + x[1])); });
+    caixa.appendChild(ul);
+    caixa.appendChild(el('div', '', 'A nota e o tempo só aparecem nas rodadas feitas depois que a gravação foi ligada. Números provisórios, não auditados.'));
+    caixa.className = 'regua';
+    id('atualizar').className = 'leve';
+  }
+
+  function mostrarErro(codigoErro) {
+    var m = id('mensagem');
+    m.textContent = '';
+    m.appendChild(el('div', 'erro', ERROS[codigoErro] || 'Algo deu errado. Tente de novo em alguns segundos.'));
+  }
+
+  function carregar(codigo, veioDoFormulario) {
+    id('mensagem').textContent = '';
+    id('quando').textContent = 'Carregando…';
+    chamar(codigo, function (r) {
+      if (r && r.ok) {
+        if (veioDoFormulario) guardar('rdo_codigo', codigo);
+        id('entrada').className = 'oculto';
+        desenhar(r);
+        return;
+      }
+      id('quando').textContent = '';
+      var erro = (r && r.erro) || 'resposta_invalida';
+      mostrarErro(erro);
+      if (erro !== 'sem_conexao' && erro !== 'resposta_invalida') id('entrada').className = '';
+    });
+  }
+
+  id('formulario').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var c = String(id('codigo').value || '').replace(/\D/g, '');
+    id('codigo').value = '';
+    if (!c) return mostrarErro('sem_codigo');
+    carregar(c, true);
+  });
+  id('atualizar').addEventListener('click', function () { carregar(guardado('rdo_codigo'), false); });
+
+  var salvo = guardado('rdo_codigo');
+  if (salvo) carregar(salvo, false);
+  else { id('quando').textContent = ''; id('entrada').className = ''; }
+})();
+</script>
+</body>
+</html>

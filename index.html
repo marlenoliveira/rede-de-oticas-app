@@ -384,6 +384,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">Treino rápido · {{ origemRodada }}</div>
             <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums"><strong style="color:#062D7B">{{ totalBanco }}</strong> questões no banco · <strong style="color:#062D7B">{{ totalTipos }}</strong> tipos de rodada</div>
           </div>
+          <div style="display:{{ mostrarLembrete }};margin-bottom:16px;padding:14px 16px;border-radius:12px;border:2px solid #E8B027;background:#FFF6DC;color:#5A4300;font-size:16px;font-weight:700;line-height:1.4">{{ textoLembrete }}</div>
           <div style="margin-bottom:12px">
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Bloco da Trilha</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1188,16 +1189,21 @@ class Component extends DCLogic {
   }
 
   /**
-   * Fim da rodada: registra no servidor que houve UMA rodada — bloco, tema e
-   * quantas questoes. O acerto NAO vai: o resultado do treino e da vendedora,
-   * e a gerente ve so a quantidade. Se o servidor falhar, o placar aparece
-   * do mesmo jeito; o registro e acessorio, o treino nao.
+   * Fim da rodada: registra no servidor que houve UMA rodada — bloco, tema,
+   * quantas questoes e, desde 13/11/2026 (decisao do Marlen), quantos acertos
+   * e quanto tempo levou. O tempo conta da primeira a ultima resposta.
+   * Se o servidor falhar, o placar aparece do mesmo jeito; o registro e
+   * acessorio, o treino nao.
    */
   fecharRodada() {
     const s = this.state;
     const n = s.rodada ? s.rodada.length : 0;
-    this.setState({ treinoFim: true, rodadas30: null });
-    this.gs('registrarRodada', [{ bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n }],
+    const segundos = this._t0Rodada ? Math.round((Date.now() - this._t0Rodada) / 1000) : null;
+    this._t0Rodada = 0;
+    // treinouHoje apaga o lembrete da tela: quem acabou de treinar nao precisa dele.
+    this.setState({ treinoFim: true, rodadas30: null, treinouHoje: true });
+    this.gs('registrarRodada', [{ bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n,
+        acertos: s.acertos, segundos: segundos }],
       r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
       () => {});
   }
@@ -1774,6 +1780,8 @@ class Component extends DCLogic {
             this._vistas = this._vistas || {}; this._vistas[q.id] = 1;
             this._erradas = this._erradas || {};
             if (i === q.certa) { delete this._erradas[q.id]; } else { this._erradas[q.id] = 1; }
+            // Relogio da rodada: comeca na primeira resposta (ver fecharRodada).
+            if (!s.iq || !this._t0Rodada) this._t0Rodada = Date.now();
             this.setState({ escolha: i, acertos: s.acertos + (i === q.certa ? 1 : 0) });
           } };
       }) : [],
@@ -1802,7 +1810,9 @@ class Component extends DCLogic {
       contagemBanco: temasDoBloco.map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
       mostrarTemas: papel === 'vendedora' ? 'none' : 'block',
       mostrarRodadas30: s.rodadas30 === null ? 'none' : 'block',
-      textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A gerente vê a quantidade, nunca o acerto.',
+      textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A Diretoria acompanha os dias de treino, a nota e o tempo de cada rodada.',
+      mostrarLembrete: (s.conteudo && s.conteudo.lembrete && !s.treinouHoje) ? 'block' : 'none',
+      textoLembrete: (s.conteudo && s.conteudo.lembrete) || '',
       tiposTreino: ['Sortear tudo'].concat(temasDoBloco.filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
         texto: t,
         selo: (t !== 'Sortear tudo' && this.BANCOS[t].itens.length < 5) ? 'inline' : 'none',
