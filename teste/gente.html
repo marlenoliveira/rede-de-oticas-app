@@ -140,6 +140,25 @@
 
   var codigo = guardado('rdoteste_codigo');
   var D = null;          // resposta do genteInicio
+  // Rotatividade e clima são buscados JÁ na abertura, em paralelo: quando a
+  // pessoa toca na aba, a resposta normalmente já chegou (o servidor do
+  // Google leva de 2 a 5 segundos por pedido). Fica só na memória da página.
+  var CACHE = {};
+  function buscar(chave, fn, pronto) {
+    var c = CACHE[chave];
+    if (c && c.dados) { pronto(c.dados); return; }
+    if (c && c.esperando) { c.esperando.push(pronto); return; }
+    CACHE[chave] = { esperando: [pronto] };
+    chamar(fn, [codigo, aparelho()], function (r) {
+      var esp = (CACHE[chave] && CACHE[chave].esperando) || [];
+      CACHE[chave] = r.ok ? { dados: r } : null;
+      esp.forEach(function (f) { f(r); });
+    });
+  }
+  function antecipar() {
+    if (ehLider()) buscar('rot', 'painelRotatividade', function () {});
+    if (ehRede()) buscar('clima', 'resultadoClima', function () {});
+  }
   var aba = 'ficha';
   var lojaEscolhida = '';
 
@@ -155,6 +174,7 @@
       var papel = { diretoria: 'Diretoria', supervisao: 'Supervisão', gerente: 'Gerente', vendedora: 'Vendedora' }[r.eu.papel] || r.eu.papel;
       id('quem').textContent = r.eu.nome + ' · ' + papel + (r.eu.loja !== 'TODAS' ? ' · ' + r.eu.loja : '');
       if (!lojaEscolhida && r.lojas.length) lojaEscolhida = r.lojas[0].codigo;
+      antecipar();
       montarAbas();
       if (depois) depois(); else mostrar(aba);
     });
@@ -282,6 +302,7 @@
     chamar(fn, [codigo, aparelho(), dados], function (r) {
       btn.disabled = false; btn.textContent = t;
       if (!r.ok) { erro(r); return; }
+      CACHE = {};
       carregar(function () { mostrar(aba); msg('feito', okTexto + (r.proxima ? ' Próxima conversa: ' + r.proxima + '.' : '')); window.scrollTo(0, 0); });
     });
   }
@@ -416,7 +437,8 @@
   // ---------------- Rotatividade ----------------
   function rotatividade() {
     var c = limpar('Rotatividade'); c.appendChild(el('p', 'sub', 'Carregando…'));
-    chamar('painelRotatividade', [codigo, aparelho()], function (r) {
+    buscar('rot', 'painelRotatividade', function (r) {
+      if (aba !== 'rotatividade') return;
       c = limpar('Rotatividade');
       if (!r.ok) { erro(r); return; }
       c.appendChild(el('p', 'sub', 'Saídas nos ' + r.periodo + ' (transferência entre lojas não conta). Taxa = saídas ÷ pessoas ativas hoje.'));
@@ -471,9 +493,11 @@
     av.appendChild(el('div', '', 'Link da pesquisa (anônima, não pede código): '));
     var a = el('a', '', link); a.href = link; a.style.wordBreak = 'break-all'; a.style.fontWeight = '800'; av.appendChild(a);
     c.appendChild(av);
-    c.appendChild(el('p', 'sub', 'Carregando o resultado…'));
-    chamar('resultadoClima', [codigo, aparelho()], function (r) {
-      c.removeChild(c.lastChild);
+    var carregando = el('p', 'sub', 'Carregando o resultado…');
+    c.appendChild(carregando);
+    buscar('clima', 'resultadoClima', function (r) {
+      if (aba !== 'clima') return;
+      if (carregando.parentNode) carregando.parentNode.removeChild(carregando);
       if (!r.ok) { erro(r); return; }
       c.appendChild(el('p', 'sub', 'Ciclo ' + r.ciclo + '. Uma loja só aparece sozinha com ' + r.minimo + ' respostas ou mais.'));
       var bloco = function (titulo, res, extra) {
