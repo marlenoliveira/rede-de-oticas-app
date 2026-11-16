@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>TESTE · Recados</title>
+<!--
+  RECADOS DA DIRETORIA — desde 16/11/2026, só na VERSÃO DE TESTE.
+
+  Todo mundo lê os recados da própria loja e da rede e toca em "Li e entendi".
+  A gerente vê quem da loja dela já leu; a Diretoria e a supervisão escrevem
+  e veem a rede inteira. O WhatsApp só avisa que tem recado novo: o recado
+  em si, e a prova de que foi lido, ficam aqui.
+
+  Página solta, sem o motor: quem decide é o servidor (Gente.gs).
+-->
+<style>
+  :root { --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6; }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 720px; padding: 20px 16px 72px; color: var(--tinta); background: #fff;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; color: var(--azul); font-weight: 800; }
+  h2 { font-size: 22px; margin: 28px 0 8px; color: var(--azul); font-weight: 800; }
+  .sub { color: var(--cinza); font-size: 15px; margin: 4px 0 0; }
+  button { font: inherit; font-weight: 800; min-height: 48px; padding: 10px 18px; border-radius: 12px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; cursor: pointer; }
+  button.leve { background: #fff; color: var(--azul); }
+  button.ok { background: var(--verde); border-color: var(--verde); }
+  input, textarea, select { font: inherit; width: 100%; box-sizing: border-box; min-height: 52px; padding: 10px 14px;
+    border-radius: 12px; border: 2px solid var(--linha); margin: 6px 0 12px; background: #fff; }
+  textarea { min-height: 130px; }
+  label { font-weight: 800; font-size: 16px; }
+  .cartao { border: 2px solid var(--linha); border-left-width: 10px; border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+  .cartao.novo { border-left-color: var(--laranja); }
+  .cartao.lido { border-left-color: var(--verde); }
+  .cartao .titulo { font-size: 20px; font-weight: 800; line-height: 1.25; }
+  .cartao .meta { font-size: 14px; color: var(--cinza); margin: 2px 0 8px; }
+  .cartao .texto { white-space: pre-wrap; }
+  .selo { display: inline-block; font-size: 14px; font-weight: 800; padding: 2px 10px; border-radius: 999px; color: #fff; }
+  .s-novo { background: var(--laranja); } .s-lido { background: var(--verde); }
+  .leitura { margin-top: 10px; font-size: 16px; border-top: 2px solid var(--linha); padding-top: 8px; }
+  .leitura summary { font-weight: 800; color: var(--azul); cursor: pointer; }
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .vazia { border: 2px dashed var(--linha); border-radius: 12px; padding: 14px 16px; color: var(--cinza); }
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+
+
+<h1>Recados</h1>
+<p class="sub" id="quem">Carregando…</p>
+<p style="margin:12px 0 0"><a href="./" style="color:#02306E;font-weight:800;font-size:17px">← Voltar ao app</a></p>
+
+<div id="entrada" class="oculto">
+  <div class="aviso">Digite o seu código do app.</div>
+  <form id="formEntrada">
+    <input id="codigo" type="password" inputmode="numeric" autocomplete="off" placeholder="Seu código">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="mensagem"></div>
+
+<div id="novo" class="oculto">
+  <h2>Novo recado</h2>
+  <form id="formNovo">
+    <label for="para">Para quem</label>
+    <select id="para"></select>
+    <label for="titulo">Assunto</label>
+    <input id="titulo" maxlength="120" placeholder="Ex.: Horário de fim de ano">
+    <label for="texto">Recado</label>
+    <textarea id="texto" maxlength="3000" placeholder="Escreva o recado como vai chegar à loja."></textarea>
+    <button type="submit">Publicar recado</button>
+  </form>
+  <p class="sub">Depois de publicar, o WhatsApp da loja só precisa avisar: "Tem recado novo no app".</p>
+</div>
+
+<h2 id="tituloLista" class="oculto">Recados</h2>
+<div id="lista"></div>
+
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbyYoBctgbFxsAc2tN-n7HpOQLA63xAAysfzm46LXHq50awvC49Zjy8XHmfvtanfiXbogw/exec';
+  var ERROS = {
+    sem_permissao: 'Este código não pode fazer isso.',
+    codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
+    sem_codigo: 'Digite o seu código.',
+    inativo: 'Este código está desativado.',
+    muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos.',
+    so_na_versao_de_teste: 'Os recados ainda não estão no app das lojas.',
+    loja_teste_sem_gente: 'A loja de teste não usa recados.',
+    titulo_e_texto: 'Preencha o assunto e o recado.',
+    loja_invalida: 'Escolha uma loja da lista.',
+    recado_nao_encontrado: 'Recado não encontrado.',
+    sem_conexao: 'Sem conexão com o servidor. Confira a internet.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.'
+  };
+
+  function id(x) { return document.getElementById(x); }
+  function guardado(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { if (v) window.localStorage.setItem(k, v); else window.localStorage.removeItem(k); } catch (e) {} }
+  function aparelho() {
+    var a = guardado('rdoteste_aparelho');
+    if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); guardar('rdoteste_aparelho', a); }
+    return a;
+  }
+  function el(tag, classe, texto) {
+    var n = document.createElement(tag);
+    if (classe) n.className = classe;
+    if (texto !== undefined && texto !== null) n.textContent = texto;
+    return n;
+  }
+  function chamar(fn, args, pronto) {
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+  function mostrarErro(r) {
+    var m = id('mensagem'); m.innerHTML = '';
+    m.appendChild(el('div', 'erro', ERROS[r && r.erro] || ('Não deu certo (' + ((r && r.erro) || 'erro') + ').')));
+  }
+  function limparMensagem() { id('mensagem').innerHTML = ''; }
+
+  var codigo = guardado('rdoteste_codigo');
+
+  function carregar() {
+    if (!codigo) { id('entrada').classList.remove('oculto'); id('quem').textContent = ''; return; }
+    id('quem').textContent = 'Carregando…';
+    chamar('listarRecados', [codigo, aparelho()], function (r) {
+      if (!r.ok) {
+        if (r.erro === 'codigo_invalido' || r.erro === 'inativo') { guardar('rdoteste_codigo', ''); codigo = ''; id('entrada').classList.remove('oculto'); }
+        id('quem').textContent = ''; mostrarErro(r); return;
+      }
+      id('entrada').classList.add('oculto');
+      var naoLidos = r.recados.filter(function (x) { return !x.lido; }).length;
+      id('quem').textContent = naoLidos ? (naoLidos + (naoLidos === 1 ? ' recado novo' : ' recados novos')) : 'Tudo lido.';
+      if (r.podeEscrever) montarNovo(r.lojas);
+      desenhar(r.recados);
+    });
+  }
+
+  function montarNovo(lojas) {
+    var s = id('para');
+    if (!s.options.length) {
+      var o = el('option', '', 'Toda a rede'); o.value = 'TODAS'; s.appendChild(o);
+      lojas.forEach(function (l) { var x = el('option', '', l.nome); x.value = l.codigo; s.appendChild(x); });
+    }
+    id('novo').classList.remove('oculto');
+  }
+
+  function desenhar(recados) {
+    var lista = id('lista'); lista.innerHTML = '';
+    id('tituloLista').classList.remove('oculto');
+    if (!recados.length) { lista.appendChild(el('div', 'vazia', 'Nenhum recado por enquanto.')); return; }
+    // Não lidos primeiro
+    recados.slice().sort(function (a, b) { return (a.lido ? 1 : 0) - (b.lido ? 1 : 0); }).forEach(function (rc) {
+      var c = el('div', 'cartao ' + (rc.lido ? 'lido' : 'novo'));
+      c.appendChild(el('span', 'selo ' + (rc.lido ? 's-lido' : 's-novo'), rc.lido ? 'Lido' : 'Novo'));
+      c.appendChild(el('div', 'titulo', rc.titulo));
+      c.appendChild(el('div', 'meta', rc.data + ' · ' + (rc.para === 'TODAS' ? 'Toda a rede' : 'Loja ' + rc.para) + ' · de ' + rc.autor));
+      c.appendChild(el('div', 'texto', rc.texto));
+      if (!rc.lido) {
+        var b = el('button', 'ok', 'Li e entendi');
+        b.style.marginTop = '12px';
+        b.onclick = function () {
+          b.disabled = true; b.textContent = 'Aguarde…';
+          chamar('marcarLido', [codigo, aparelho(), rc.id], function (r) {
+            if (!r.ok) { b.disabled = false; b.textContent = 'Li e entendi'; mostrarErro(r); return; }
+            limparMensagem(); carregar();
+          });
+        };
+        c.appendChild(b);
+      }
+      if (rc.leram) {
+        var tot = rc.leram.length + rc.faltam.length;
+        var d = el('details', 'leitura');
+        d.appendChild(el('summary', '', 'Leram ' + rc.leram.length + ' de ' + tot));
+        if (rc.faltam.length) {
+          d.appendChild(el('div', '', 'Faltam: ' + rc.faltam.map(function (p) { return p.nome + ' (' + p.loja + ')'; }).join(', ')));
+        }
+        if (rc.leram.length) {
+          d.appendChild(el('div', '', 'Leram: ' + rc.leram.map(function (p) { return p.nome + ' (' + p.loja + ', ' + p.quando + ')'; }).join(', ')));
+        }
+        c.appendChild(d);
+      }
+      lista.appendChild(c);
+    });
+  }
+
+  id('formEntrada').onsubmit = function (e) {
+    e.preventDefault();
+    codigo = String(id('codigo').value || '').replace(/\D/g, '');
+    guardar('rdoteste_codigo', codigo); limparMensagem(); carregar();
+  };
+  id('formNovo').onsubmit = function (e) {
+    e.preventDefault();
+    var btn = e.target.querySelector('button'); btn.disabled = true;
+    chamar('salvarRecado', [codigo, aparelho(), { para: id('para').value, titulo: id('titulo').value, texto: id('texto').value }], function (r) {
+      btn.disabled = false;
+      if (!r.ok) { mostrarErro(r); return; }
+      id('titulo').value = ''; id('texto').value = '';
+      limparMensagem(); id('mensagem').appendChild(el('div', 'aviso', 'Recado publicado.'));
+      carregar();
+    });
+  };
+  carregar();
+})();
+</script>
+</body>
+</html>

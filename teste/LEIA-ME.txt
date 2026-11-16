@@ -1,0 +1,2 @@
+VERSAO DE TESTE do app da Casa do Olhar. Nao e o app das lojas.
+Gerada por ferramentas/montar-teste.js a partir do mesmo codigo (src/). Nao editar aqui.

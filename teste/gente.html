@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>TESTE · Gente</title>
+<!--
+  GENTE — desde 16/11/2026, só na VERSÃO DE TESTE.
+
+  Minha ficha (todo mundo de loja): conversas, elogios, autoavaliação,
+  relatório liberado e, para a vendedora, avaliar a própria gerente (sem nome).
+  Equipe (gerente: a própria loja; Diretoria e supervisão: a rede): conversa
+  mensal, elogio, avaliação, relatório e saída com motivo.
+  Rotatividade (gerente: a loja; rede: todas), Sucessão e Clima (só rede).
+
+  Página solta, sem o motor: quem decide quem vê o quê é o servidor (Gente.gs).
+  Texto vindo do servidor entra sempre como texto, nunca como marcação.
+-->
+<style>
+  :root { --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6; --fundo: #F4F6F9; }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 760px; padding: 20px 16px 72px; color: var(--tinta); background: #fff;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; color: var(--azul); font-weight: 800; }
+  h2 { font-size: 22px; margin: 24px 0 8px; color: var(--azul); font-weight: 800; }
+  h3 { font-size: 18px; margin: 18px 0 6px; color: var(--azul); }
+  .sub { color: var(--cinza); font-size: 15px; margin: 4px 0 0; }
+  button { font: inherit; font-weight: 800; min-height: 44px; padding: 8px 14px; border-radius: 12px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; cursor: pointer; }
+  button.leve { background: #fff; color: var(--azul); }
+  button.perigo { background: #fff; color: var(--vermelho); border-color: var(--vermelho); }
+  button.ok { background: var(--verde); border-color: var(--verde); }
+  input, textarea, select { font: inherit; width: 100%; box-sizing: border-box; min-height: 48px; padding: 8px 12px;
+    border-radius: 12px; border: 2px solid var(--linha); margin: 4px 0 12px; background: #fff; }
+  textarea { min-height: 80px; }
+  label { font-weight: 800; font-size: 16px; display: block; }
+  .abas { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 4px; }
+  .abas button { background: #fff; color: var(--azul); min-height: 40px; }
+  .abas button.ativa { background: var(--azul); color: #fff; }
+  .cartao { border: 2px solid var(--linha); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+  .cartao .nome { font-size: 20px; font-weight: 800; line-height: 1.25; }
+  .cartao .papel { font-size: 13px; color: var(--cinza); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .acoes button { font-size: 15px; min-height: 40px; padding: 6px 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip { font-size: 14px; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: var(--fundo); color: var(--tinta); }
+  .chip.bom { background: #EAF6EF; color: #146B3D; } .chip.ruim { background: #FBECEA; color: var(--vermelho); }
+  .chip.meio { background: #FFF6DC; color: #7A5B04; }
+  .item { border-left: 6px solid var(--linha); padding: 6px 12px; margin: 10px 0; background: var(--fundo); border-radius: 8px; font-size: 16px; }
+  .item b { color: var(--azul); }
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .feito { border-left: 8px solid var(--verde); background: #EAF6EF; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .vazia { border: 2px dashed var(--linha); border-radius: 12px; padding: 12px 14px; color: var(--cinza); }
+  .criterio { border: 2px solid var(--linha); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
+  .criterio .t { font-weight: 800; } .criterio .d { font-size: 15px; color: var(--cinza); margin-bottom: 6px; }
+  .niveis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .niveis button, .escala button { background: #fff; color: var(--azul); border-color: var(--linha); font-size: 14px;
+    font-weight: 700; min-height: 52px; padding: 4px; line-height: 1.15; }
+  .niveis button.marcado, .escala button.marcado { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .escala { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; margin: 8px 0; }
+  th, td { border-bottom: 2px solid var(--linha); padding: 6px 4px; text-align: left; vertical-align: top; }
+  th { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--cinza); }
+  td.n { text-align: center; font-weight: 800; }
+  .oculto { display: none; }
+  @media (max-width: 480px) { .niveis { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+
+
+<h1>Gente</h1>
+<p class="sub" id="quem">Carregando…</p>
+<p style="margin:12px 0 0"><a href="./" style="color:#02306E;font-weight:800;font-size:17px">← Voltar ao app</a></p>
+
+<div id="entrada" class="oculto">
+  <div class="aviso">Digite o seu código do app.</div>
+  <form id="formEntrada">
+    <input id="codigo" type="password" inputmode="numeric" autocomplete="off" placeholder="Seu código">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="mensagem"></div>
+<div class="abas oculto" id="abas"></div>
+<div id="conteudo"></div>
+
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbyYoBctgbFxsAc2tN-n7HpOQLA63xAAysfzm46LXHq50awvC49Zjy8XHmfvtanfiXbogw/exec';
+  var ERROS = {
+    sem_permissao: 'Este código não pode fazer isso.',
+    sem_permissao_para_esta_pessoa: 'Você não pode fazer isso com esta pessoa.',
+    codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
+    inativo: 'Este código está desativado.',
+    muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos.',
+    so_na_versao_de_teste: 'Esta parte ainda não está no app das lojas.',
+    loja_teste_sem_gente: 'A loja de teste não usa esta parte.',
+    como_esta_1_a_5: 'Marque como a pessoa está (de 1 a 5).',
+    acerto_melhorar_acao: 'Preencha o acerto, o ponto a melhorar e a ação do mês.',
+    valor_invalido: 'Escolha um dos valores da rede.',
+    o_que_e_diferenca: 'Escreva o que a pessoa fez e que diferença fez.',
+    falta_nota: 'Falta dar nota em um critério.',
+    relatorio_nao_liberado: 'O relatório ainda não foi liberado.',
+    falta_avaliacao_do_lider: 'Primeiro faça a avaliação do líder.',
+    motivo_obrigatorio: 'Escolha o motivo da saída.',
+    ja_inativa: 'Esta pessoa já está desativada.',
+    linha_mudou: 'A lista mudou. Toque em Atualizar e tente de novo.',
+    prontidao_invalida: 'Escolha a prontidão.',
+    resultado_invalido: 'O resultado é um número de 0 a 300 (% da meta).',
+    sem_conexao: 'Sem conexão com o servidor. Confira a internet.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.'
+  };
+  var COMO = ['Muito mal', 'Mal', 'Mais ou menos', 'Bem', 'Muito bem'];
+
+  function id(x) { return document.getElementById(x); }
+  function guardado(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { if (v) window.localStorage.setItem(k, v); else window.localStorage.removeItem(k); } catch (e) {} }
+  function aparelho() {
+    var a = guardado('rdoteste_aparelho');
+    if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); guardar('rdoteste_aparelho', a); }
+    return a;
+  }
+  function el(tag, classe, texto) { var n = document.createElement(tag); if (classe) n.className = classe; if (texto !== undefined && texto !== null) n.textContent = texto; return n; }
+  function botao(texto, classe, acao) { var b = el('button', classe || '', texto); b.type = 'button'; b.onclick = acao; return b; }
+  function chamar(fn, args, pronto) {
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+  function msg(classe, texto) { var m = id('mensagem'); m.innerHTML = ''; if (texto) m.appendChild(el('div', classe, texto)); }
+  function erro(r) { msg('erro', ERROS[r && r.erro] || ('Não deu certo (' + ((r && r.erro) || 'erro') + ').')); window.scrollTo(0, 0); }
+
+  var codigo = guardado('rdoteste_codigo');
+  var D = null;          // resposta do genteInicio
+  var aba = 'ficha';
+  var lojaEscolhida = '';
+
+  function carregar(depois) {
+    if (!codigo) { id('entrada').classList.remove('oculto'); id('quem').textContent = ''; return; }
+    chamar('genteInicio', [codigo, aparelho()], function (r) {
+      if (!r.ok) {
+        if (r.erro === 'codigo_invalido' || r.erro === 'inativo') { guardar('rdoteste_codigo', ''); codigo = ''; id('entrada').classList.remove('oculto'); }
+        id('quem').textContent = ''; erro(r); return;
+      }
+      D = r;
+      id('entrada').classList.add('oculto');
+      var papel = { diretoria: 'Diretoria', supervisao: 'Supervisão', gerente: 'Gerente', vendedora: 'Vendedora' }[r.eu.papel] || r.eu.papel;
+      id('quem').textContent = r.eu.nome + ' · ' + papel + (r.eu.loja !== 'TODAS' ? ' · ' + r.eu.loja : '');
+      if (!lojaEscolhida && r.lojas.length) lojaEscolhida = r.lojas[0].codigo;
+      montarAbas();
+      if (depois) depois(); else mostrar(aba);
+    });
+  }
+
+  function ehRede() { return D && (D.eu.papel === 'diretoria' || D.eu.papel === 'supervisao'); }
+  function ehLider() { return D && (ehRede() || D.eu.papel === 'gerente'); }
+
+  function montarAbas() {
+    var lista = [];
+    if (!ehRede()) lista.push(['ficha', 'Minha ficha']);
+    if (ehLider()) lista.push(['equipe', 'Equipe']);
+    if (ehLider()) lista.push(['rotatividade', 'Rotatividade']);
+    if (ehRede()) lista.push(['sucessao', 'Sucessão']);
+    if (ehRede()) lista.push(['clima', 'Clima']);
+    if (lista.map(function (x) { return x[0]; }).indexOf(aba) < 0) aba = lista[0][0];
+    var c = id('abas'); c.innerHTML = ''; c.classList.remove('oculto');
+    lista.forEach(function (x) {
+      c.appendChild(botao(x[1], x[0] === aba ? 'ativa' : '', function () { msg(); aba = x[0]; montarAbas(); mostrar(aba); }));
+    });
+  }
+
+  function limpar(titulo) { var c = id('conteudo'); c.innerHTML = ''; if (titulo) c.appendChild(el('h2', '', titulo)); return c; }
+
+  function mostrar(qual) {
+    if (qual === 'ficha') return ficha();
+    if (qual === 'equipe') return equipe();
+    if (qual === 'rotatividade') return rotatividade();
+    if (qual === 'sucessao') return sucessao();
+    if (qual === 'clima') return clima();
+  }
+
+  // ---------------- Minha ficha ----------------
+  function ficha() {
+    var c = limpar('Minha ficha'), f = D.ficha;
+    if (D.naoLidos) {
+      var av = el('div', 'aviso', 'Você tem ' + D.naoLidos + (D.naoLidos === 1 ? ' recado novo. ' : ' recados novos. '));
+      var a = el('a', '', 'Abrir recados'); a.href = 'recados.html'; a.style.fontWeight = '800'; av.appendChild(a);
+      c.appendChild(av);
+    }
+    c.appendChild(el('h3', '', 'Avaliação (' + D.conteudo.ciclo + ')'));
+    var eu = { loja: D.eu.loja, nome: D.eu.nome, papel: D.eu.papel };
+    var box = el('div', 'acoes');
+    if (!f.autoFeita) box.appendChild(botao('Fazer minha autoavaliação', '', function () { formAvaliacao(eu, 'auto'); }));
+    else box.appendChild(el('span', 'chip bom', 'Autoavaliação feita'));
+    if (f.liberado) box.appendChild(botao('Ver meu relatório', 'leve', function () { relatorio(eu); }));
+    else box.appendChild(el('span', 'chip', 'Relatório: aguardando o líder liberar'));
+    c.appendChild(box);
+    if (f.gerente) {
+      c.appendChild(el('h3', '', 'Avaliar minha gerente'));
+      if (f.avaliouGerente) c.appendChild(el('div', 'feito', 'Você já avaliou a sua gerente neste ciclo. Obrigado!'));
+      else {
+        c.appendChild(el('p', 'sub', 'Sem nome: a gerente nunca vê quem respondeu. Só aparece a média, com 3 respostas ou mais.'));
+        c.appendChild(botao('Avaliar ' + f.gerente.nome, 'leve', function () { formAvaliacao({ loja: f.gerente.loja, nome: f.gerente.nome, papel: 'gerente' }, 'equipe'); }));
+      }
+    }
+    c.appendChild(el('h3', '', 'Minhas conversas'));
+    if (!f.conversas.length) c.appendChild(el('div', 'vazia', 'Nenhuma conversa registrada ainda.'));
+    f.conversas.forEach(function (x) { c.appendChild(itemConversa(x)); });
+    c.appendChild(el('h3', '', 'Meus elogios'));
+    if (!f.elogios.length) c.appendChild(el('div', 'vazia', 'Nenhum elogio registrado ainda.'));
+    f.elogios.forEach(function (x) { c.appendChild(itemElogio(x)); });
+  }
+
+  function itemConversa(x) {
+    var d = el('div', 'item');
+    d.appendChild(el('div', '', x.data + ' · com ' + x.por + ' · como estava: ' + (COMO[x.comoEsta - 1] || '-')));
+    if (x.resultado) d.appendChild(linhaRotulo('Resultado × meta', x.resultado));
+    d.appendChild(linhaRotulo('Um acerto', x.acerto));
+    d.appendChild(linhaRotulo('Um ponto a melhorar', x.melhorar));
+    d.appendChild(linhaRotulo('Ação do mês', x.acao));
+    d.appendChild(el('div', 'sub', 'Próxima conversa: ' + x.proxima));
+    return d;
+  }
+  function itemElogio(x) {
+    var d = el('div', 'item');
+    d.appendChild(el('div', '', x.data + ' · ' + x.por + ' · valor: ' + x.valor));
+    d.appendChild(linhaRotulo('O que fez', x.oQueFez));
+    d.appendChild(linhaRotulo('Que diferença fez', x.diferenca));
+    return d;
+  }
+  function linhaRotulo(r, t) { var d = el('div'); d.appendChild(el('b', '', r + ': ')); d.appendChild(document.createTextNode(t)); return d; }
+
+  // ---------------- Equipe ----------------
+  function equipe() {
+    var c = limpar('Equipe');
+    var pessoas = D.equipe;
+    if (ehRede()) {
+      var s = el('select'); s.setAttribute('aria-label', 'Loja');
+      D.lojas.forEach(function (l) { var o = el('option', '', l.nome); o.value = l.codigo; if (l.codigo === lojaEscolhida) o.selected = true; s.appendChild(o); });
+      s.onchange = function () { lojaEscolhida = s.value; equipe(); };
+      c.appendChild(s);
+      pessoas = pessoas.filter(function (p) { return p.loja === lojaEscolhida; });
+      pessoas.sort(function (a, b) { return (a.papel === 'gerente' ? 0 : 1) - (b.papel === 'gerente' ? 0 : 1); });
+    }
+    c.appendChild(el('p', 'sub', 'Conversa mensal: a cada ' + D.conteudo.diasConversa + ' dias. Vermelho = atrasada ou nunca feita.'));
+    if (!pessoas.length) c.appendChild(el('div', 'vazia', 'Ninguém ativo aqui.'));
+    pessoas.forEach(function (p) {
+      var k = el('div', 'cartao');
+      k.appendChild(el('div', 'papel', p.papel + ' · ' + p.loja));
+      k.appendChild(el('div', 'nome', p.nome));
+      var ch = el('div', 'chips');
+      ch.appendChild(el('span', 'chip ' + (p.conversaAtrasada ? 'ruim' : 'bom'),
+        p.ultimaConversa ? 'Conversa: há ' + p.diasConversa + ' dias' : 'Conversa: nunca'));
+      ch.appendChild(el('span', 'chip', 'Elogios: ' + p.elogios));
+      ch.appendChild(el('span', 'chip ' + (p.autoFeita ? 'bom' : 'meio'), p.autoFeita ? 'Autoavaliação feita' : 'Sem autoavaliação'));
+      ch.appendChild(el('span', 'chip ' + (p.liderFeita ? 'bom' : 'meio'), p.liderFeita ? 'Avaliação do líder feita' : 'Falta avaliação do líder'));
+      if (p.liberado) ch.appendChild(el('span', 'chip bom', 'Relatório liberado'));
+      k.appendChild(ch);
+      var ac = el('div', 'acoes');
+      ac.appendChild(botao('Conversa do mês', '', function () { formConversa(p); }));
+      ac.appendChild(botao('Elogiar', 'leve', function () { formElogio(p); }));
+      ac.appendChild(botao('Avaliar', 'leve', function () { formAvaliacao(p, 'lider'); }));
+      ac.appendChild(botao('Relatório', 'leve', function () { relatorio(p); }));
+      if (D.eu.papel !== 'supervisao') ac.appendChild(botao('Registrar saída', 'perigo', function () { formSaida(p); }));
+      k.appendChild(ac);
+      c.appendChild(k);
+    });
+  }
+
+  function voltar(c) { c.appendChild(el('p')).appendChild(botao('← Voltar', 'leve', function () { msg(); mostrar(aba); window.scrollTo(0, 0); })); }
+
+  function gravar(fn, dados, okTexto, btn) {
+    btn.disabled = true; var t = btn.textContent; btn.textContent = 'Aguarde…';
+    chamar(fn, [codigo, aparelho(), dados], function (r) {
+      btn.disabled = false; btn.textContent = t;
+      if (!r.ok) { erro(r); return; }
+      carregar(function () { mostrar(aba); msg('feito', okTexto + (r.proxima ? ' Próxima conversa: ' + r.proxima + '.' : '')); window.scrollTo(0, 0); });
+    });
+  }
+
+  function escala(rotulos, aoMarcar, classe) {
+    var g = el('div', classe || 'escala');
+    rotulos.forEach(function (rot, i) {
+      var b = botao(rot, '', function () {
+        Array.prototype.forEach.call(g.children, function (x) { x.classList.remove('marcado'); });
+        b.classList.add('marcado'); aoMarcar(i + 1);
+      });
+      g.appendChild(b);
+    });
+    return g;
+  }
+  function campo(c, rotulo, tipo, dica) {
+    c.appendChild(el('label', '', rotulo));
+    var x = el(tipo === 'area' ? 'textarea' : 'input'); if (dica) x.placeholder = dica; if (tipo === 'numero') { x.type = 'number'; x.inputMode = 'numeric'; }
+    c.appendChild(x); return x;
+  }
+
+  function formConversa(p) {
+    var c = limpar('Conversa do mês · ' + p.nome); msg();
+    c.appendChild(el('p', 'sub', '15 minutos, a sós, uma vez por mês. Comece perguntando como ela está.'));
+    var dados = { loja: p.loja, nome: p.nome, comoEsta: 0 };
+    c.appendChild(el('label', '', 'Como ela está?'));
+    c.appendChild(escala(COMO, function (n) { dados.comoEsta = n; }));
+    var res = campo(c, 'Resultado do mês × meta', 'texto', 'Ex.: 92% da meta (SsÓtica)');
+    var ac = campo(c, 'Um acerto', 'area', 'Algo que ela fez bem, com o exemplo.');
+    var me = campo(c, 'Um ponto a melhorar', 'area', 'Um só, com o exemplo.');
+    var acao = campo(c, 'Ação combinada para o mês', 'area', 'O que ela vai fazer, e como você vai ver.');
+    var b = botao('Salvar conversa', '', function () {
+      dados.resultado = res.value; dados.acerto = ac.value; dados.melhorar = me.value; dados.acao = acao.value;
+      gravar('salvarConversa', dados, 'Conversa registrada.', b);
+    });
+    c.appendChild(b); voltar(c); window.scrollTo(0, 0);
+  }
+
+  function formElogio(p) {
+    var c = limpar('Elogiar · ' + p.nome); msg();
+    c.appendChild(el('div', 'aviso', 'Um bom elogio: liga a um valor da rede, diz o que a pessoa fez (com o exemplo) e que diferença fez. Fica na ficha dela; não vai para mural.'));
+    c.appendChild(el('label', '', 'Valor da rede'));
+    var s = el('select'); var o0 = el('option', '', 'Escolha'); o0.value = ''; s.appendChild(o0);
+    D.conteudo.valores.forEach(function (v) { var o = el('option', '', v); o.value = v; s.appendChild(o); });
+    c.appendChild(s);
+    var oq = campo(c, 'O que ela fez', 'area', 'Ex.: Refez a medida da cliente sem ninguém pedir.');
+    var dif = campo(c, 'Que diferença fez', 'area', 'Ex.: A cliente voltou e indicou a irmã.');
+    var b = botao('Salvar elogio', '', function () { gravar('salvarElogio', { loja: p.loja, nome: p.nome, valor: s.value, oQueFez: oq.value, diferenca: dif.value }, 'Elogio registrado.', b); });
+    c.appendChild(b); voltar(c); window.scrollTo(0, 0);
+  }
+
+  function formAvaliacao(p, tipo) {
+    var titulo = tipo === 'auto' ? 'Minha autoavaliação' : (tipo === 'equipe' ? 'Avaliar minha gerente' : 'Avaliar · ' + p.nome);
+    var c = limpar(titulo); msg();
+    var crits = tipo === 'equipe' ? D.conteudo.criteriosEquipe : D.conteudo.criterios[p.papel];
+    if (!crits) { c.appendChild(el('div', 'vazia', 'Não há critérios para este papel.')); voltar(c); return; }
+    c.appendChild(el('p', 'sub', tipo === 'equipe'
+      ? 'Sem nome: a gerente nunca vê quem respondeu. Nota de 1 a 4: 1 = nunca, 4 = sempre.'
+      : 'Ciclo ' + D.conteudo.ciclo + '. Nota de 1 a 4 em cada item. Pense no semestre inteiro, não na última semana.'));
+    var notas = {};
+    var rotulos = tipo === 'equipe' ? ['Nunca', 'Às vezes', 'Quase sempre', 'Sempre'] : D.conteudo.niveis.map(function (n) { return n.n + ' · ' + n.rotulo; });
+    crits.forEach(function (cr) {
+      var k = el('div', 'criterio');
+      k.appendChild(el('div', 't', cr.nome)); k.appendChild(el('div', 'd', cr.texto));
+      k.appendChild(escala(rotulos, function (n) { notas[cr.id] = n; }, 'niveis'));
+      c.appendChild(k);
+    });
+    var resultado = null;
+    if (tipo === 'lider') resultado = campo(c, 'Resultado do período (% da meta, do SsÓtica) — opcional', 'numero', 'Ex.: 95');
+    var com = campo(c, tipo === 'equipe' ? 'Comentário (opcional, sem nomes)' : 'Comentário', 'area', '');
+    var b = botao('Salvar avaliação', '', function () {
+      gravar('salvarAvaliacao', { tipo: tipo, loja: p.loja, nome: p.nome, notas: notas, comentario: com.value,
+        resultado: resultado ? resultado.value : '' }, 'Avaliação salva.', b);
+    });
+    c.appendChild(b); voltar(c); window.scrollTo(0, 0);
+  }
+
+  function relatorio(p) {
+    var c = limpar('Relatório · ' + p.nome); msg();
+    c.appendChild(el('p', 'sub', 'Carregando…'));
+    chamar('relatorioAvaliacao', [codigo, aparelho(), { loja: p.loja, nome: p.nome }], function (r) {
+      c = limpar('Relatório · ' + p.nome);
+      if (!r.ok) { c.appendChild(el('div', 'vazia', ERROS[r.erro] || r.erro)); voltar(c); return; }
+      c.appendChild(el('p', 'sub', 'Ciclo ' + r.ciclo + (r.lider ? ' · avaliado por ' + r.lider : '') + ' · ' + (r.liberado ? 'liberado para a pessoa' : 'ainda não liberado para a pessoa')));
+      var t = el('table'), h = el('tr');
+      ['Critério', 'Ela mesma', 'Líder'].forEach(function (x) { h.appendChild(el('th', '', x)); }); t.appendChild(h);
+      r.criterios.forEach(function (cr) {
+        var tr = el('tr'), td = el('td');
+        td.appendChild(el('b', '', cr.nome)); td.appendChild(el('div', 'sub', cr.texto)); tr.appendChild(td);
+        tr.appendChild(el('td', 'n', cr.auto || '–')); tr.appendChild(el('td', 'n', cr.lider || '–'));
+        t.appendChild(tr);
+      });
+      c.appendChild(t);
+      c.appendChild(el('p', 'sub', 'Notas: ' + r.niveis.map(function (n) { return n.n + ' = ' + n.rotulo; }).join(' · ')));
+      if (r.resultado !== '' && r.resultado !== null && r.resultado !== undefined) c.appendChild(linhaRotulo('Resultado do período', r.resultado + '% da meta'));
+      c.appendChild(linhaRotulo('Treino no app (últimos 30 dias)', r.treino30 + ' rodadas'));
+      if (r.comentarioAuto) c.appendChild(linhaRotulo('Comentário dela', r.comentarioAuto));
+      if (r.comentarioLider) c.appendChild(linhaRotulo('Comentário do líder', r.comentarioLider));
+      if (r.equipe) {
+        c.appendChild(el('h3', '', 'Avaliação da equipe (sem nomes)'));
+        if (r.equipe.respostas < r.equipe.minimo) c.appendChild(el('div', 'vazia', r.equipe.respostas + ' resposta(s). A média só aparece com ' + r.equipe.minimo + ' ou mais.'));
+        else {
+          var t2 = el('table');
+          r.equipe.criterios.forEach(function (cr) { var tr = el('tr'); tr.appendChild(el('td', '', cr.texto)); tr.appendChild(el('td', 'n', String(cr.media))); t2.appendChild(tr); });
+          c.appendChild(t2);
+          c.appendChild(el('p', 'sub', r.equipe.respostas + ' respostas. 1 = nunca, 4 = sempre.'));
+        }
+      }
+      var souEu = p.nome === D.eu.nome && p.loja === D.eu.loja;
+      if (!souEu && !r.liberado) {
+        var b = botao('Liberar o relatório para ' + p.nome, 'ok', function () { gravar('liberarRelatorio', { loja: p.loja, nome: p.nome }, 'Relatório liberado.', b); });
+        c.appendChild(el('p', 'sub', 'Libere depois de conversar com ela sobre o resultado.'));
+        c.appendChild(b);
+      }
+      voltar(c);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function formSaida(p) {
+    var c = limpar('Registrar saída · ' + p.nome); msg();
+    c.appendChild(el('div', 'aviso', 'A pessoa perde o acesso ao app na hora. O motivo entra na rotatividade da loja.'));
+    c.appendChild(el('label', '', 'Motivo'));
+    var s = el('select'); var o0 = el('option', '', 'Escolha o motivo'); o0.value = ''; s.appendChild(o0);
+    D.conteudo.motivos.forEach(function (m) { var o = el('option', '', m.rotulo); o.value = m.id; s.appendChild(o); });
+    c.appendChild(s);
+    var det = campo(c, 'Detalhe (opcional)', 'area', 'Ex.: mudou de cidade.');
+    var b = botao('Confirmar a saída', 'perigo', function () { gravar('registrarSaida', { linha: p.linha, nome: p.nome, motivo: s.value, detalhe: det.value }, 'Saída registrada.', b); });
+    c.appendChild(b); voltar(c); window.scrollTo(0, 0);
+  }
+
+  // ---------------- Rotatividade ----------------
+  function rotatividade() {
+    var c = limpar('Rotatividade'); c.appendChild(el('p', 'sub', 'Carregando…'));
+    chamar('painelRotatividade', [codigo, aparelho()], function (r) {
+      c = limpar('Rotatividade');
+      if (!r.ok) { erro(r); return; }
+      c.appendChild(el('p', 'sub', 'Saídas nos ' + r.periodo + ' (transferência entre lojas não conta). Taxa = saídas ÷ pessoas ativas hoje.'));
+      if (r.lojas.length > 1) {
+        var tt = r.total;
+        c.appendChild(el('div', 'aviso', 'Rede: ' + tt.saidas + ' saídas para ' + tt.ativos + ' pessoas ativas' +
+          (tt.taxa !== null ? ' (' + tt.taxa + '%)' : '') + ' · pediram para sair: ' + tt.voluntarias + ' · dispensadas: ' + tt.involuntarias + ' · entradas: ' + tt.entradas));
+      }
+      r.lojas.forEach(function (l) {
+        var k = el('div', 'cartao');
+        k.appendChild(el('div', 'nome', l.nomeLoja));
+        var ch = el('div', 'chips');
+        ch.appendChild(el('span', 'chip', 'Ativos: ' + l.ativos));
+        ch.appendChild(el('span', 'chip ' + (l.saidas ? 'ruim' : 'bom'), 'Saídas: ' + l.saidas + (l.taxa !== null ? ' (' + l.taxa + '%)' : '')));
+        ch.appendChild(el('span', 'chip', 'Pediram: ' + l.voluntarias));
+        ch.appendChild(el('span', 'chip', 'Dispensadas: ' + l.involuntarias));
+        ch.appendChild(el('span', 'chip', 'Entradas: ' + l.entradas));
+        if (l.mesesDeCasa !== null) ch.appendChild(el('span', 'chip', 'Tempo médio de casa: ' + l.mesesDeCasa + ' meses'));
+        k.appendChild(ch);
+        l.lista.forEach(function (x) { k.appendChild(el('div', 'item', x.data + ' · ' + x.nome + ' · ' + x.motivo + (x.detalhe ? ' · ' + x.detalhe : ''))); });
+        c.appendChild(k);
+      });
+    });
+  }
+
+  // ---------------- Sucessão ----------------
+  function sucessao() {
+    var c = limpar('Sucessão'), s = D.sucessao;
+    c.appendChild(el('p', 'sub', 'Em cada loja: quem está sendo preparada para gerente e o que falta. Só a Diretoria e a supervisão veem. Não é promessa de cargo.'));
+    s.lojas.forEach(function (l) {
+      var k = el('div', 'cartao');
+      k.appendChild(el('div', 'nome', l.nomeLoja));
+      k.appendChild(el('div', 'sub', 'Gerente hoje: ' + (l.gerente || 'sem gerente cadastrada') + (l.atualizado ? ' · atualizado em ' + l.atualizado : '')));
+      var prep = campo(k, 'Em preparação', 'texto', 'Nome de quem está sendo preparada'); prep.value = l.preparando;
+      k.appendChild(el('label', '', 'Prontidão'));
+      var pr = el('select');
+      Object.keys(s.prontidao).forEach(function (key) { var o = el('option', '', s.prontidao[key]); o.value = key; if (key === l.prontidao) o.selected = true; pr.appendChild(o); });
+      if (!l.prontidao) pr.value = 'ninguem';
+      k.appendChild(pr);
+      var falta = campo(k, 'O que falta', 'area', 'Ex.: caixa, escala, abrir a loja sozinha'); falta.value = l.falta;
+      var b = botao('Salvar ' + l.nomeLoja, 'leve', function () { gravar('salvarSucessao', { loja: l.loja, preparando: prep.value, prontidao: pr.value, falta: falta.value }, 'Sucessão salva.', b); });
+      k.appendChild(b);
+      c.appendChild(k);
+    });
+  }
+
+  // ---------------- Clima ----------------
+  function clima() {
+    var c = limpar('Pesquisa de clima');
+    var link = new URL('clima.html', window.location.href).href;
+    var av = el('div', 'aviso');
+    av.appendChild(el('div', '', 'Link da pesquisa (anônima, não pede código): '));
+    var a = el('a', '', link); a.href = link; a.style.wordBreak = 'break-all'; a.style.fontWeight = '800'; av.appendChild(a);
+    c.appendChild(av);
+    c.appendChild(el('p', 'sub', 'Carregando o resultado…'));
+    chamar('resultadoClima', [codigo, aparelho()], function (r) {
+      c.removeChild(c.lastChild);
+      if (!r.ok) { erro(r); return; }
+      c.appendChild(el('p', 'sub', 'Ciclo ' + r.ciclo + '. Uma loja só aparece sozinha com ' + r.minimo + ' respostas ou mais.'));
+      var bloco = function (titulo, res, extra) {
+        var k = el('div', 'cartao'); k.appendChild(el('div', 'nome', titulo));
+        k.appendChild(el('div', 'sub', res.respostas + ' respostas' + (extra || '') + (res.enps !== null && res.enps !== undefined ? ' · eNPS ' + res.enps : '')));
+        if (res.temas) {
+          var t = el('table'), h = el('tr');
+          ['Tema', 'Concordam', 'Média (1 a 5)'].forEach(function (x) { h.appendChild(el('th', '', x)); }); t.appendChild(h);
+          res.temas.forEach(function (tm) {
+            var tr = el('tr'); tr.appendChild(el('td', '', tm.tema));
+            tr.appendChild(el('td', 'n', tm.favoravel === null ? '–' : tm.favoravel + '%'));
+            tr.appendChild(el('td', 'n', tm.media === null ? '–' : String(tm.media)));
+            t.appendChild(tr);
+          });
+          k.appendChild(t);
+        } else k.appendChild(el('div', 'vazia', 'Menos de ' + r.minimo + ' respostas: não aparece.'));
+        return k;
+      };
+      c.appendChild(bloco('Rede inteira', r.rede));
+      r.lojas.forEach(function (l) { c.appendChild(bloco(l.loja, l, ' de ' + l.ativos + ' pessoas ativas')); });
+      if (r.agrupadas.lojas.length) {
+        var nomes = r.agrupadas.lojas.map(function (l) { return l.loja + ' (' + l.respostas + ')'; }).join(', ');
+        c.appendChild(bloco('Lojas com menos de ' + r.minimo + ' respostas, juntas', r.agrupadas.resumo || { respostas: r.agrupadas.respostas }, ''));
+        c.appendChild(el('p', 'sub', nomes));
+      }
+      c.appendChild(el('p', 'sub', 'eNPS: % de quem daria 9 ou 10 menos % de quem daria de 0 a 6. Vai de −100 a 100.'));
+      c.appendChild(el('h3', '', 'Comentários (sem loja, em ordem aleatória)'));
+      if (!r.comentarios.length) c.appendChild(el('div', 'vazia', 'Nenhum comentário.'));
+      r.comentarios.forEach(function (t) { c.appendChild(el('div', 'item', t)); });
+    });
+  }
+
+  id('formEntrada').onsubmit = function (e) {
+    e.preventDefault();
+    codigo = String(id('codigo').value || '').replace(/\D/g, '');
+    guardar('rdoteste_codigo', codigo); msg(); carregar();
+  };
+  carregar();
+})();
+</script>
+</body>
+</html>

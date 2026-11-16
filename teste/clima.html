@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>TESTE · Pesquisa de clima</title>
+<!--
+  PESQUISA DE CLIMA — desde 16/11/2026, só na VERSÃO DE TESTE.
+
+  ANÔNIMA DE VERDADE: esta página NÃO usa o código do app (nem o guardado no
+  aparelho). O servidor grava só a loja, a data (sem hora) e as respostas.
+  O resultado só aparece por grupo de 5 respostas ou mais (Gente.gs).
+-->
+<style>
+  :root { --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6; }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 720px; padding: 20px 16px 72px; color: var(--tinta); background: #fff;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; color: var(--azul); font-weight: 800; }
+  .sub { color: var(--cinza); font-size: 15px; margin: 4px 0 0; }
+  button { font: inherit; font-weight: 800; min-height: 48px; padding: 10px 18px; border-radius: 12px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; cursor: pointer; }
+  select, textarea { font: inherit; width: 100%; box-sizing: border-box; min-height: 52px; padding: 10px 14px;
+    border-radius: 12px; border: 2px solid var(--linha); margin: 6px 0 12px; background: #fff; }
+  textarea { min-height: 110px; }
+  .frase { border: 2px solid var(--linha); border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
+  .frase.falta { border-color: var(--vermelho); }
+  .frase .t { font-weight: 800; margin-bottom: 8px; }
+  .opcoes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .opcoes button, .enps button { background: #fff; color: var(--azul); border-color: var(--linha); font-size: 14px;
+    font-weight: 700; padding: 6px 4px; min-height: 56px; line-height: 1.15; }
+  .opcoes button.marcado, .enps button.marcado { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .enps { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+  .enps button { font-size: 16px; padding: 4px 0; min-height: 48px; }
+  .pontas { display: flex; justify-content: space-between; font-size: 13px; color: var(--cinza); margin-top: 4px; }
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .feito { border-left: 8px solid var(--verde); background: #EAF6EF; border-radius: 10px; padding: 16px; margin: 16px 0; font-size: 20px; font-weight: 800; }
+  .oculto { display: none; }
+  @media (max-width: 480px) { .opcoes { grid-template-columns: 1fr; } .opcoes button { min-height: 44px; } }
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+
+
+<h1>Pesquisa de clima</h1>
+<p class="sub">Leva uns 4 minutos.</p>
+
+<div class="aviso">
+  <b>É anônima.</b> Não pede código nem nome, e não guarda a hora em que você respondeu.
+  O resultado só aparece juntando pelo menos 5 respostas, para ninguém ser identificado.
+  Responda com sinceridade: é assim que a rede melhora.
+</div>
+
+<div id="mensagem"></div>
+
+<form id="form" class="oculto">
+  <label for="loja"><b>Sua loja</b></label>
+  <select id="loja"><option value="">Escolha a sua loja</option></select>
+  <div id="frases"></div>
+  <div class="frase" id="caixaEnps">
+    <div class="t" id="textoEnps"></div>
+    <div class="enps" id="enps"></div>
+    <div class="pontas"><span>0 = de jeito nenhum</span><span>10 = com certeza</span></div>
+  </div>
+  <label for="comentario"><b>Quer dizer mais alguma coisa?</b> (opcional; não escreva nomes)</label>
+  <textarea id="comentario" maxlength="1000"></textarea>
+  <button type="submit">Enviar respostas</button>
+</form>
+
+<div id="obrigado" class="feito oculto">Obrigado! Suas respostas foram enviadas.</div>
+
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbyYoBctgbFxsAc2tN-n7HpOQLA63xAAysfzm46LXHq50awvC49Zjy8XHmfvtanfiXbogw/exec';
+  var ERROS = {
+    so_na_versao_de_teste: 'A pesquisa de clima ainda não está aberta.',
+    loja_invalida: 'Escolha a sua loja.',
+    falta_resposta: 'Falta responder uma frase (marcada em vermelho).',
+    falta_enps: 'Falta a nota de 0 a 10.',
+    muitas_respostas: 'Este aparelho já enviou várias respostas. Tente mais tarde.',
+    sem_conexao: 'Sem conexão. Confira a internet e tente de novo.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.'
+  };
+  function id(x) { return document.getElementById(x); }
+  function el(tag, classe, texto) { var n = document.createElement(tag); if (classe) n.className = classe; if (texto !== undefined) n.textContent = texto; return n; }
+  // Aparelho só para o quebra-molas do servidor (fica no cache por 6 h, nunca na planilha).
+  function aparelho() {
+    try {
+      var a = window.localStorage.getItem('rdoteste_aparelho');
+      if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); window.localStorage.setItem('rdoteste_aparelho', a); }
+      return a;
+    } catch (e) { return 'sem-aparelho'; }
+  }
+  function chamar(fn, args, pronto) {
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+  function erro(r) { var m = id('mensagem'); m.innerHTML = ''; m.appendChild(el('div', 'erro', ERROS[r && r.erro] || 'Não deu certo. Tente de novo.')); }
+
+  var notas = {}, enps = null, frases = [];
+
+  chamar('lojasClima', [], function (r) {
+    if (!r.ok) { erro(r); return; }
+    frases = r.frases;
+    r.lojas.forEach(function (l) { var o = el('option', '', l.nome); o.value = l.codigo; id('loja').appendChild(o); });
+    frases.forEach(function (f, i) {
+      var caixa = el('div', 'frase'); caixa.id = 'f_' + f.id;
+      caixa.appendChild(el('div', 't', (i + 1) + '. ' + f.texto));
+      var op = el('div', 'opcoes');
+      r.escala.forEach(function (rot, k) {
+        var b = el('button', '', rot); b.type = 'button';
+        b.onclick = function () {
+          notas[f.id] = k + 1; caixa.classList.remove('falta');
+          Array.prototype.forEach.call(op.children, function (x) { x.classList.remove('marcado'); });
+          b.classList.add('marcado');
+        };
+        op.appendChild(b);
+      });
+      caixa.appendChild(op);
+      id('frases').appendChild(caixa);
+    });
+    id('textoEnps').textContent = (frases.length + 1) + '. ' + r.enps;
+    for (var n = 0; n <= 10; n++) (function (n) {
+      var b = el('button', '', String(n)); b.type = 'button';
+      b.onclick = function () {
+        enps = n; id('caixaEnps').classList.remove('falta');
+        Array.prototype.forEach.call(id('enps').children, function (x) { x.classList.remove('marcado'); });
+        b.classList.add('marcado');
+      };
+      id('enps').appendChild(b);
+    })(n);
+    id('form').classList.remove('oculto');
+  });
+
+  id('form').onsubmit = function (e) {
+    e.preventDefault();
+    var faltou = null;
+    frases.forEach(function (f) { if (!notas[f.id]) { id('f_' + f.id).classList.add('falta'); if (!faltou) faltou = id('f_' + f.id); } });
+    if (enps === null) { id('caixaEnps').classList.add('falta'); if (!faltou) faltou = id('caixaEnps'); }
+    if (!id('loja').value) { erro({ erro: 'loja_invalida' }); window.scrollTo(0, 0); return; }
+    if (faltou) { erro({ erro: 'falta_resposta' }); faltou.scrollIntoView({ block: 'center' }); return; }
+    var btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Enviando…';
+    chamar('responderClima', [aparelho(), { loja: id('loja').value, notas: notas, enps: enps, comentario: id('comentario').value }], function (r) {
+      if (!r.ok) { btn.disabled = false; btn.textContent = 'Enviar respostas'; erro(r); return; }
+      id('mensagem').innerHTML = ''; id('form').classList.add('oculto'); id('obrigado').classList.remove('oculto'); window.scrollTo(0, 0);
+    });
+  };
+})();
+</script>
+</body>
+</html>

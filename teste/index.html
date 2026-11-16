@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Motor de tela em arquivos separados. Ordem obrigatoria:
+     React -> React-DOM -> dc-runtime. -->
+<script src="motor/react.js"></script>
+<script src="motor/react-dom.js"></script>
+<script src="motor/dc-runtime.js"></script>
+<!-- ================================================================
+     ICONE E PREVIA DO LINK.
+     apple-touch-icon: e o desenho que o iPhone usa quando a pessoa
+     faz "Adicionar a Tela de Inicio". Sem ele o iPhone tira uma foto
+     da tela e usa isso como icone.
+     og:*  : e o cartao que aparece quando o link e colado no WhatsApp.
+     Sao DUAS imagens de proposito: no cartao do WhatsApp cabe a marca
+     inteira (casinha + escrito); no icone do iPhone, que aparece com
+     uns 60 pixels, o escrito viraria borrao - la vai so a casinha.
+     Os enderecos sao ABSOLUTOS de proposito: o WhatsApp nao resolve
+     caminho relativo, e assim as mesmas tags valem tambem quando a
+     pagina roda dentro do Apps Script.
+     ================================================================ -->
+<title>TESTE · Casa do Olhar</title>
+<meta name="apple-mobile-web-app-title" content="Casa do Olhar">
+<meta name="application-name" content="Casa do Olhar">
+<meta name="theme-color" content="#062D7B">
+<link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-512.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-32.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Casa do Olhar">
+<meta property="og:title" content="Casa do Olhar">
+<meta property="og:description" content="Ver bem é viver melhor.">
+<meta property="og:url" content="https://marlenoliveira.github.io/rede-de-oticas-app/">
+<meta property="og:image" content="https://marlenoliveira.github.io/rede-de-oticas-app/icones/cartao-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+
+<x-dc>
+<helmet data-dc-atomics>
+<style>
+html,body{margin:0;padding:0;background:#fff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,"Segoe UI",Helvetica,sans-serif;color:#3A3F47}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+a{color:#062D7B}a:hover{color:#F96B05}
+::selection{background:rgba(224,110,10,.22)}
+:focus-visible{outline:2px solid #F96B05;outline-offset:2px}
+
+/* Abertura do app (tela "carregando").
+   Fundo no azul do BRAND BOOK v2.2 (#062D7B) com a versao oficial do logo
+   para fundo azul — CASA e OTICA brancos, OLHAR laranja — como manda a
+   secao 08 do brand book. Nada de efeito sobre a marca: a secao 09 proibe
+   brilho, sombra e 3D no logo, e a versao anterior tinha uma varredura de
+   luz passando por cima dele. Ver marca/CLAUDE.md. */
+[data-abre="marca"]{width:300px;max-width:74vw;height:auto;display:block;animation:abre-marca 1s cubic-bezier(.2,.8,.2,1) both}
+[data-abre="slogan"]{margin-top:38px;font-size:15px;color:#fff;animation:abre-aparece .7s .5s both}
+[data-abre="slogan"] i{font-style:normal;color:#F96B05}
+[data-abre="barra"]{position:relative;margin-top:20px;width:186px;height:5px;border-radius:99px;background:rgba(255,255,255,.24);overflow:hidden;animation:abre-aparece .7s .65s both}
+[data-abre="corre"]{position:absolute;top:0;bottom:0;width:42%;border-radius:99px;background:#F96B05;animation:abre-corre 1.5s ease-in-out infinite}
+[data-abre="dizer"]{margin-top:16px;font-size:14.5px;color:rgba(255,255,255,.74);animation:abre-aparece .7s .8s both}
+@keyframes abre-marca{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes abre-aparece{from{opacity:0}to{opacity:1}}
+@keyframes abre-corre{0%{left:-45%}100%{left:100%}}
+@media (prefers-reduced-motion:reduce){[data-abre]{animation:none!important}}
+</style>
+</helmet>
+
+<!-- Tela 1: identificando. Aparece enquanto o servidor nao respondeu quem e o usuario.
+     Fundo #062D7B, o azul do brand book, igual ao theme-color la em cima: no iPhone
+     a barra de status fica dessa cor e a abertura entra sem emenda.
+     A marca aqui e logo-fundo-azul.png — a versao OFICIAL para fundo azul. Nao e a
+     mesma imagem das outras telas: aquela (logo-horizontal.png) e a versao para fundo
+     branco, e sobre azul o escrito "CASA DO" sumiria. Trocar uma pela outra quebra a
+     regra da secao 08 do brand book. -->
+<div data-tela="carregando" style="display:{{ mostrarCarregando }};min-height:100vh;flex-direction:column;align-items:center;justify-content:center;background:#062D7B;padding:24px;text-align:center">
+  <img data-abre="marca" src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-fundo-azul.png" alt="Casa do Olhar">
+  <div data-abre="slogan">Ver bem é <i>viver melhor.</i></div>
+  <div data-abre="barra"><div data-abre="corre"></div></div>
+  <div data-abre="dizer">Identificando você…</div>
+</div>
+
+<!-- Tela 2: bloqueio. Aparece quando o servidor nao liberou o acesso. Nunca tela branca. -->
+<!-- Tela de código. É a única coisa que a pessoa vê antes de entrar:
+     campo grande, teclado de números e o botão Entrar. Nada mais. -->
+<div data-tela="login" style="display:{{ mostrarLogin }};min-height:100vh;align-items:center;justify-content:center;background:#fff;padding:24px">
+  <div style="max-width:360px;width:100%;text-align:center">
+    <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:250px;max-width:100%;height:auto;display:block;margin:0 auto">
+    <div style="font-size:15px;color:#8A9099;margin-top:10px">Ver bem é viver melhor.</div>
+
+    <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:36px">Código de acesso</div>
+    <div style="margin-top:12px;min-height:72px;border:2px solid {{ bordaCodigo }};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#062D7B;letter-spacing:.28em;font-variant-numeric:tabular-nums;background:#fff">{{ codigoNaTela }}</div>
+
+    <div style="display:{{ mostrarErroLogin }};margin-top:16px;padding:12px 16px;border-radius:12px;background:#FBECEA;border:2px solid #C0392B;font-size:15px;font-weight:700;color:#8E2A1F;line-height:1.4">{{ erroLogin }}</div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px">
+      <sc-for list="{{ teclas }}" as="t" hint-placeholder-count="12">
+        <button style="min-height:64px;border-radius:16px;background:{{ t.fundo }};color:{{ t.cor }};font-size:{{ t.tamanho }};font-weight:800;border:2px solid #EDEFF2" onClick="{{ t.tocar }}">{{ t.texto }}</button>
+      </sc-for>
+    </div>
+
+    <button style="width:100%;min-height:60px;margin-top:20px;border-radius:16px;background:{{ fundoEntrar }};color:#fff;font-size:19px;font-weight:800" onClick="{{ entrar }}">{{ rotuloEntrar }}</button>
+
+    <div style="font-size:14px;color:#8A9099;margin-top:24px;line-height:1.5">Não sabe seu código? Fale com a gerente da sua loja.</div>
+
+
+  </div>
+</div>
+
+<div data-tela="app" style="display:{{ mostrarApp }};min-height:100vh;background:#fff">
+
+  <div style="display:{{ mostrarLateral }};width:264px;flex:none;border-right:1px solid #EDEFF2;padding:24px 16px;flex-direction:column;gap:8px;position:sticky;top:0;height:100vh">
+    <div style="padding:8px 12px 16px">
+      <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:190px;max-width:100%;height:auto;display:block">
+      <div style="font-size:13px;color:#8A9099;margin-top:6px">Ver bem é viver melhor.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;padding:0 4px 16px">
+      <button style="flex:1;display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-radius:12px;background:#EDEFF2;text-align:left" onClick="{{ abrirMenu }}">
+        <span style="width:32px;height:32px;flex:none;border-radius:16px;background:#062D7B;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
+        <span style="flex:1;min-width:0">
+          <span style="display:block;font-size:15px;font-weight:800;color:#062D7B">{{ usuarioPrimeiro }}</span>
+          <span style="display:block;font-size:12px;color:#8A9099">{{ usuarioPapel }}</span>
+        </span>
+        <span style="font-size:12px;color:#8A9099">▾</span>
+      </button>
+    </div>
+    <sc-for list="{{ navegacao }}" as="n" hint-placeholder-count="6">
+      <button style="display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:8px 12px;border-radius:12px;font-size:16px;font-weight:{{ n.peso }};color:{{ n.cor }};background:{{ n.fundo }};text-align:left" onClick="{{ n.ir }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ n.cor }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>
+        <span style="flex:1">{{ n.rotulo }}</span>
+        <span style="font-size:11px;font-weight:700;color:#8A9099">{{ n.selo }}</span>
+      </button>
+    </sc-for>
+    <div style="flex:1"></div>
+    <div style="border-radius:12px;background:#EDEFF2;padding:16px;font-size:14px;font-weight:700;color:#062D7B;line-height:1.35">{{ txt_lemaOrdem }}</div>
+  </div>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <div style="display:{{ mostrarTopo }};align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid #EDEFF2;position:sticky;top:0;background:#fff;z-index:20">
+      <img src="https://marlenoliveira.github.io/rede-de-oticas-app/icones/logo-horizontal.png" alt="Casa do Olhar" style="width:148px;max-width:52vw;height:auto;display:block">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button style="display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-radius:12px;background:#EDEFF2" onClick="{{ abrirMenu }}">
+          <span style="width:28px;height:28px;border-radius:14px;background:#062D7B;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
+          <span style="font-size:14px;font-weight:800;color:#062D7B">{{ usuarioPrimeiro }}</span>
+          <span style="font-size:12px;color:#8A9099">▾</span>
+        </button>
+      </div>
+    </div>
+
+    <div style="flex:1;padding:{{ padConteudo }};max-width:1180px;width:100%">
+
+      <sc-if value="{{ menuAberto }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #EDEFF2;border-radius:12px;padding:16px;margin-bottom:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+            <div style="font-size:16px;font-weight:800;color:#062D7B">Quem está usando</div>
+            <button style="min-height:48px;padding:8px 16px;border-radius:12px;font-size:15px;font-weight:700;color:#8A9099" onClick="{{ fecharMenu }}">Fechar</button>
+          </div>
+          <!-- Antes aqui havia um seletor manual de perfil. Foi removido:
+               quem manda e o quemSouEu() do servidor, nao a escolha do navegador. -->
+          <div style="display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;border-radius:12px;background:#EDEFF2">
+            <span style="width:36px;height:36px;flex:none;border-radius:18px;background:#062D7B;color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ usuarioInicial }}</span>
+            <span style="flex:1;min-width:0">
+              <span style="display:block;font-size:16px;font-weight:700;color:#062D7B">{{ identNome }}</span>
+              <span style="display:block;font-size:13px;color:#8A9099">{{ usuarioPapel }}</span>
+            </span>
+          </div>
+          <!-- Sair: para trocar de pessoa no mesmo aparelho, que na loja
+               costuma ser um computador só para todo mundo. -->
+          <button style="width:100%;min-height:48px;margin-top:8px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#8A9099;font-size:15px;font-weight:700" onClick="{{ sair }}">Sair desta conta</button>
+        </div>
+      </sc-if>
+
+
+
+
+      <sc-if value="{{ emNiveis }}" hint-placeholder-val="{{ true }}">
+        <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">Linha de lentes</div>
+        <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:8px 0 8px;line-height:1.1">Os 4 níveis</h1>
+        <p style="font-size:16px;line-height:1.5;margin:0 0 24px;max-width:62ch">{{ txt_compareFatores }}</p>
+        <div style="display:grid;grid-template-columns:{{ gridNiveis }};gap:16px">
+          <sc-for list="{{ niveis }}" as="nv" hint-placeholder-count="4">
+            <div style="border:1px solid #EDEFF2;border-top:4px solid {{ nv.borda }};border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px;background:#fff">
+              <div>
+                <div style="font-size:24px;font-weight:800;color:#062D7B;line-height:1.1">{{ nv.nome }}</div>
+                <div style="font-size:13px;font-weight:700;color:#F96B05;margin-top:4px">{{ nv.faixa }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ nv.fatores }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:8px;font-size:15px">
+                    <span style="width:64px;flex:none;height:8px;border-radius:8px;background:#EDEFF2;overflow:hidden;display:block"><span style="display:block;height:8px;background:#062D7B;width:{{ f.largura }}"></span></span>
+                    <span>{{ f.texto }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ nv.selos }}" as="s" hint-placeholder-count="2">
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:8px 12px;border-radius:12px;background:{{ s.fundo }};color:{{ s.cor }}">{{ s.texto }}</span>
+                </sc-for>
+              </div>
+              <div style="background:#EDEFF2;border-radius:12px;padding:16px;font-size:16px;line-height:1.45;font-weight:600;color:#062D7B">“{{ nv.frase }}”</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:24px;border-radius:12px;background:#FDF1E4;border:1px solid #F96B05;padding:16px;display:flex;gap:12px;align-items:center">
+          <span style="font-size:22px">⚠</span>
+          <div style="font-size:16px;font-weight:700;color:#062D7B;line-height:1.4">{{ txt_apresente3 }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ emAtendimento }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+          <sc-for list="{{ trilha }}" as="t" hint-placeholder-count="5">
+            <div style="flex:1;min-width:104px;border-radius:12px;padding:12px 8px;text-align:center;background:{{ t.fundo }};color:{{ t.cor }};font-size:13px;font-weight:800;letter-spacing:.06em">
+              <div style="font-size:11px;opacity:.75">{{ t.n }}</div>{{ t.rotulo }}
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ fasePassos }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">Passo {{ passoNum }} de 5</div>
+          <h1 style="font-size:30px;font-weight:800;color:#062D7B;margin:8px 0 8px;line-height:1.1">{{ passoNome }}</h1>
+          <p style="font-size:16px;line-height:1.5;margin:0 0 16px;max-width:60ch">{{ passoAjuda }}</p>
+          <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ checagem }}" as="c" hint-placeholder-count="4">
+                <button style="display:flex;gap:12px;align-items:center;width:100%;min-height:56px;padding:12px 16px;border:1px solid {{ c.borda }};border-radius:12px;background:{{ c.fundo }};text-align:left" onClick="{{ c.alternar }}">
+                  <span style="width:28px;height:28px;flex:none;border-radius:8px;border:2px solid {{ c.corMarca }};background:{{ c.fundoMarca }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800">{{ c.marca }}</span>
+                  <span style="font-size:16px;line-height:1.35;color:{{ c.corTexto }}">{{ c.texto }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="border-radius:12px;background:#EDEFF2;padding:24px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B">Fala pronta</div>
+              <p style="font-size:18px;line-height:1.45;font-weight:600;color:#062D7B;margin:8px 0 16px">“{{ passoFala }}”</p>
+              <div style="height:1px;background:#D6DAE0;margin-bottom:16px"></div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#C0392B">Nunca faça</div>
+              <p style="font-size:15px;line-height:1.45;margin:8px 0 0">{{ passoNunca }}</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:24px;flex-wrap:wrap">
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ avancar }}">{{ rotuloAvancar }}</button>
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ voltar }}">Voltar</button>
+            <span style="font-size:14px;color:#8A9099">{{ marcados }} de {{ totalItens }} marcados</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ faseResultado }}" hint-placeholder-val="{{ false }}">
+          <!-- Confere quem esta logado ANTES de gravar. Na loja o
+               computador e compartilhado: quem senta depois registra no
+               nome de quem sentou antes, e o dado sai errado sem ninguem
+               ver. Melhor ver o nome errado agora do que descobrir na
+               planilha depois. -->
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;margin-bottom:20px;padding:16px;border-radius:12px;border:2px solid #F96B05;background:#FDF1E4">
+            <div style="min-width:0">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A5A0A">Vai ser registrado como</div>
+              <div style="font-size:20px;font-weight:800;color:#062D7B;line-height:1.25">{{ identNome }}</div>
+              <div style="font-size:13px;color:#8A9099">{{ usuarioPapel }}</div>
+            </div>
+            <button style="min-height:48px;padding:12px 20px;border-radius:12px;background:#fff;border:2px solid #F96B05;color:#F96B05;font-size:16px;font-weight:800;flex:none" onClick="{{ naoSouEu }}">Não sou eu</button>
+          </div>
+
+          <h1 style="font-size:30px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Registrar o resultado</h1>
+          <p style="font-size:16px;margin:0 0 24px">Um toque. É isso que alimenta o seu desempenho e o painel da loja.</p>
+          <div style="display:grid;grid-template-columns:{{ grid3 }};gap:16px">
+            <sc-for list="{{ resultados }}" as="r" hint-placeholder-count="3">
+              <button style="min-height:96px;border-radius:12px;border:2px solid {{ r.borda }};background:{{ r.fundo }};padding:16px;text-align:left" onClick="{{ r.escolher }}">
+                <div style="font-size:20px;font-weight:800;color:{{ r.cor }}">{{ r.rotulo }}</div>
+                <div style="font-size:14px;margin-top:4px;color:#3A3F47">{{ r.ajuda }}</div>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ vendeu }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:24px;border-radius:12px;background:#EDEFF2;padding:24px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Nível vendido</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+                <sc-for list="{{ chipsNivel }}" as="ch" hint-placeholder-count="4">
+                  <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ ch.borda }};background:{{ ch.fundo }};color:{{ ch.cor }};font-size:16px;font-weight:700" onClick="{{ ch.escolher }}">{{ ch.texto }}</button>
+                </sc-for>
+              </div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Valor do pedido</div>
+              <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #EDEFF2;border-radius:12px;padding:0 16px;max-width:320px">
+                <span style="font-size:18px;font-weight:800;color:#8A9099">R$</span>
+                <input type="text" inputmode="numeric" placeholder="0,00" value="{{ valorTexto }}" onInput="{{ mudarValor }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:inherit;font-size:24px;font-weight:800;color:#062D7B;padding:12px 0;min-height:48px;font-variant-numeric:tabular-nums" />
+              </div>
+
+              <div style="height:1px;background:#D6DAE0;margin:24px 0"></div>
+
+              <div style="display:grid;grid-template-columns:{{ grid2 }};gap:24px">
+                <div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Tipo de visão</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <sc-for list="{{ chipsVisao }}" as="cv" hint-placeholder-count="2">
+                      <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ cv.borda }};background:{{ cv.fundo }};color:{{ cv.cor }};font-size:16px;font-weight:700" onClick="{{ cv.escolher }}">{{ cv.texto }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Segundo par</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <sc-for list="{{ chipsSegundoPar }}" as="cs" hint-placeholder-count="2">
+                      <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ cs.borda }};background:{{ cs.fundo }};color:{{ cs.cor }};font-size:16px;font-weight:700" onClick="{{ cs.escolher }}">{{ cs.texto }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Tratamentos <span style="color:#8A9099;font-weight:700">(pode marcar mais de um)</span></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <sc-for list="{{ chipsTratamentos }}" as="ct" hint-placeholder-count="7">
+                      <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ ct.borda }};background:{{ ct.fundo }};color:{{ ct.cor }};font-size:16px;font-weight:700" onClick="{{ ct.escolher }}">{{ ct.texto }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Armação <span style="color:#8A9099;font-weight:700">(opcional)</span></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <sc-for list="{{ chipsArmacao }}" as="ca" hint-placeholder-count="2">
+                      <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ ca.borda }};background:{{ ca.fundo }};color:{{ ca.cor }};font-size:16px;font-weight:700" onClick="{{ ca.escolher }}">{{ ca.texto }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Desconto concedido</div>
+                  <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid {{ bordaDesconto }};border-radius:12px;padding:0 16px;max-width:200px">
+                    <input type="text" inputmode="numeric" value="{{ descontoTexto }}" onInput="{{ mudarDesconto }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:inherit;font-size:24px;font-weight:800;color:{{ corDesconto }};padding:12px 0;min-height:48px;font-variant-numeric:tabular-nums" />
+                    <span style="font-size:18px;font-weight:800;color:#8A9099">%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:{{ mostrarJustificativa }};margin-top:24px">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#C0392B;margin-bottom:8px">Justificativa do desconto · obrigatória</div>
+                <input type="text" placeholder="Ex.: cliente antiga, segundo par no mesmo pedido" value="{{ justificativaTexto }}" onInput="{{ mudarJustificativa }}" style="width:100%;border:2px solid {{ bordaJustificativa }};border-radius:12px;background:#fff;font-family:inherit;font-size:16px;color:#3A3F47;padding:12px 16px;min-height:48px;outline:none" />
+              </div>
+
+              <div style="display:{{ mostrarAlcada }};margin-top:24px;border:1px solid #C0392B;background:#FBECEA;border-radius:12px;padding:16px;gap:12px;align-items:center">
+                <span style="font-size:20px;font-weight:800;color:#C0392B">!</span>
+                <div style="font-size:16px;line-height:1.4;font-weight:700;color:#8E2A1F">{{ txt_alcada40 }}</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ vaiPensar }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:24px;border-radius:12px;background:#EDEFF2;padding:24px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Deixou orçamento?</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ chipsOrcamento }}" as="co" hint-placeholder-count="2">
+                  <button style="min-height:48px;padding:12px 24px;border-radius:12px;border:2px solid {{ co.borda }};background:{{ co.fundo }};color:{{ co.cor }};font-size:16px;font-weight:700" onClick="{{ co.escolher }}">{{ co.texto }}</button>
+                </sc-for>
+              </div>
+              <div style="display:{{ mostrarFollowUp }};margin-top:16px;font-size:15px;font-weight:700;color:#062D7B">{{ txt_followUp24h }}</div>
+            </div>
+          </sc-if>
+
+          <div style="display:{{ mostrarPendencia }};margin-top:24px;font-size:15px;font-weight:700;color:#7A5B04">Faltam: {{ pendencias }} — complete para poder salvar.</div>
+          <div style="display:{{ mostrarErroSalvar }};margin-top:16px;padding:12px 16px;border-radius:12px;background:#FBECEA;border:2px solid #C0392B;font-size:15px;font-weight:700;color:#8E2A1F;line-height:1.4">{{ erroSalvar }}</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:24px;flex-wrap:wrap">
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:{{ fundoSalvar }};color:#fff;font-size:18px;font-weight:800" onClick="{{ salvar }}">{{ rotuloSalvar }}</button>
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ voltar }}">Voltar</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ faseSalvo }}" hint-placeholder-val="{{ false }}">
+          <div style="border-radius:12px;background:#E9F6EF;border:1px solid #1E9E5A;padding:32px;max-width:640px">
+            <div style="width:56px;height:56px;border-radius:12px;background:#1E9E5A;color:#fff;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</div>
+            <h1 style="font-size:28px;font-weight:800;color:#062D7B;margin:16px 0 8px">Atendimento salvo</h1>
+            <p style="font-size:17px;line-height:1.5;margin:0 0 16px">{{ resumoSalvo }}</p>
+            <div style="font-size:15px;color:#3A3F47">Aderência ao passo a passo neste atendimento: <strong style="color:#F96B05;font-size:20px">{{ aderencia }}</strong></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:24px;flex-wrap:wrap">
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ novoAtendimento }}">Novo atendimento</button>
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ irDesempenho }}">Ver meu desempenho</button>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ emTreino }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-bottom:24px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">Treino rápido · {{ origemRodada }}</div>
+            <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums"><strong style="color:#062D7B">{{ totalBanco }}</strong> questões no banco · <strong style="color:#062D7B">{{ totalTipos }}</strong> tipos de rodada</div>
+          </div>
+          <div style="display:{{ mostrarLembrete }};margin-bottom:16px;padding:14px 16px;border-radius:12px;border:2px solid #E8B027;background:#FFF6DC;color:#5A4300;font-size:16px;font-weight:700;line-height:1.4">{{ textoLembrete }}</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Bloco da Trilha</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ blocosTreino }}" as="bt" hint-placeholder-count="4">
+                <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ bt.borda }};background:{{ bt.fundo }};color:{{ bt.cor }};font-size:15px;font-weight:700" onClick="{{ bt.escolher }}">{{ bt.texto }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:{{ mostrarTemas }}">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Dirigir reforço por tema</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ tiposTreino }}" as="tt" hint-placeholder-count="10">
+                <button style="display:flex;align-items:center;gap:8px;min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ tt.borda }};background:{{ tt.fundo }};color:{{ tt.cor }};font-size:15px;font-weight:700" onClick="{{ tt.escolher }}">
+                  <span>{{ tt.texto }}</span>
+                  <span style="display:{{ tt.selo }};font-size:11px;font-weight:800;padding:4px 8px;border-radius:12px;background:#FDF6E3;color:#7A5B04">bloco curto</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;padding-top:16px;border-top:1px solid #EDEFF2">
+            <sc-for list="{{ contagemBanco }}" as="cb" hint-placeholder-count="12">
+              <span style="font-size:12px;color:#8A9099;font-variant-numeric:tabular-nums">{{ cb.nome }} <strong style="color:#062D7B">{{ cb.n }}</strong></span>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ treinoAtivo }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
+            <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">{{ tipoRodada }} · {{ nQuestao }} de {{ totalQuestoes }}</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:15px;font-weight:700;color:#1E9E5A">{{ acertos }} acertos</span>
+              <button style="min-height:48px;padding:8px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:14px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
+            </div>
+          </div>
+          <div style="height:8px;border-radius:8px;background:#EDEFF2;margin-bottom:24px"><div style="height:8px;border-radius:8px;background:#F96B05;width:{{ progressoTreino }}"></div></div>
+          <h1 style="font-size:26px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.25;max-width:34ch">{{ enunciado }}</h1>
+          <p style="font-size:16px;margin:0 0 24px;color:#8A9099">{{ instrucao }}</p>
+          <div style="display:grid;grid-template-columns:{{ grid2 }};gap:8px">
+            <sc-for list="{{ opcoes }}" as="o" hint-placeholder-count="4">
+              <button style="display:flex;gap:12px;align-items:center;min-height:64px;padding:16px;border-radius:12px;border:2px solid {{ o.borda }};background:{{ o.fundo }};text-align:left" onClick="{{ o.escolher }}">
+                <span style="width:28px;height:28px;flex:none;border-radius:8px;background:{{ o.fundoMarca }};color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ o.marca }}</span>
+                <span style="font-size:16px;line-height:1.35;font-weight:600;color:{{ o.cor }}">{{ o.texto }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ respondeu }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:24px;border-radius:12px;padding:24px;background:{{ fundoFeedback }};border:1px solid {{ corFeedback }}">
+              <div style="font-size:18px;font-weight:800;color:{{ corFeedback }}">{{ tituloFeedback }}</div>
+              <p style="font-size:16px;line-height:1.5;margin:8px 0 0">{{ explicacao }}</p>
+            </div>
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800;margin-top:16px" onClick="{{ proxima }}">{{ rotuloProxima }}</button>
+          </sc-if>
+        </sc-if>
+        <sc-if value="{{ treinoFim }}" hint-placeholder-val="{{ false }}">
+          <div style="border-radius:12px;background:#EDEFF2;padding:32px;max-width:640px;text-align:center">
+            <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">Placar da rodada</div>
+            <div style="font-size:72px;font-weight:800;color:#062D7B;line-height:1.05;margin:8px 0">{{ placar }}</div>
+            <div style="font-size:18px;font-weight:700;color:{{ corPlacar }}">{{ mensagemPlacar }}</div>
+            <p style="font-size:16px;line-height:1.5;margin:16px 0 0">{{ dicaPlacar }}</p>
+            <div style="display:{{ mostrarRodadas30 }};margin-top:12px;font-size:14px;color:#8A9099">{{ textoRodadas30 }}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
+            <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ treinarDeNovo }}">Treinar de novo</button>
+            <button style="min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ emConsulta }}" hint-placeholder-val="{{ false }}">
+        <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Consulta rápida</h1>
+        <p style="font-size:16px;margin:0 0 24px;max-width:62ch">{{ txt_referenciaInterna }}</p>
+        <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;align-items:start">
+          <div style="border:1px solid #EDEFF2;border-radius:12px;overflow:hidden">
+            <div style="background:#062D7B;color:#fff;padding:16px;font-size:16px;font-weight:800">Grau → material de partida</div>
+            <sc-for list="{{ materiais }}" as="m" hint-placeholder-count="4">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px;border-top:1px solid #EDEFF2">
+                <span style="font-size:16px;font-variant-numeric:tabular-nums">{{ m.grau }}</span>
+                <span style="font-size:18px;font-weight:800;color:#F96B05;font-variant-numeric:tabular-nums">{{ m.indice }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ avisos }}" as="a" hint-placeholder-count="3">
+              <div style="border:1px solid #C0392B;background:#FBECEA;border-radius:12px;padding:16px;display:flex;gap:12px">
+                <span style="color:#C0392B;font-size:20px;font-weight:800">!</span>
+                <div style="font-size:15px;line-height:1.45;color:#8E2A1F">{{ a.texto }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px;align-items:start">
+          <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="font-size:20px;font-weight:800;color:#062D7B">Garantia de grau</div>
+            <ul style="margin:16px 0 0;padding-left:20px;font-size:16px;line-height:1.6">
+              <li>90 dias, a partir da Intermediária.</li>
+              <li>{{ txt_garantia90dias }}</li>
+              <li>Troca sem custo para o cliente.</li>
+            </ul>
+            <div style="margin-top:16px;border-radius:12px;background:#FDF6E3;border:1px solid #E8B027;padding:16px;font-size:15px;line-height:1.5;color:#7A5B04">
+              <strong style="display:block;color:#062D7B;margin-bottom:4px">Atenção — erro da loja</strong>
+              {{ txt_garantia3meses }}
+            </div>
+          </div>
+          <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="font-size:20px;font-weight:800;color:#062D7B">Marca da lente</div>
+            <ul style="margin:16px 0 0;padding-left:20px;font-size:16px;line-height:1.6">
+              <li>{{ txt_semMarca }}</li>
+              <li>{{ txt_comMarca }}</li>
+              <li>Tudo que sai do padrão vai no campo <strong>Observação do pedido</strong>.</li>
+            </ul>
+            <div style="margin-top:16px;background:#EDEFF2;border-radius:12px;padding:16px;font-size:17px;line-height:1.45;font-weight:600;color:#062D7B">{{ txt_falaMarcas }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ emDesempenho }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Meu desempenho</h1>
+          <div style="font-size:14px;color:#8A9099">{{ vendedora }} · comparado à semana anterior</div>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ gridKpi }};gap:16px;margin-top:16px">
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+            <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">{{ k.rotulo }}</div>
+              <div style="font-size:40px;font-weight:800;color:#F96B05;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
+              <div style="font-size:14px;font-weight:700;color:{{ k.corVar }};margin-top:4px">{{ k.variacao }}</div>
+            </div>
+          </sc-for>
+        </div>
+          <div style="margin-top:12px;font-size:13px;color:#8A9099;line-height:1.4">{{ textoNaoAuditado }}</div>
+        <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px;align-items:start">
+          <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Mix de nível vendido</div>
+            <sc-for list="{{ mix }}" as="mx" hint-placeholder-count="4">
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:4px"><span>{{ mx.nome }}</span><span style="font-variant-numeric:tabular-nums;color:#062D7B">{{ mx.pct }}</span></div>
+                <div style="height:16px;border-radius:8px;background:#EDEFF2;overflow:hidden"><div style="height:16px;background:{{ mx.cor }};width:{{ mx.pct }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Atendimentos de hoje</div>
+            <div style="display:{{ mostrarVazio }};font-size:15px;color:#8A9099;padding:8px 0">Nenhum atendimento registrado ainda.</div>
+            <sc-for list="{{ atendimentosHoje }}" as="at" hint-placeholder-count="5">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:#062D7B">{{ at.cliente }}</div>
+                  <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ at.hora }} · {{ at.nivel }}</div>
+                </div>
+                <span style="font-size:12px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ at.fundo }};color:{{ at.cor }}">{{ at.estado }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px;margin-top:16px">
+          <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:8px">Orçamentos em aberto</div>
+          <div style="display:{{ mostrarSemOrcamento }};font-size:15px;color:#8A9099">Nenhum orçamento aguardando retorno.</div>
+          <sc-for list="{{ orcamentosAbertos }}" as="o" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
+              <div>
+                <div style="font-size:16px;font-weight:700;color:#062D7B">{{ o.cliente }}</div>
+                <div style="font-size:13px;color:#8A9099">{{ o.nivel }}</div>
+              </div>
+              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#062D7B;font-variant-numeric:tabular-nums">há {{ o.dias }} dias</span>
+            </div>
+          </sc-for>
+        </div>
+        <button style="display:{{ mostrarBotaoPainel }};min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800;margin-top:24px;align-items:center;justify-content:center" onClick="{{ irPainel }}">Abrir painel da loja (gerente)</button>
+      </sc-if>
+
+      <sc-if value="{{ emPainel }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="width:44px;height:44px;border-radius:12px;background:#062D7B;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ lojaSigla }}</span>
+            <div>
+              <div style="font-size:16px;font-weight:800;color:#062D7B">{{ lojaNome }}</div>
+              <div style="font-size:13px;color:#8A9099">{{ gerenteDaLoja }}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <sc-for list="{{ periodos }}" as="pe" hint-placeholder-count="3">
+              <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ pe.borda }};background:{{ pe.fundo }};color:{{ pe.cor }};font-size:15px;font-weight:700" onClick="{{ pe.escolher }}">{{ pe.nome }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:24px 0 8px;line-height:1.1">Painel da loja · {{ periodoAtual }}</h1>
+
+        <!-- Nova loja: gravação em arquivo de produção. Só diretoria e
+             supervisão veem este botão, e o servidor confere de novo. -->
+        <button style="display:{{ mostrarBotaoLoja }};min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid #F96B05;background:#fff;color:#F96B05;font-size:15px;font-weight:800;align-items:center;margin-bottom:8px" onClick="{{ abrirLoja }}">+ Nova loja</button>
+        <sc-if value="{{ lojaAberta }}" hint-placeholder-val="{{ false }}">
+          <div style="border:2px solid #F96B05;background:#FDF1E4;border-radius:12px;padding:24px;margin-bottom:16px">
+            <div style="font-size:18px;font-weight:800;color:#062D7B">Nova loja</div>
+            <div style="font-size:14px;color:#8A9099;margin-top:4px;line-height:1.45">O código não pode repetir nem substituir loja existente.</div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:16px;margin-bottom:6px">Código (3 letras, ex.: ABC)</div>
+            <input value="{{ lCodigo }}" onInput="{{ mudarLCodigo }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:800;letter-spacing:.1em">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:12px;margin-bottom:6px">Nome da loja</div>
+            <input value="{{ lNome }}" onInput="{{ mudarLNome }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-top:12px;margin-bottom:6px">Cidade</div>
+            <input value="{{ lCidade }}" onInput="{{ mudarLCidade }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px">
+            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+              <button style="min-height:52px;padding:12px 24px;border-radius:12px;background:#F96B05;color:#fff;font-size:16px;font-weight:800" onClick="{{ confirmarLoja }}">{{ rotuloConfirmarLoja }}</button>
+              <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#8A9099;font-size:15px;font-weight:700" onClick="{{ fecharLoja }}">Cancelar</button>
+            </div>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:{{ gridKpi }};gap:16px;margin-top:16px">
+          <sc-for list="{{ kpisLoja }}" as="k" hint-placeholder-count="4">
+            <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">{{ k.rotulo }}</div>
+              <div style="font-size:40px;font-weight:800;color:#F96B05;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
+              <div style="font-size:14px;font-weight:700;color:{{ k.corVar }};margin-top:4px">{{ k.variacao }}</div>
+            </div>
+          </sc-for>
+        </div>
+          <div style="margin-top:12px;font-size:13px;color:#8A9099;line-height:1.4">{{ textoNaoAuditado }}</div>
+        <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px;align-items:start">
+          <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px">
+              <div style="font-size:20px;font-weight:800;color:#062D7B">Conversão por vendedora</div>
+              <div style="font-size:12px;color:#8A9099">toque no nome para abrir o perfil</div>
+            </div>
+            <sc-for list="{{ ranking }}" as="rk" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid #EDEFF2">
+                <span style="width:24px;flex:none;font-size:13px;font-weight:800;color:#8A9099;font-variant-numeric:tabular-nums">{{ rk.pos }}</span>
+                <button style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:48px;text-align:left" onClick="{{ rk.abrir }}">
+                  <span style="width:40px;height:40px;flex:none;border-radius:20px;background:#062D7B;color:#fff;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ rk.inicial }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:16px;font-weight:700;color:#062D7B">{{ rk.nome }}</span>
+                      <span style="display:{{ rk.selo }};font-size:11px;font-weight:800;padding:4px 8px;border-radius:12px;background:#FDF6E3;color:#7A5B04">Em formação</span>
+                    </span>
+                    <span style="display:block;height:8px;border-radius:8px;background:#EDEFF2;margin-top:4px;overflow:hidden"><span style="display:block;height:8px;background:{{ rk.cor }};width:{{ rk.barra }}"></span></span>
+                  </span>
+                </button>
+                <span style="font-size:18px;font-weight:800;color:#062D7B;font-variant-numeric:tabular-nums">{{ rk.conv }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:8px">Últimos atendimentos registrados</div>
+            <sc-for list="{{ feed }}" as="fd" hint-placeholder-count="4">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:#062D7B">{{ fd.vendedora }}</div>
+                  <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ fd.cliente }} · há {{ fd.min }} min</div>
+                </div>
+                <span style="font-size:12px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ fd.fundo }};color:{{ fd.cor }}">{{ fd.etapa }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px;margin-top:16px">
+          <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:8px">Orçamentos em aberto aguardando retorno</div>
+          <sc-for list="{{ orcamentosLoja }}" as="o" hint-placeholder-count="4">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2;flex-wrap:wrap">
+              <div>
+                <div style="font-size:16px;font-weight:700;color:#062D7B">{{ o.cliente }}</div>
+                <div style="font-size:13px;color:#8A9099">{{ o.vendedora }} · {{ o.nivel }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px;color:#3A3F47">{{ o.janela }}</span>
+                <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ o.fundo }};color:{{ o.cor }};font-variant-numeric:tabular-nums">{{ o.dias }}d</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+          <sc-for list="{{ alertas }}" as="al" hint-placeholder-count="3">
+            <div style="border:1px solid {{ al.cor }};background:{{ al.fundo }};border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center">
+              <span style="font-size:20px;font-weight:800;color:{{ al.cor }}">!</span>
+              <div style="flex:1;font-size:16px;line-height:1.4;color:#3A3F47"><strong style="color:#062D7B">{{ al.titulo }}</strong> — {{ al.texto }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ emEquipe }}" hint-placeholder-val="{{ false }}">
+        <div style="display:{{ mostrarSeletorLoja }};gap:8px;flex-wrap:wrap;margin-bottom:16px">
+          <sc-for list="{{ seletorLojas }}" as="l" hint-placeholder-count="1">
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ l.borda }};background:{{ l.fundo }};color:{{ l.cor }};font-size:15px;font-weight:700" onClick="{{ l.escolher }}">{{ l.nome }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0;line-height:1.1">Equipe</h1>
+          <div style="font-size:14px;color:#8A9099">{{ lojaSelecionada }}</div>
+        </div>
+        <div style="margin-top:8px;border-radius:12px;background:#EDEFF2;padding:16px;font-size:15px;line-height:1.45;font-weight:700;color:#062D7B">Quem sai fica inativo. O histórico dela continua nos indicadores.</div>
+
+        <div style="display:{{ mostrarOkEquipe }};margin-top:16px;border:1px solid #1E9E5A;background:#E9F6EF;border-radius:12px;padding:16px;gap:12px;align-items:center">
+          <span style="font-size:18px;font-weight:800;color:#1E9E5A">✓</span>
+          <div style="font-size:16px;font-weight:700;color:#062D7B">{{ okEquipe }}</div>
+        </div>
+        <div style="display:{{ mostrarErroEquipe }};margin-top:16px;border:1px solid #C0392B;background:#FBECEA;border-radius:12px;padding:16px;gap:12px;align-items:center">
+          <span style="font-size:18px;font-weight:800;color:#C0392B">!</span>
+          <div style="font-size:16px;font-weight:700;color:#8E2A1F">{{ erroEquipe }}</div>
+        </div>
+
+        <div style="display:{{ equipeCarregando }};margin-top:16px;font-size:15px;color:#8A9099">Carregando a equipe…</div>
+
+        <!-- Cartão de entrega: aparece uma vez, com o código e a mensagem
+             pronta de WhatsApp. Se fechar sem anotar, só gerando outro. -->
+        <div style="display:{{ mostrarEntrega }};margin-top:16px;border:2px solid #1E9E5A;background:#E9F6EF;border-radius:12px;padding:24px">
+          <div style="font-size:18px;font-weight:800;color:#062D7B">{{ entregaNome }} está cadastrada</div>
+          <div style="font-size:15px;color:#3A3F47;margin-top:4px;line-height:1.5">Anote o código agora. Ele aparece uma vez só — depois, só gerando outro.</div>
+          <div style="margin-top:16px;padding:20px;border-radius:12px;background:#fff;border:2px solid #1E9E5A;text-align:center;font-size:38px;font-weight:800;color:#062D7B;letter-spacing:.22em;font-variant-numeric:tabular-nums">{{ entregaCodigo }}</div>
+          <button style="width:100%;min-height:56px;margin-top:16px;border-radius:12px;background:{{ fundoCopiar }};color:#fff;font-size:17px;font-weight:800" onClick="{{ copiarEntrega }}">{{ rotuloCopiar }}</button>
+          <div style="margin-top:12px;padding:12px 16px;border-radius:12px;background:#fff;border:1px solid #EDEFF2;font-size:13px;color:#3A3F47;line-height:1.5;white-space:pre-wrap">{{ entregaTexto }}</div>
+          <button style="min-height:48px;margin-top:12px;padding:12px 16px;font-size:15px;font-weight:700;color:#8A9099" onClick="{{ fecharEntrega }}">Já anotei, fechar</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px;margin-top:16px">
+          <sc-for list="{{ equipe }}" as="p" hint-placeholder-count="6">
+            <div style="border:1px solid #EDEFF2;border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px">
+              <span style="width:44px;height:44px;flex:none;border-radius:22px;background:#062D7B;color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ p.inicial }}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:16px;font-weight:700;color:#062D7B">{{ p.nome }}</div>
+                <div style="font-size:13px;color:#8A9099">{{ p.papelRotulo }}</div>
+                <div style="font-size:13px;color:#8A9099">{{ p.rodadasRotulo }}</div>
+                <span style="display:{{ p.avisoSemCodigo }};margin-top:4px;font-size:12px;font-weight:800;padding:4px 8px;border-radius:12px;background:#FDF6E3;color:#7A5B04">sem código — não consegue entrar</span>
+                <button style="display:block;margin-top:6px;min-height:44px;padding:8px 0;font-size:14px;font-weight:700;color:#F96B05;text-align:left" onClick="{{ p.gerarCodigo }}">Gerar novo código</button>
+              </div>
+              <button style="display:flex;align-items:center;gap:8px;min-height:48px;padding:8px" onClick="{{ p.alternar }}">
+                <span style="font-size:13px;font-weight:800;color:{{ p.corEstado }};min-width:52px;text-align:right">{{ p.estado }}</span>
+                <span style="width:56px;height:32px;border-radius:16px;background:{{ p.fundoTrilho }};display:flex;align-items:center;justify-content:{{ p.alinhamento }};padding:4px">
+                  <span style="width:24px;height:24px;border-radius:12px;background:#fff;display:block"></span>
+                </span>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ formAberto }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Adicionar pessoa</div>
+            <div style="display:grid;grid-template-columns:{{ grid2 }};gap:16px">
+              <div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Nome</div>
+                <input type="text" placeholder="Nome completo" value="{{ fNome }}" onInput="{{ mudarNome }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;color:#3A3F47;outline:none" />
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">E-mail</div>
+                <input type="email" inputmode="email" placeholder="nome@rede.com.br" value="{{ fEmail }}" onInput="{{ mudarEmail }}" style="width:100%;min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;color:#3A3F47;outline:none" />
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Loja</div>
+                <div style="min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px;background:#EDEFF2;color:#8A9099;display:flex;align-items:center;gap:8px">
+                  <span>{{ lojaSelecionada }}</span>
+                  <span style="display:{{ lojaTravada }};font-size:12px;font-weight:800">· travado</span>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062D7B;margin-bottom:8px">Papel</div>
+                <div style="display:{{ papelTravado }};min-height:48px;border:2px solid #EDEFF2;border-radius:12px;padding:12px 16px;font-size:16px;background:#EDEFF2;color:#8A9099;align-items:center">Vendedora · fixo</div>
+                <div style="display:{{ papelEscolha }};gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ chipsPapel }}" as="cp" hint-placeholder-count="3">
+                    <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ cp.borda }};background:{{ cp.fundo }};color:{{ cp.cor }};font-size:16px;font-weight:700" onClick="{{ cp.escolher }}">{{ cp.texto }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
+              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">Salvar pessoa</button>
+              <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ fecharForm }}">Cancelar</button>
+            </div>
+          </div>
+        </sc-if>
+        <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800;margin-top:24px" onClick="{{ abrirForm }}">Adicionar pessoa</button>
+      </sc-if>
+
+      <sc-if value="{{ emPerfil }}" hint-placeholder-val="{{ false }}">
+        <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700;margin-bottom:16px" onClick="{{ fecharPerfil }}">‹ Voltar ao painel</button>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <span style="width:64px;height:64px;flex:none;border-radius:32px;background:#062D7B;color:#fff;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ perfilInicial }}</span>
+          <div>
+            <h1 style="font-size:28px;font-weight:800;color:#062D7B;margin:0;line-height:1.15">{{ perfilNome }}</h1>
+            <div style="font-size:14px;color:#8A9099">{{ lojaSelecionada }}{{ gerenteSufixo }}</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;border:1px solid #EDEFF2;border-radius:12px;padding:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between">
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#062D7B">Em formação</div>
+            <div style="font-size:14px;color:#8A9099">{{ txt_treinoDiario }}</div>
+          </div>
+          <button style="min-height:48px;padding:12px 24px;border-radius:12px;border:2px solid {{ perfilBordaSelo }};background:{{ perfilFundoSelo }};color:{{ perfilCorSelo }};font-size:16px;font-weight:800" onClick="{{ alternarFormacao }}">{{ perfilRotuloSelo }}</button>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ gridKpi }};gap:16px;margin-top:16px">
+          <sc-for list="{{ perfilKpis }}" as="k" hint-placeholder-count="6">
+            <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099">{{ k.rotulo }}</div>
+              <div style="font-size:36px;font-weight:800;color:#F96B05;line-height:1.05;margin-top:8px;font-variant-numeric:tabular-nums">{{ k.valor }}</div>
+              <div style="font-size:14px;font-weight:700;color:{{ k.corVar }};margin-top:4px">{{ k.variacao }}</div>
+            </div>
+          </sc-for>
+        </div>
+          <div style="margin-top:12px;font-size:13px;color:#8A9099;line-height:1.4">{{ textoNaoAuditado }}</div>
+      </sc-if>
+
+      <div style="margin-top:40px;border-top:1px solid #EDEFF2;padding-top:24px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+        <div style="font-size:22px;font-weight:800;color:#062D7B;line-height:1.25;max-width:34ch">{{ txt_lemaOrdem }}</div>
+        <div style="font-size:14px;color:#8A9099">Casa do Olhar · Ver bem é viver melhor.</div>
+      </div>
+    </div>
+
+    <div style="display:{{ mostrarAbas }};position:sticky;bottom:0;background:#fff;border-top:1px solid #EDEFF2;padding:8px 8px 16px;gap:4px;z-index:20">
+      <sc-for list="{{ abas }}" as="n" hint-placeholder-count="5">
+        <button style="flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:11px;font-weight:800;letter-spacing:.02em" onClick="{{ n.ir }}">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ n.cor }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>
+          {{ n.rotulo }}
+        </button>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = {
+    w: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    tela: 'niveis', passo: 0, fase: 'passos', feitos: {},
+    resultado: null, nivelVendido: null,
+    valorTexto: '', descontoTexto: '0', justificativa: '',
+    visao: null, segundoPar: null, armacao: null, orcamento: null,
+    tipoTreino: 'Sortear tudo',
+    // Bloco da Trilha escolhido para treinar (Lentes, Armações, Negociação ou tudo). Fica no aparelho.
+    blocoTreino: (function () { try { return window.localStorage.getItem('rdoteste_bloco') || ''; } catch (e) { return ''; } })(),
+    rodadas30: null,
+    rodada: null, iq: 0, escolha: null, acertos: 0, treinoFim: false,
+    periodo: 'Hoje', formacao: {}, perfil: null,
+    menu: false,
+    lojas: [], lojaSel: null, equipe: [], carregando: true, erroEquipe: null, okEquipe: null,
+    ident: null, identErro: null, identCarregando: true,
+    codigoDigitado: '', entrando: false, erroLogin: null,
+    horaInicio: null, tratamentos: {}, salvando: false, erroSalvar: null,
+    atendimentos: [], atendCarregando: true, atendErro: null,
+    conteudo: null, erroBanco: null,
+    formAberto: false, fNome: '', fEmail: '', fPapel: 'vendedora',
+    entrega: null, entregando: false,
+    lojaAberta: false, lCodigo: '', lNome: '', lCidade: ''
+  };
+
+  get ERROS() {
+    return {
+      sem_permissao: 'Você não tem permissão para essa ação.',
+      outra_loja: 'Essa pessoa é de outra loja. Você só pode cadastrar na sua loja.',
+      so_vendedora: 'A gerente só pode cadastrar pessoas no papel de vendedora.',
+      email_invalido: 'E-mail inválido. Confira e tente de novo.',
+      sem_permissao_para_esta_pessoa: 'Você só pode fazer isso com vendedoras da sua própria loja.',
+      inativo: 'Seu acesso está desativado. Fale com a gerente.',
+      // Mensagem única de propósito: não dizer se o código existe ou não.
+      codigo_invalido: 'Código não confere. Confira com a gerente.',
+      sem_codigo: 'Digite o seu código de acesso.',
+      codigo_duplicado: 'Há um problema no seu cadastro. Fale com a diretoria.',
+      muitas_tentativas: 'Muitas tentativas. Espere 5 minutos e tente de novo.',
+      linha_mudou: 'A lista mudou enquanto você mexia. Abra a Equipe de novo e repita.',
+      nao_consegui_gerar_codigo: 'Não consegui gerar um código agora. Tente de novo.',
+      loja_ja_existe: 'Já existe uma loja com esse código. Escolha outro.',
+      codigo_loja_invalido: 'O código da loja usa só letras e números, de 2 a 10 caracteres.',
+      nome_loja_obrigatorio: 'Informe o nome da loja.',
+      cidade_obrigatoria: 'Informe a cidade da loja.',
+      aba_nao_encontrada: 'Uma aba da planilha não foi encontrada. Fale com a diretoria.',
+      pessoa_nao_encontrada: 'Essa pessoa não está na lista de usuários.',
+      erro_desconhecido: 'Algo deu errado. Tente de novo em alguns segundos.',
+      email_duplicado: 'Esse e-mail aparece em mais de uma linha da aba USUARIOS. Peça à diretoria para deixar só uma linha antes de continuar.',
+      papel_exige_todas: 'Diretoria e Supervisão só existem com Loja = TODAS. Escolha outro papel ou deixe a loja como TODAS.',
+      loja_invalida: 'Essa loja não existe ou está inativa na aba LOJAS.',
+      papel_invalido: 'Papel desconhecido. Use vendedora, gerente, supervisão ou diretoria.',
+      nome_obrigatorio: 'Informe o nome da pessoa.',
+      sem_conexao: 'Sem conexão com o servidor. Confira sua internet e tente de novo.',
+      resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.',
+      falha_no_servidor: 'Algo deu errado no servidor. Tente de novo em alguns segundos.'
+    };
+  }
+
+  /**
+   * Ponte com o servidor. O Codigo.gs SEMPRE responde uma caixa
+   * {ok:true, ...} ou {ok:false, erro:'codigo'}. Aqui a caixa e aberta:
+   * ok:false vira erro tratado, com o codigo e a resposta inteira,
+   * para quem chamou poder ler campos extras (o e-mail detectado, p.ex.).
+   * Assim nenhuma resposta de recusa passa por sucesso.
+   */
+  gs(fn, args, ok, falha) {
+    // O codigo de acesso e o identificador do aparelho vao em TODA chamada,
+    // sempre nas duas primeiras posicoes. Assim nenhum lugar do app precisa
+    // lembrar de mandar - e nenhum consegue esquecer.
+    const completos = [this._codigo || '', this._aparelho || ''].concat(args || []);
+    const abrir = r => {
+      if (r && typeof r === 'object' && r.ok === false) return falha(r.erro || 'erro_desconhecido', r);
+      ok(r);
+    };
+    const g = typeof google !== 'undefined' && google.script && google.script.run;
+    if (g) {
+      // Rodando DENTRO do Apps Script (o jeito antigo, mantido enquanto
+      // a pagina nova nao substitui).
+      google.script.run
+        .withSuccessHandler(abrir)
+        .withFailureHandler(e => falha(e && e.message ? e.message : String(e), null))
+        [fn].apply(null, completos);
+      return;
+    }
+
+    // Rodando FORA do Apps Script: fala com o servidor por fora.
+    //
+    // Content-Type text/plain de proposito. Com application/json o
+    // navegador faz uma checagem previa (OPTIONS) que o Apps Script nao
+    // responde, e a conversa morre antes de comecar.
+    fetch(this.URL_SERVIDOR, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: completos })
+    })
+      .then(r => r.text())
+      .then(t => {
+        let d = null;
+        try { d = JSON.parse(t); } catch (e) {}
+        if (!d) return falha('resposta_invalida', null);
+        abrir(d);
+      })
+      .catch(() => falha('sem_conexao', null));
+  }
+
+
+
+  papelAtual() {
+    // Vem do servidor, via quemSouEu(). Enquanto nao chegar, o papel mais
+    // restrito e o padrao - nunca liberar tela por otimismo.
+    return (this.state.ident && this.state.ident.papel) || 'vendedora';
+  }
+
+  carregarLojas() {
+    this.gs('listarLojas', [], r => {
+      // O servidor manda [{codigo, nome, cidade}]. O codigo e o que a
+      // aba USUARIOS guarda na coluna Loja - e o que vale nas consultas.
+      const bruto = (r && r.lojas) || [];
+      const lista = (Array.isArray(bruto) ? bruto : []).map(l => ({
+        codigo: String(l.codigo || '').trim(),
+        nome: String(l.nome || '').trim(),
+        cidade: String(l.cidade || '').trim(),
+        rotulo: String(l.codigo || '').trim() + (l.nome ? ' — ' + l.nome : '')
+      }));
+      const sel = this.state.lojaSel || (lista[0] ? lista[0].codigo : null);
+      this.setState({ lojas: lista, lojaSel: sel }, () => this.carregarEquipe());
+    }, e => this.setState({ carregando: false, lojas: [],
+      erroEquipe: this.ERROS[e] || 'Não foi possível carregar as lojas.' }));
+  }
+
+  carregarEquipe() {
+    this.setState({ carregando: true });
+    this.gs('listarEquipe', [this.state.lojaSel], r => {
+      // A planilha guarda Ativo como texto SIM/NAO, nao como sim/nao logico.
+      // Sem normalizar, 'NAO' seria lido como verdadeiro.
+      const bruto = (r && r.equipe) || [];
+      this.setState({
+        equipe: (Array.isArray(bruto) ? bruto : []).map(p => ({
+          // linha e a chave da pessoa agora: o e-mail deixou de ser
+          // obrigatorio e nao serve mais para apontar ninguem.
+          linha: Number(p.linha) || 0,
+          nome: String(p.nome || '').trim(),
+          loja: String(p.loja || '').trim(),
+          papel: String(p.papel || '').toLowerCase().trim(),
+          ativo: String(p.ativo).toUpperCase().trim() === 'SIM',
+          temCodigo: String(p.temCodigo || '').toUpperCase().trim() === 'SIM' ? 'SIM' : 'NAO',
+          rodadas30: Number(p.rodadas30) || 0
+        })),
+        carregando: false, erroEquipe: null });
+    }, e => this.setState({ carregando: false, equipe: [],
+      erroEquipe: this.ERROS[e] || 'Não foi possível carregar a equipe.' }));
+  }
+
+  salvarPessoa() {
+    const s = this.state;
+    const papel = this.papelAtual() === 'gerente' ? 'vendedora' : s.fPapel;
+    // Diretoria e supervisao nao pertencem a loja nenhuma: o servidor exige TODAS.
+    const lojaAlvo = (papel === 'diretoria' || papel === 'supervisao') ? 'TODAS' : s.lojaSel;
+    const pessoa = { nome: s.fNome.trim(), email: s.fEmail.trim(), papel: papel, loja: lojaAlvo, ativo: true };
+    this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
+    this.gs('salvarPessoa', [pessoa], r => {
+      // O codigo volta UMA vez. Se a gerente fechar esta tela sem anotar,
+      // so resta gerar outro - nem o servidor guarda copia fora da planilha.
+      this.setState({
+        entrega: this.montarEntrega(r.nome || pessoa.nome, r.codigoNovo, r.loja || lojaAlvo),
+        entregando: false, formAberto: false, fNome: '', fEmail: '', fPapel: 'vendedora'
+      }, () => this.carregarEquipe());
+    }, e => this.setState({ entregando: false,
+      erroEquipe: this.ERROS[e] || 'Não foi possível salvar. Tente de novo.' }));
+  }
+
+  /** Gera outro código para alguém que perdeu o dela. */
+  novoCodigoPara(pessoa) {
+    this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
+    this.gs('gerarNovoCodigo', [{ linha: pessoa.linha, nome: pessoa.nome }], r => {
+      this.setState({ entrega: this.montarEntrega(r.nome, r.codigoNovo, r.loja), entregando: false },
+        () => this.carregarEquipe());
+    }, e => this.setState({ entregando: false,
+      erroEquipe: this.ERROS[e] || 'Não foi possível gerar o código.' }));
+  }
+
+  /**
+   * Monta o cartao de entrega: o codigo para anotar e o texto pronto de
+   * WhatsApp. A ideia e que abrir loja nova vire "cadastra, copia, cola" -
+   * sem ninguem da diretoria no meio.
+   */
+  montarEntrega(nome, codigo, loja) {
+    const primeiro = String(nome || '').split(' ')[0];
+    const texto =
+      'Oi, ' + primeiro + '! Esse é o app da Casa do Olhar para você registrar os atendimentos.\n\n' +
+      '1) Abra este link no celular:\n' + this.LINK_DO_APP + '\n\n' +
+      '2) Digite o seu código de acesso: ' + codigo + '\n\n' +
+      '3) Para ficar com o ícone na tela inicial: toque no botão de compartilhar do navegador e escolha "Adicionar à Tela de Início".\n\n' +
+      'Guarde esse código, ele é só seu. Qualquer dúvida me chama.';
+    return { nome: nome, primeiro: primeiro, codigo: codigo, loja: loja, texto: texto, copiado: false };
+  }
+
+  copiarEntrega() {
+    const e = this.state.entrega;
+    if (!e) return;
+    const feito = () => this.setState({ entrega: Object.assign({}, e, { copiado: true }) });
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(e.texto).then(feito, () => this.copiarNaMarra(e.texto, feito));
+        return;
+      }
+    } catch (x) { /* cai no caminho de baixo */ }
+    this.copiarNaMarra(e.texto, feito);
+  }
+
+  /** Navegador antigo ou sem permissao: copia pelo caminho velho. */
+  copiarNaMarra(texto, feito) {
+    try {
+      const t = document.createElement('textarea');
+      t.value = texto;
+      t.style.position = 'fixed';
+      t.style.opacity = '0';
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand('copy');
+      document.body.removeChild(t);
+      feito();
+    } catch (x) {
+      this.setState({ erroEquipe: 'Não consegui copiar sozinho. Selecione o texto e copie à mão.' });
+    }
+  }
+
+  salvarLoja() {
+    const s = this.state;
+    this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
+    const nova = { codigo: (s.lCodigo || '').trim().toUpperCase(),
+                   nome: (s.lNome || '').trim(), cidade: (s.lCidade || '').trim() };
+    this.gs('salvarLoja', [nova], r => {
+      this.setState({ entregando: false, lojaAberta: false, lCodigo: '', lNome: '', lCidade: '',
+        okEquipe: 'Loja ' + nova.codigo + ' criada.' }, () => this.carregarLojas());
+    }, e => this.setState({ entregando: false,
+      erroEquipe: this.ERROS[e] || 'Não foi possível criar a loja.' }));
+  }
+
+  /**
+   * Tratamentos oferecidos. Vem do proprio banco de treino deste app,
+   * que foi montado a partir dos manuais - nao e lista inventada aqui.
+   */
+  /**
+   * Endereco do servidor. E a UNICA coisa deste arquivo que fala com o
+   * mundo de fora. Nao e segredo: qualquer um pode chamar, e o servidor
+   * recusa quem nao apresentar um codigo valido.
+   */
+  get URL_SERVIDOR() {
+    return 'https://script.google.com/macros/s/AKfycbyYoBctgbFxsAc2tN-n7HpOQLA63xAAysfzm46LXHq50awvC49Zjy8XHmfvtanfiXbogw/exec';
+  }
+
+  /**
+   * Link oficial do app, usado no texto de WhatsApp da entrega.
+   *
+   * Aponta para a pagina publicada, NAO para o Apps Script. O endereco do
+   * Apps Script continua funcionando, mas quem abre por la cai na versao
+   * de dentro do quadro isolado - a que nao guarda o codigo.
+   */
+  get LINK_DO_APP() {
+    return 'https://marlenoliveira.github.io/rede-de-oticas-app/';
+  }
+
+
+
+
+
+
+  componentDidMount() {
+    this._r = () => this.setState({ w: window.innerWidth });
+    window.addEventListener('resize', this._r);
+    // A rodada de treino so e montada depois que o banco chegar do
+    // servidor - e o banco so vem depois do codigo validado.
+    // Se ja houver codigo guardado no aparelho, entra direto. Mas quem diz
+    // se ele ainda vale e o servidor, toda vez: e assim que a desativacao
+    // na planilha corta o acesso na hora.
+    const guardado = this.guardado('rdoteste_codigo');
+    if (guardado) this.identificar(guardado, false);
+    else this.setState({ identCarregando: false });
+  }
+
+  // ---------------- memoria do aparelho ----------------
+  // O codigo fica guardado ate a pessoa clicar em Sair ou ate ser
+  // desativada na planilha. Sem validade em dias: cinco meninas perdendo
+  // acesso todo mes viraria suporte semanal com 13 lojas.
+
+  guardado(chave) {
+    try { return window.localStorage.getItem(chave) || ''; } catch (e) { return ''; }
+  }
+  guardar(chave, valor) {
+    try { if (valor) window.localStorage.setItem(chave, valor); else window.localStorage.removeItem(chave); }
+    catch (e) { /* navegador sem armazenamento: o app funciona, so pergunta o codigo toda vez */ }
+  }
+
+
+
+  /** Identificador do aparelho, so para a trava de tentativas. Nao e segredo. */
+  idDoAparelho() {
+    let a = this.guardado('rdoteste_aparelho');
+    if (!a) {
+      a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+      this.guardar('rdoteste_aparelho', a);
+    }
+    return a;
+  }
+
+  /**
+   * Valida o codigo NO SERVIDOR. O navegador nunca decide se o codigo
+   * presta - ele so entrega e espera a resposta.
+   */
+  identificar(codigo, guardarDepois) {
+    this._codigo = String(codigo || '').replace(/\D/g, '');
+    this._aparelho = this.idDoAparelho();
+    if (!this._codigo) {
+      this.setState({ identCarregando: false, ident: null, entrando: false });
+      return;
+    }
+    this.setState({ identCarregando: true, entrando: true, erroLogin: null });
+    this.gs('quemSouEu', [],
+      r => {
+        if (guardarDepois) this.guardar('rdoteste_codigo', this._codigo);
+        // Trilha do treinamento (14/11/2026): so quem esta matriculada recebe
+        // `trilha` do servidor. Ao entrar, a primeira tela dela passa a ser
+        // "Minha trilha" (trilha.html), uma vez por sessao do navegador. Para
+        // todo o resto, nada muda.
+        if (r && r.trilha && this.primeiraVezNaSessao()) { this.abrirTrilha(); return; }
+        this.setState({ identCarregando: false, entrando: false, ident: r,
+                        erroLogin: null, codigoDigitado: '' },
+          () => { this.carregarLojas(); this.carregarAtendimentos(); this.carregarBanco(); });
+      },
+      (cod, resposta) => {
+        // Desativada ou codigo trocado: o guardado no aparelho perde a
+        // validade na hora. E isto que substitui a validade em dias.
+        if (cod === 'inativo' || cod === 'codigo_invalido' || cod === 'codigo_duplicado') {
+          this.guardar('rdoteste_codigo', '');
+          this._codigo = '';
+        }
+        this.setState({ identCarregando: false, entrando: false, ident: null,
+          erroLogin: this.MENSAGEM_LOGIN(cod, resposta) });
+      });
+  }
+
+  /** Mensagem unica para codigo errado: nao dizer se existe ou nao. */
+  MENSAGEM_LOGIN(cod, resposta) {
+    if (cod === 'muitas_tentativas') {
+      const m = (resposta && resposta.esperaMinutos) || 5;
+      return 'Muitas tentativas. Espere ' + m + ' minutos e tente de novo.';
+    }
+    if (cod === 'inativo') return 'Seu acesso está desativado. Fale com a gerente.';
+    if (cod === 'codigo_duplicado') return 'Há um problema no seu cadastro. Fale com a diretoria.';
+    if (cod === 'aba_nao_encontrada') return 'Uma aba da planilha não foi encontrada. Fale com a diretoria.';
+    if (cod === 'fora_do_apps_script') return 'Abra o app pelo link oficial que a gerente enviou.';
+    if (cod === 'codigo_invalido' || cod === 'sem_codigo') return 'Código não confere. Confira com a gerente.';
+    return 'Não consegui entrar agora. Tente de novo em alguns segundos.';
+  }
+
+  sair() {
+    this.guardar('rdoteste_codigo', '');
+    // Tablet da loja: a proxima pessoa matriculada tambem tem de cair na trilha.
+    try { window.sessionStorage.removeItem('rdoteste_trilha_vista'); } catch (e) {}
+    this._codigo = '';
+    this.setState({ ident: null, identCarregando: false, entrando: false,
+                    codigoDigitado: '', erroLogin: null, menu: false,
+                    atendimentos: [], lojas: [], equipe: [] });
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); }
+
+  get AZUL() { return '#062D7B'; }
+  get LARANJA() { return '#F96B05'; }
+
+
+
+  /**
+   * As 211 questoes NAO moram mais nesta pagina.
+   *
+   * Elas ficam no servidor e so descem depois do codigo validado. Antes,
+   * o link entregava os manuais inteiros a qualquer um que abrisse, antes
+   * de digitar codigo nenhum.
+   */
+  get BANCOS()      { return (this.state.conteudo || {}).bancos || {}; }
+  get NIVEIS()      { return (this.state.conteudo || {}).niveis || []; }
+  get PASSOS()      { return (this.state.conteudo || {}).passos || []; }
+  get TRATAMENTOS() { return (this.state.conteudo || {}).tratamentos || []; }
+  get MATERIAIS()   { return (this.state.conteudo || {}).materiais || []; }
+  get AVISOS()      { return (this.state.conteudo || {}).avisos || []; }
+
+  carregarBanco() {
+    this.gs('lerBanco', [],
+      r => this.setState({ conteudo: r || {} },
+        () => this.setState({ rodada: this.montarRodada() })),
+      codigo => this.setState({ conteudo: {},
+        erroBanco: this.ERROS[codigo] || 'Não consegui carregar o conteúdo dos manuais.' }));
+  }
+
+  /**
+   * Fim da rodada: registra no servidor que houve UMA rodada — bloco, tema,
+   * quantas questoes e, desde 13/11/2026 (decisao do Marlen), quantos acertos
+   * e quanto tempo levou. O tempo conta da primeira a ultima resposta.
+   * Se o servidor falhar, o placar aparece do mesmo jeito; o registro e
+   * acessorio, o treino nao.
+   */
+  fecharRodada() {
+    const s = this.state;
+    const n = s.rodada ? s.rodada.length : 0;
+    const segundos = this._t0Rodada ? Math.round((Date.now() - this._t0Rodada) / 1000) : null;
+    this._t0Rodada = 0;
+    // treinouHoje apaga o lembrete da tela: quem acabou de treinar nao precisa dele.
+    this.setState({ treinoFim: true, rodadas30: null, treinouHoje: true });
+    this.gs('registrarRodada', [{ bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n,
+        acertos: s.acertos, segundos: segundos }],
+      r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
+      () => {});
+  }
+
+  montarRodada(tipoEscolhido) {
+    const bancos = this.BANCOS;
+    // Sem banco carregado ainda, nao ha rodada. A tela de treino avisa.
+    if (!bancos || !Object.keys(bancos).length) return [];
+    const tipo = tipoEscolhido || this.state.tipoTreino || 'Sortear tudo';
+    const girar = (arr, s) => { const k = arr.length ? ((s % arr.length) + arr.length) % arr.length : 0; return arr.slice(k).concat(arr.slice(0, k)); };
+    const base = Math.floor(Math.random() * 97);
+    const blocoSel = this.state.blocoTreino || '';
+    const nomes = Object.keys(bancos).filter(k => !blocoSel || bancos[k].bloco === blocoSel);
+    if (tipo === 'Sortear tudo') {
+      const vistas = this._vistas || {}, erradas = this._erradas || {};
+      const mistura = a => { const o = a.slice(); for (let i = o.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); const t = o[i]; o[i] = o[k]; o[k] = t; } return o; };
+      const todas = [];
+      nomes.forEach(k => {
+        const b = bancos[k];
+        b.itens.forEach(it => {
+          const pool = (b.pool || b.itens.map(x => x[1])).filter(x => x !== it[1]);
+          const fin = mistura(mistura(pool).slice(0, 3).concat([it[1]]));
+          todas.push({ id: b.tipo + '::' + it[0], tipo: b.tipo, enunciado: it[0], instrucao: b.instrucao, opcoes: fin, certa: fin.indexOf(it[1]), explicacao: it[2] });
+        });
+      });
+      const peso = q2 => (erradas[q2.id] ? 0 : (vistas[q2.id] ? 2 : 1));
+      const ordenadas = mistura(todas).sort((a, b2) => peso(a) - peso(b2));
+      const usados = {}, saida = [];
+      for (let i = 0; i < ordenadas.length && saida.length < 8; i++) {
+        if (!usados[ordenadas[i].id]) { usados[ordenadas[i].id] = 1; saida.push(ordenadas[i]); }
+      }
+      return saida;
+    }
+    const alvos = [tipo];
+    const porBanco = 8;
+    const q = [];
+
+    alvos.forEach((nome, bi) => {
+      const b = bancos[nome];
+      const itens = girar(b.itens, base + bi * 3);
+      for (let i = 0; i < porBanco && i < itens.length && q.length < 8; i++) {
+        const it = itens[i];
+        const pool = (b.pool || b.itens.map(x => x[1])).filter(x => x !== it[1]);
+        const distr = girar(pool, base + bi * 7 + i * 3).slice(0, 3);
+        const ops = distr.concat([it[1]]);
+        for (let j = ops.length - 1; j > 0; j--) { const k2 = Math.floor(Math.random() * (j + 1)); const t = ops[j]; ops[j] = ops[k2]; ops[k2] = t; }
+        q.push({ id: b.tipo + '::' + it[0], tipo: b.tipo, enunciado: it[0], instrucao: b.instrucao, opcoes: ops, certa: ops.indexOf(it[1]), explicacao: it[2] });
+      }
+    });
+    return q.slice(0, 8);
+  }
+
+  carregarAtendimentos() {
+    this.setState({ atendCarregando: true, atendErro: null });
+    this.gs('lerAtendimentos', [],
+      r => this.setState({ atendimentos: (r && Array.isArray(r.linhas)) ? r.linhas : [],
+                           atendCarregando: false, atendErro: null }),
+      codigo => this.setState({ atendimentos: [], atendCarregando: false,
+        atendErro: this.ERROS[codigo] || 'Não consegui carregar os atendimentos.' }));
+  }
+
+  /** "DD/MM/AAAA" ou Date -> Date. Devolve null se nao der para ler. */
+  comoData(v) {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    const t = String(v).trim();
+    let m = t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+    const d = new Date(t);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  /** Recorta pelo periodo escolhido na tela. */
+  filtrarPeriodo(linhas, periodo) {
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    let limite = null;
+    if (periodo === 'Hoje') limite = hoje;
+    else if (periodo === 'Semana') { limite = new Date(hoje); limite.setDate(limite.getDate()-6); }
+    else if (periodo === 'Mês')    { limite = new Date(hoje); limite.setDate(limite.getDate()-29); }
+    if (!limite) return linhas.slice();
+    return linhas.filter(l => { const d = this.comoData(l['Data']); return d && d >= limite; });
+  }
+
+  /**
+   * Metricas de um conjunto de linhas. NAO inventa nada: quando nao ha
+   * linha, devolve total 0 e quem chama mostra "Ainda nao ha atendimentos
+   * registrados" em vez de zero disfarcado de resultado.
+   */
+  resumo(linhas) {
+    const n = linhas.length;
+    const num = x => { const v = parseFloat(String(x).replace(',','.')); return isNaN(v) ? 0 : v; };
+    const vendas = linhas.filter(l => String(l['Resultado']).trim() === 'Vendeu');
+    const nv = vendas.length;
+    const soma = (arr, f) => arr.reduce((a,x) => a + f(x), 0);
+    const pct = (a,b) => b ? Math.round((a/b)*100) : 0;
+    const mixNiveis = {};
+    vendas.forEach(l => { const k = String(l['Nivel']).trim() || '—'; mixNiveis[k] = (mixNiveis[k]||0)+1; });
+    const nTrat = soma(linhas, l => String(l['Tratamentos']||'').split(';').filter(x => x.trim()).length);
+    return {
+      vazio: n === 0,
+      total: n,
+      vendas: nv,
+      conversao: pct(nv, n),
+      faturamento: soma(vendas, l => num(l['Valor'])),
+      ticket: nv ? Math.round(soma(vendas, l => num(l['Valor'])) / nv) : 0,
+      descontoMedio: nv ? Math.round(soma(vendas, l => num(l['Desconto %'])) / nv) : 0,
+      multifocal: pct(vendas.filter(l => String(l['Tipo visao']).trim() === 'Multifocal').length, nv),
+      segundoPar: pct(vendas.filter(l => String(l['Segundo par']).trim() === 'Sim').length, nv),
+      tratPorAtend: n ? (nTrat / n) : 0,
+      aderencia: n ? Math.round(soma(linhas, l => num(l['Etapas'])) / n / 14 * 100) : 0,
+      mix: mixNiveis,
+      pensando: linhas.filter(l => String(l['Resultado']).trim() === 'Vai pensar'),
+      linhas: linhas
+    };
+  }
+
+  /**
+   * Painel do treino: pagina solta (painel.html), no mesmo endereco do app.
+   * Garante o codigo guardado no aparelho antes de ir, para o painel entrar
+   * direto. Quem decide o que cada papel ve continua sendo o servidor.
+   */
+  abrirPainel() {
+    if (this._codigo) this.guardar('rdoteste_codigo', this._codigo);
+    try { window.location.href = 'painel.html'; } catch (e) {}
+  }
+
+  /** Minha trilha: pagina solta (trilha.html), no mesmo endereco do app. */
+  abrirTrilha() {
+    if (this._codigo) this.guardar('rdoteste_codigo', this._codigo);
+    try { window.location.href = 'trilha.html'; } catch (e) {}
+  }
+
+  /**
+   * Recados e Gente (desde 16/11/2026): paginas soltas que so existem na
+   * VERSAO DE TESTE. No app das lojas os itens nem aparecem (escondeAba).
+   */
+  abrirPagina(pagina) {
+    if (this._codigo) this.guardar('rdoteste_codigo', this._codigo);
+    try { window.location.href = pagina; } catch (e) {}
+  }
+
+  /** Verdadeiro so na primeira entrada desta sessao do navegador. */
+  primeiraVezNaSessao() {
+    try {
+      if (window.sessionStorage.getItem('rdoteste_trilha_vista')) return false;
+      window.sessionStorage.setItem('rdoteste_trilha_vista', '1');
+      return true;
+    } catch (e) { return false; }
+  }
+
+  ir(tela) {
+    // O relogio do atendimento comeca quando a vendedora entra na tela,
+    // nao quando ela salva. Sem campo para digitar: menos erro no balcao.
+    if (tela === 'atendimento' && !this.state.horaInicio) {
+      this.setState({ tela: tela, horaInicio: this.agora() });
+      return;
+    }
+    this.setState({ tela: tela });
+  }
+
+  /** Hora local no formato HH:MM. */
+  agora() {
+    const d = new Date();
+    return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
+  }
+
+  /** Data local no formato DD/MM/AAAA. */
+  hoje() {
+    const d = new Date();
+    return ('0'+d.getDate()).slice(-2) + '/' + ('0'+(d.getMonth()+1)).slice(-2) + '/' + d.getFullYear();
+  }
+
+  /** "1.284,50" -> 1284.5 . Sem isto o valor entra como texto e nao soma. */
+  valorNumero(txt) {
+    const limpo = String(txt||'').replace(/\./g,'').replace(',','.').replace(/[^0-9.]/g,'');
+    const n = parseFloat(limpo);
+    return isNaN(n) ? 0 : n;
+  }
+
+  /** Monta o objeto do atendimento e grava. */
+  gravarAtendimento() {
+    if (this.state.salvando) return;           // trava contra clique duplo
+    const s = this.state;
+    const passos = this.PASSOS;
+    const etapas = Object.keys(s.feitos).filter(k => s.feitos[k]).length;
+    const trat = Object.keys(s.tratamentos).filter(k => s.tratamentos[k]);
+    const vendeu = s.resultado === 'vendeu';
+    const rotulos = { vendeu: 'Vendeu', pensar: 'Vai pensar', olhando: 'Só olhando' };
+
+    const registro = {
+      data:          this.hoje(),
+      horaInicio:    s.horaInicio || this.agora(),
+      horaFim:       this.agora(),
+      resultado:     rotulos[s.resultado] || '',
+      // Sem campo na tela para outra pessoa: assume quem esta logada, e so
+      // quando houve venda. Vazio nos demais casos, em vez de chutar.
+      quemFechou:    vendeu ? ((s.ident && s.ident.nome) || '') : '',
+      nivel:         vendeu ? (s.nivelVendido || '') : '',
+      tipoVisao:     s.visao || '',
+      segundoPar:    s.segundoPar || '',
+      desconto:      parseInt(s.descontoTexto || '0', 10) || 0,
+      justificativa: (s.justificativa || '').trim(),
+      valor:         vendeu ? this.valorNumero(s.valorTexto) : 0,
+      tratamentos:   trat.join('; '),
+      etapas:        etapas
+    };
+
+    this.setState({ salvando: true, erroSalvar: null });
+    this.gs('salvarAtendimento', [registro],
+      () => this.setState({ salvando: false, erroSalvar: null, fase: 'salvo' }),
+      (codigo) => this.setState({ salvando: false,
+        erroSalvar: (this.ERROS[codigo] || 'Não consegui salvar. Confira sua internet e tente de novo.') +
+                    ' O atendimento continua aqui na tela — nada foi perdido.' }));
+  }
+
+  renderVals() {
+    const s = this.state, AZ = '#062D7B', LA = '#F96B05', VD = '#1E9E5A', VM = '#C0392B', BL = '#EDEFF2', CZ = '#8A9099';
+    const desktop = s.w >= 900;
+    const leituraDesconto = (d, conv) => d <= 18
+      ? 'vende valor: desconto baixo com faturamento alto'
+      : (conv >= 48 ? 'está comprando a venda com a margem' : 'alerta: desconto alto e faturamento baixo');
+    const papel = this.papelAtual();
+    const souGerente = papel === 'gerente';
+    const id = s.ident || {};
+    const identNome = id.nome || '';
+    const identPrimeiro = identNome.split(' ')[0] || '';
+    const identLoja = id.loja || '';
+    const papelRotulo = papel === 'diretoria' ? 'Diretoria da rede'
+      : (papel === 'supervisao' ? 'Supervisão da rede'
+      : (papel === 'gerente' ? 'Gerente · ' + identLoja : 'Vendedora · ' + identLoja))
+      + (id.teste ? ' · LOJA DE TESTE: nada é gravado' : '');
+    const veRede = (papel === 'diretoria' || papel === 'supervisao');
+    // Enquanto nao houver identidade confirmada pelo servidor, a unica
+    // tela possivel e a do codigo.
+    const naLogin = !s.identCarregando && !s.ident;
+    // Blindagem: se o servidor devolver algo inesperado, vira lista vazia
+    // em vez de derrubar a tela inteira com "map is not a function".
+    const listaLojas = Array.isArray(s.lojas) ? s.lojas : [];
+    const listaEquipe = Array.isArray(s.equipe) ? s.equipe : [];
+    const lojaAtual = listaLojas.filter(l => l.codigo === s.lojaSel)[0] || null;
+    const gerenteDaLoja = (listaEquipe.filter(p => p.papel === 'gerente')[0] || {}).nome || '';
+    const textosServidor = (s.conteudo || {}).textos || null;
+    const txt = chave => textosServidor ? (textosServidor[chave] || '') : 'carregando…';
+
+    // ---------- DADOS REAIS (vindos de lerAtendimentos) ----------
+    // Nada abaixo inventa numero. Sem linha na planilha, o painel diz que
+    // nao ha dado, em vez de mostrar zero disfarcado de resultado.
+    const atendTodos = Array.isArray(s.atendimentos) ? s.atendimentos : [];
+    const noPeriodo  = this.filtrarPeriodo(atendTodos, s.periodo);
+    const meuEmail   = String(id.email || '').toLowerCase().trim();
+    const lojaFoco   = veRede ? String(s.lojaSel || '').trim() : identLoja;
+    const meus   = noPeriodo.filter(l => String(l['Email'] || '').toLowerCase().trim() === meuEmail);
+    const daLoja = noPeriodo.filter(l => String(l['Loja'] || '').trim() === lojaFoco);
+    const R  = this.resumo(meus);
+    const RL = this.resumo(daLoja);
+    const SEM_DADO = 'Ainda não há atendimentos registrados';
+    const NAO_AUDITADO = 'Números provisórios, não auditados. Quem consolida e audita é a analista financeira.';
+    const kpi = (rotulo, vazio, valor, contexto) => ({
+      rotulo: rotulo, valor: vazio ? '—' : valor,
+      variacao: vazio ? SEM_DADO : (contexto || ''), corVar: CZ
+    });
+    const brl = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+    const umDia = 86400000;
+    const diasDe = l => { const d = this.comoData(l['Data']);
+      return d ? Math.max(0, Math.round((new Date().getTime() - d.getTime()) / umDia)) : 0; };
+    const resumoLinha = l => [String(l['Nivel']||'').trim(), String(l['Tipo visao']||'').trim(),
+                              String(l['Tratamentos']||'').trim()].filter(Boolean).join(' · ') || '—';
+    const corResultado = r => r === 'Vendeu' ? VD : (r === 'Vai pensar' ? '#7A5B04' : CZ);
+    const fundoResultado = r => r === 'Vendeu' ? '#E9F6EF' : (r === 'Vai pensar' ? '#FDF6E3' : BL);
+    const porPessoa = linhas => {
+      const m = {};
+      linhas.forEach(l => { const n = String(l['Vendedora iniciou'] || '').trim();
+        if (n) { (m[n] = m[n] || []).push(l); } });
+      return m;
+    };
+    // Teclado de números da tela de código. Teclas grandes: o app é usado
+    // em pé, no balcão, muitas vezes com uma mão só.
+    const digitado = String(s.codigoDigitado || '');
+    const tecla = (texto, aoTocar, destaque) => ({
+      texto: texto, tocar: aoTocar,
+      fundo: destaque ? '#EDEFF2' : '#fff',
+      cor: destaque ? '#8A9099' : '#062D7B',
+      tamanho: destaque ? '18px' : '26px'
+    });
+    const digitar = d => () => {
+      if (digitado.length >= 8) return;
+      this.setState({ codigoDigitado: digitado + d, erroLogin: null });
+    };
+    // Vendedora nao entra em Loja, Equipe nem Perfil.
+    // Supervisao le tudo, mas nao entra em Equipe (nao cadastra ninguem).
+    // Painel do treino: Diretoria, supervisao e gerencia (decisao do Marlen em 14/11/2026).
+    const escondeAba = id => (papel === 'vendedora' && (id === 'equipe' || id === 'loja' || id === 'painel'))
+                          || (papel === 'supervisao' && id === 'equipe')
+                          || (id === 'trilha' && !(s.ident && s.ident.trilha))
+                          // Recados e Gente: so na versao de teste (montar-teste.js liga a chave).
+                          || ((id === 'recados' || id === 'gente') && !(typeof window !== 'undefined' && window.AMBIENTE_TESTE));
+    const telaBloqueada = escondeAba(s.tela)
+                       || (papel === 'vendedora' && s.tela === 'perfil');
+    const telaAtiva = telaBloqueada ? 'desempenho' : s.tela;
+    const passos = this.PASSOS;
+    const pa = passos[s.passo] || { nome:'', ajuda:'', fala:'', nunca:'', chave:'', itens:[] };
+
+    const itensNav = [
+      { id: 'atendimento', rotulo: 'Atendimento', d: 'M4 5h16v11H8l-4 4V5z' },
+      { id: 'niveis', rotulo: 'Níveis', d: 'M4 18h3V9H4v9zM10.5 18h3V5h-3v13zM17 18h3v-7h-3v7z' },
+      { id: 'treino', rotulo: 'Treino', d: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 5a4 4 0 100 8 4 4 0 000-8z' },
+      { id: 'consulta', rotulo: 'Consulta', d: 'M4 5h7a2 2 0 012 2v12a2 2 0 00-2-2H4V5zm16 0h-7a2 2 0 00-2 2v12a2 2 0 012-2h7V5z' },
+      { id: 'desempenho', rotulo: 'Desempenho', d: 'M4 19h16M7 15l4-5 3 3 4-6' },
+      { id: 'loja', rotulo: 'Loja', selo: 'gerente', d: 'M4 4h7v7H4V4zm9 0h7v4h-7V4zM4 13h7v7H4v-7zm9 3h7v4h-7v-4z' },
+      { id: 'equipe', rotulo: 'Equipe', selo: 'gerente', d: 'M9 11a3 3 0 100-6 3 3 0 000 6zm7 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM3 20v-1a5 5 0 015-5h2a5 5 0 015 5v1M17 14a4 4 0 014 4v2' },
+      // Nao e uma tela deste app: abre a pagina painel.html, no mesmo endereco.
+      // Ela usa o codigo que o app ja guarda no aparelho, entao nao pede de novo.
+      { id: 'painel', rotulo: 'Painel', selo: 'gerente', d: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
+      // So aparece para quem esta matriculada na trilha (o servidor diz quem).
+      { id: 'trilha', rotulo: 'Minha trilha', d: 'M5 20V4l7 4 7-4v16l-7-4-7 4z' },
+      // Versao de teste (16/11/2026): paginas recados.html e gente.html.
+      { id: 'recados', rotulo: 'Recados', d: 'M4 6h16v12H4V6zm0 0l8 7 8-7' },
+      { id: 'gente', rotulo: 'Gente', d: 'M12 20s-7-4.4-7-9.6A3.9 3.9 0 0112 8a3.9 3.9 0 017 2.4C19 15.6 12 20 12 20z' }
+    ];
+    const mapNav = n => ({
+      rotulo: n.rotulo, d: n.d, selo: n.selo || '',
+      cor: s.tela === n.id ? AZ : CZ,
+      fundo: s.tela === n.id ? BL : 'transparent',
+      peso: s.tela === n.id ? 800 : 600,
+      ir: () => n.id === 'painel' ? this.abrirPainel() : (n.id === 'trilha' ? this.abrirTrilha()
+        : ((n.id === 'recados' || n.id === 'gente') ? this.abrirPagina(n.id + '.html') : this.ir(n.id)))
+    });
+
+    const feitosCount = Object.keys(s.feitos).filter(k => s.feitos[k]).length;
+    const totalGeral = passos.reduce((a, p) => a + p.itens.length, 0);
+
+    const chip = (ativo, cor) => ({
+      borda: ativo ? (cor || LA) : BL,
+      fundo: ativo ? (cor ? '#EAF0F8' : '#FDF1E4') : '#fff',
+      cor: ativo ? (cor || LA) : '#3A3F47'
+    });
+
+    const perfilLinhas = s.perfil ? daLoja.filter(l => String(l['Vendedora iniciou']||'').trim() === s.perfil) : [];
+    const RP = this.resumo(perfilLinhas);
+    const perfil = s.perfil ? { nome: s.perfil, primeiro: String(s.perfil).split(' ')[0] } : null;
+    const temasDoBloco = Object.keys(this.BANCOS).filter(k => !s.blocoTreino || this.BANCOS[k].bloco === s.blocoTreino);
+    const emFormacao = perfil ? !!s.formacao[perfil.nome] : false;
+    const desconto = parseInt(s.descontoTexto || '0', 10) || 0;
+    const pendencias = [];
+    if (!s.resultado) pendencias.push('resultado');
+    if (s.resultado === 'vendeu' && !s.nivelVendido) pendencias.push('nível vendido');
+    if (s.resultado === 'vendeu' && !s.valorTexto) pendencias.push('valor');
+    if (s.resultado === 'vendeu' && desconto > 25 && !s.justificativa.trim()) pendencias.push('justificativa do desconto');
+    const q = s.rodada ? s.rodada[s.iq] : null;
+    const respondeu = s.escolha !== null;
+    const acertou = q && respondeu && s.escolha === q.certa;
+
+    return {
+      mostrarCarregando: s.identCarregando ? 'flex' : 'none',
+      mostrarLogin: naLogin ? 'flex' : 'none',
+      mostrarApp: (!s.identCarregando && !!s.ident) ? 'flex' : 'none',
+
+      // ---- tela de código ----
+      // Mostra bolinhas, nunca os números: o app é usado no balcão, com
+      // gente do lado.
+      codigoNaTela: digitado ? digitado.replace(/./g, '•') : '– – – – – –',
+      bordaCodigo: s.erroLogin ? VM : (digitado ? AZ : BL),
+      erroLogin: s.erroLogin || '',
+      mostrarErroLogin: s.erroLogin ? 'block' : 'none',
+      rotuloEntrar: s.entrando ? 'Entrando…' : 'Entrar',
+      fundoEntrar: (s.entrando || digitado.length < 6) ? '#8A9099' : LA,
+      entrar: () => {
+        if (s.entrando) return;
+        if (digitado.length < 6) {
+          this.setState({ erroLogin: 'O código tem 6 dígitos. Confira com a gerente.' });
+          return;
+        }
+        this.identificar(digitado, true);
+      },
+      teclas: ['1','2','3','4','5','6','7','8','9']
+        .map(d => tecla(d, digitar(d), false))
+        .concat([
+          tecla('Apagar', () => this.setState({ codigoDigitado: digitado.slice(0, -1), erroLogin: null }), true),
+          tecla('0', digitar('0'), false),
+          tecla('Limpar', () => this.setState({ codigoDigitado: '', erroLogin: null }), true)
+        ]),
+
+      identNome: identNome,
+      identEmail: id.email || '',
+      sair: () => this.sair(),
+      // "Nao sou eu": sai da conta E descarta o atendimento pela metade.
+      // Se so saisse, o rascunho da pessoa anterior ficaria na tela para
+      // a proxima continuar - e o dado sairia errado do mesmo jeito.
+      naoSouEu: () => {
+        this.setState({
+          passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null,
+          valorTexto: '', descontoTexto: '0', justificativa: '', visao: null,
+          segundoPar: null, armacao: null, orcamento: null, tratamentos: {},
+          horaInicio: null, erroSalvar: null, salvando: false
+        }, () => this.sair());
+      },
+      vendedora: identPrimeiro + (identLoja ? ' · ' + identLoja : ''),
+      usuarioPrimeiro: identPrimeiro,
+      usuarioInicial: (identPrimeiro || '?').charAt(0),
+      usuarioPapel: papelRotulo,
+      menuAberto: s.menu,
+      mostrarVazio: meus.length ? 'none' : 'block',
+      textoNaoAuditado: NAO_AUDITADO,
+      abrirMenu: () => this.setState({ menu: !s.menu }),
+      fecharMenu: () => this.setState({ menu: false }),
+      zerarPlacar: () => this.setState({ rodada: this.montarRodada(), iq: 0, escolha: null, acertos: 0, treinoFim: false }),
+      mostrarLateral: desktop ? 'flex' : 'none',
+      mostrarTopo: desktop ? 'none' : 'flex',
+      mostrarAbas: desktop ? 'none' : 'flex',
+      padConteudo: desktop ? '32px 40px 48px' : '16px 16px 24px',
+      gridNiveis: s.w >= 1100 ? 'repeat(4,1fr)' : (s.w >= 700 ? 'repeat(2,1fr)' : '1fr'),
+      grid2: desktop ? '1fr 1fr' : '1fr',
+      grid3: desktop ? 'repeat(3,1fr)' : '1fr',
+      gridKpi: s.w >= 1000 ? 'repeat(3,1fr)' : (s.w >= 700 ? 'repeat(2,1fr)' : '1fr'),
+      navegacao: itensNav.filter(n => !escondeAba(n.id)).map(mapNav),
+      abas: itensNav.filter(n => !escondeAba(n.id)).map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '' })),
+
+      emNiveis: telaAtiva === 'niveis', emAtendimento: telaAtiva === 'atendimento',
+      emTreino: telaAtiva === 'treino', emConsulta: telaAtiva === 'consulta',
+      emDesempenho: telaAtiva === 'desempenho', emPainel: telaAtiva === 'loja', emPerfil: telaAtiva === 'perfil',
+      emEquipe: telaAtiva === 'equipe',
+      // Quem e a gerente vem da propria equipe da loja em foco. Antes
+      // havia um nome escrito na tela - certo enquanto so existia uma
+      // loja, errado no dia de abrir a segunda.
+      gerenteDaLoja: gerenteDaLoja ? ('Gerente ' + gerenteDaLoja) : '',
+      gerenteSufixo: gerenteDaLoja ? (' · gerente ' + gerenteDaLoja) : '',
+      lojaSelecionada: lojaAtual ? lojaAtual.rotulo : '—',
+      lojaSigla: lojaAtual ? lojaAtual.codigo : '—',
+      lojaNome: lojaAtual ? lojaAtual.nome : '',
+      mostrarSeletorLoja: veRede ? 'flex' : 'none',
+      seletorLojas: listaLojas.map(l => Object.assign({
+        nome: l.rotulo, escolher: () => this.setState({ lojaSel: l.codigo }, () => this.carregarEquipe())
+      }, chip(s.lojaSel === l.codigo, AZ))),
+      equipeCarregando: s.carregando ? 'block' : 'none',
+      erroEquipe: s.erroEquipe || '', mostrarErroEquipe: s.erroEquipe ? 'flex' : 'none',
+      okEquipe: s.okEquipe || '', mostrarOkEquipe: s.okEquipe ? 'flex' : 'none',
+      equipe: listaEquipe.map(p => ({
+        nome: p.nome,
+        primeiro: String(p.nome).split(' ')[0],
+        inicial: String(p.nome).charAt(0),
+        papelRotulo: { gerente:'Gerente', diretoria:'Diretoria', supervisao:'Supervisão' }[p.papel] || 'Vendedora',
+        // Quantidade de rodadas de treino, nunca o acerto (regra do CLAUDE.md).
+        rodadasRotulo: p.papel === 'vendedora' ? (p.rodadas30 + (p.rodadas30 === 1 ? ' rodada' : ' rodadas') + ' de treino em 30 dias') : '',
+        estado: p.ativo ? 'Ativo' : 'Inativo',
+        corEstado: p.ativo ? VD : CZ,
+        fundoEstado: p.ativo ? '#E9F6EF' : BL,
+        alinhamento: p.ativo ? 'flex-end' : 'flex-start',
+        fundoTrilho: p.ativo ? VD : '#C7CCD3',
+        // Quem não tem código ainda não consegue entrar: fica visível.
+        avisoSemCodigo: p.temCodigo === 'NAO' ? 'inline-flex' : 'none',
+        // A pessoa é apontada pela LINHA da planilha, e o servidor confere
+        // o nome antes de mexer. O e-mail deixou de ser chave.
+        alternar: () => this.gs('alternarAtivo', [{ linha: p.linha, nome: p.nome }],
+          () => this.carregarEquipe(),
+          e => this.setState({ erroEquipe: this.ERROS[e] || 'Não foi possível alterar.' })),
+        gerarCodigo: () => this.novoCodigoPara(p)
+      })),
+
+      // ---- cartão de entrega: o código e o texto de WhatsApp ----
+      mostrarEntrega: s.entrega ? 'block' : 'none',
+      entregaNome: s.entrega ? s.entrega.nome : '',
+      entregaPrimeiro: s.entrega ? s.entrega.primeiro : '',
+      entregaCodigo: s.entrega ? s.entrega.codigo : '',
+      entregaTexto: s.entrega ? s.entrega.texto : '',
+      rotuloCopiar: (s.entrega && s.entrega.copiado) ? '✓ Copiado' : 'Copiar mensagem do WhatsApp',
+      fundoCopiar: (s.entrega && s.entrega.copiado) ? VD : LA,
+      copiarEntrega: () => this.copiarEntrega(),
+      fecharEntrega: () => this.setState({ entrega: null }),
+
+      // ---- loja nova: só quem enxerga a rede ----
+      mostrarBotaoLoja: veRede ? 'inline-flex' : 'none',
+      lojaAberta: !!s.lojaAberta,
+      abrirLoja: () => this.setState({ lojaAberta: true, erroEquipe: null, okEquipe: null }),
+      fecharLoja: () => this.setState({ lojaAberta: false }),
+      lCodigo: s.lCodigo || '', lNome: s.lNome || '', lCidade: s.lCidade || '',
+      mudarLCodigo: e => this.setState({ lCodigo: (e.target.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) }),
+      mudarLNome: e => this.setState({ lNome: e.target.value }),
+      mudarLCidade: e => this.setState({ lCidade: e.target.value }),
+      confirmarLoja: () => this.salvarLoja(),
+      rotuloConfirmarLoja: s.entregando ? 'Criando…' : 'Criar loja',
+      formAberto: s.formAberto,
+      abrirForm: () => this.setState({ formAberto: true, okEquipe: null, erroEquipe: null }),
+      fecharForm: () => this.setState({ formAberto: false }),
+      fNome: s.fNome, fEmail: s.fEmail,
+      mudarNome: e => this.setState({ fNome: e.target.value }),
+      mudarEmail: e => this.setState({ fEmail: e.target.value }),
+      lojaTravada: papel === 'gerente' ? 'block' : 'none',
+      papelTravado: papel === 'gerente' ? 'block' : 'none',
+      papelEscolha: papel === 'gerente' ? 'none' : 'flex',
+      chipsPapel: ['vendedora', 'gerente', 'supervisao', 'diretoria'].map(p => Object.assign({
+        texto: { vendedora:'Vendedora', gerente:'Gerente', supervisao:'Supervisão', diretoria:'Diretoria' }[p],
+        escolher: () => this.setState({ fPapel: p })
+      }, chip(s.fPapel === p))),
+      confirmarPessoa: () => this.salvarPessoa(),
+
+      // Frases de manual: vem do servidor. Enquanto nao chegam, a tela
+      // diz 'carregando'. Texto generico no lugar de regra e pior que
+      // espaco vazio: a vendedora pode ler e achar que e a regra.
+      txt_lemaOrdem: txt('lemaOrdem'),
+      txt_compareFatores: txt('compareFatores'),
+      txt_apresente3: txt('apresente3'),
+      txt_alcada40: txt('alcada40'),
+      txt_followUp24h: txt('followUp24h'),
+      txt_referenciaInterna: txt('referenciaInterna'),
+      txt_garantia90dias: txt('garantia90dias'),
+      txt_garantia3meses: txt('garantia3meses'),
+      txt_semMarca: txt('semMarca'),
+      txt_comMarca: txt('comMarca'),
+      txt_falaMarcas: txt('falaMarcas'),
+      txt_treinoDiario: txt('treinoDiario'),
+      niveis: this.NIVEIS,
+      // Tabela de indices e avisos do laboratorio: tambem vieram dos
+      // manuais e tambem so descem depois do codigo validado.
+      materiais: this.MATERIAIS,
+      avisos: this.AVISOS,
+
+      trilha: passos.map((p, i) => ({
+        n: '0' + (i + 1), rotulo: p.chave,
+        fundo: i === s.passo ? LA : (i < s.passo ? '#EAF0F8' : BL),
+        cor: i === s.passo ? '#fff' : (i < s.passo ? AZ : CZ)
+      })),
+      fasePassos: s.fase === 'passos', faseResultado: s.fase === 'resultado', faseSalvo: s.fase === 'salvo',
+      passoNum: s.passo + 1, passoNome: pa.nome, passoAjuda: pa.ajuda, passoFala: pa.fala, passoNunca: pa.nunca,
+      totalItens: pa.itens.length,
+      marcados: pa.itens.filter((_, i) => s.feitos[s.passo + ':' + i]).length,
+      checagem: pa.itens.map((t, i) => {
+        const k = s.passo + ':' + i, on = !!s.feitos[k];
+        return {
+          texto: t, marca: on ? '✓' : '',
+          borda: on ? VD : BL, fundo: on ? '#E9F6EF' : '#fff',
+          corMarca: on ? VD : '#C7CCD3', fundoMarca: on ? VD : '#fff',
+          corTexto: on ? AZ : '#3A3F47',
+          alternar: () => this.setState(st => ({ feitos: Object.assign({}, st.feitos, { [k]: !on }) }))
+        };
+      }),
+      rotuloAvancar: s.passo < passos.length - 1 ? 'Próximo passo' : 'Registrar resultado',
+      avancar: () => s.passo < passos.length - 1 ? this.setState({ passo: s.passo + 1 }) : this.setState({ fase: 'resultado' }),
+      voltar: () => {
+        if (s.fase === 'resultado') return this.setState({ fase: 'passos' });
+        if (s.passo > 0) return this.setState({ passo: s.passo - 1 });
+        this.ir('niveis');
+      },
+      resultados: [
+        { id: 'vendeu', rotulo: 'Vendeu', ajuda: 'Pedido fechado hoje', cor: VD },
+        { id: 'pensar', rotulo: 'Vai pensar', ajuda: 'Levou orçamento, volta depois', cor: '#7A5B04' },
+        { id: 'olhando', rotulo: 'Só olhando', ajuda: 'Sem receita ou sem intenção agora', cor: CZ }
+      ].map(r => ({
+        rotulo: r.rotulo, ajuda: r.ajuda, cor: r.cor,
+        borda: s.resultado === r.id ? r.cor : BL,
+        fundo: s.resultado === r.id ? '#F7F9FB' : '#fff',
+        escolher: () => this.setState({ resultado: r.id })
+      })),
+      vendeu: s.resultado === 'vendeu',
+      vaiPensar: s.resultado === 'pensar',
+      chipsNivel: ['Essencial', 'Intermediária', 'Premium', 'Personalizada'].map(n => Object.assign({ texto: n, escolher: () => this.setState({ nivelVendido: n }) }, chip(s.nivelVendido === n))),
+      valorTexto: s.valorTexto,
+      mudarValor: e => {
+        const d = (e.target.value || '').replace(/\D/g, '').slice(0, 9);
+        this.setState({ valorTexto: d ? (parseInt(d, 10) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' });
+      },
+      descontoTexto: s.descontoTexto,
+      mudarDesconto: e => {
+        const d = (e.target.value || '').replace(/\D/g, '').slice(0, 3);
+        this.setState({ descontoTexto: d === '' ? '' : String(Math.min(100, parseInt(d, 10))) });
+      },
+      corDesconto: desconto > 40 ? VM : (desconto > 25 ? '#7A5B04' : AZ),
+      bordaDesconto: desconto > 40 ? VM : (desconto > 25 ? '#E8B027' : BL),
+      mostrarJustificativa: desconto > 25 ? 'block' : 'none',
+      bordaJustificativa: s.justificativa.trim() ? BL : VM,
+      justificativaTexto: s.justificativa,
+      mudarJustificativa: e => this.setState({ justificativa: e.target.value }),
+      mostrarAlcada: desconto > 40 ? 'flex' : 'none',
+      chipsVisao: ['Visão simples', 'Multifocal'].map(v => Object.assign({ texto: v, escolher: () => this.setState({ visao: v }) }, chip(s.visao === v))),
+      chipsSegundoPar: ['Sim', 'Não'].map(v => Object.assign({ texto: v, escolher: () => this.setState({ segundoPar: v }) }, chip(s.segundoPar === v))),
+      chipsArmacao: ['Entrada', 'Premium'].map(v => Object.assign({ texto: v, escolher: () => this.setState({ armacao: v }) }, chip(s.armacao === v))),
+      chipsOrcamento: ['Sim', 'Não'].map(v => Object.assign({ texto: v, escolher: () => this.setState({ orcamento: v }) }, chip(s.orcamento === v))),
+      mostrarFollowUp: s.orcamento === 'Sim' ? 'block' : 'none',
+      mostrarPendencia: pendencias.length ? 'block' : 'none',
+      pendencias: pendencias.join(', '),
+      // Nao salva com pendencia: registro incompleto vira indicador
+      // torto, e quem audita depois recebe lixo.
+      salvar: () => {
+        if (pendencias.length) {
+          this.setState({ erroSalvar: 'Faltam: ' + pendencias.join(', ') + '. Complete antes de salvar.' });
+          return;
+        }
+        this.gravarAtendimento();
+      },
+      rotuloSalvar: s.salvando ? 'Salvando…' : 'Salvar atendimento',
+      fundoSalvar: (s.salvando || pendencias.length) ? '#8A9099' : LA,
+      erroSalvar: s.erroSalvar || '',
+      mostrarErroSalvar: s.erroSalvar ? 'block' : 'none',
+      chipsTratamentos: this.TRATAMENTOS.map(t => Object.assign({
+        texto: t,
+        escolher: () => this.setState(st => ({
+          tratamentos: Object.assign({}, st.tratamentos, { [t]: !st.tratamentos[t] })
+        }))
+      }, chip(!!s.tratamentos[t]))),
+      resumoSalvo: s.resultado === 'vendeu'
+        ? 'Venda registrada: nível ' + (s.nivelVendido || '—') + ', R$ ' + (s.valorTexto || '0,00') + (s.visao ? ' · ' + s.visao : '') + (s.segundoPar === 'Sim' ? ' · com segundo par' : '') + (desconto ? ' · desconto de ' + desconto + '%' : ' · sem desconto') + '.'
+        : (s.resultado === 'pensar'
+            ? (s.orcamento === 'Sim' ? 'Orçamento deixado com o cliente. Follow-up agendado para 24h — leve um motivo legítimo.' : 'Cliente vai pensar, sem orçamento deixado. Vale o convite para voltar com a receita.')
+            : 'Atendimento registrado como “só olhando”. Vale o convite para voltar com a receita.'),
+      aderencia: Math.round((feitosCount / totalGeral) * 100) + '%',
+      novoAtendimento: () => this.setState({ passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null, valorTexto: '', descontoTexto: '0', justificativa: '', visao: null, segundoPar: null, armacao: null, orcamento: null, tratamentos: {}, horaInicio: this.agora(), erroSalvar: null, salvando: false }),
+      irDesempenho: () => this.ir('desempenho'),
+
+      treinoAtivo: !s.treinoFim && !!q, treinoFim: s.treinoFim,
+      tipoRodada: q ? q.tipo : '', enunciado: q ? q.enunciado : '', instrucao: q ? q.instrucao : '',
+      nQuestao: s.iq + 1, totalQuestoes: s.rodada ? s.rodada.length : 6,
+      progressoTreino: s.rodada ? Math.round(((s.iq + (respondeu ? 1 : 0)) / s.rodada.length) * 100) + '%' : '0%',
+      acertos: s.acertos,
+      opcoes: q ? q.opcoes.map((o, i) => {
+        const certa = i === q.certa, escolhida = i === s.escolha;
+        let borda = BL, fundo = '#fff', cor = '#3A3F47', fundoMarca = '#C7CCD3', marca = '';
+        if (respondeu && certa) { borda = VD; fundo = '#E9F6EF'; cor = AZ; fundoMarca = VD; marca = '✓'; }
+        else if (respondeu && escolhida) { borda = VM; fundo = '#FBECEA'; cor = '#8E2A1F'; fundoMarca = VM; marca = '✕'; }
+        return { texto: o, borda: borda, fundo: fundo, cor: cor, fundoMarca: fundoMarca, marca: marca,
+          escolher: () => {
+            if (respondeu) return;
+            this._vistas = this._vistas || {}; this._vistas[q.id] = 1;
+            this._erradas = this._erradas || {};
+            if (i === q.certa) { delete this._erradas[q.id]; } else { this._erradas[q.id] = 1; }
+            // Relogio da rodada: comeca na primeira resposta (ver fecharRodada).
+            if (!s.iq || !this._t0Rodada) this._t0Rodada = Date.now();
+            this.setState({ escolha: i, acertos: s.acertos + (i === q.certa ? 1 : 0) });
+          } };
+      }) : [],
+      respondeu: respondeu,
+      corFeedback: acertou ? VD : VM,
+      fundoFeedback: acertou ? '#E9F6EF' : '#FBECEA',
+      tituloFeedback: acertou ? '✓ Isso mesmo' : ('✕ A resposta certa é: ' + (q ? q.opcoes[q.certa] : '')),
+      explicacao: q ? q.explicacao : '',
+      rotuloProxima: s.rodada && s.iq === s.rodada.length - 1 ? 'Ver placar' : 'Próxima',
+      proxima: () => s.iq === s.rodada.length - 1
+        ? this.fecharRodada()
+        : this.setState({ iq: s.iq + 1, escolha: null }),
+      placar: s.acertos + '/' + (s.rodada ? s.rodada.length : 6),
+      corPlacar: s.acertos >= 5 ? VD : (s.acertos >= 3 ? '#7A5B04' : VM),
+      mensagemPlacar: s.acertos >= 5 ? 'Pronta para o salão' : (s.acertos >= 3 ? 'Quase lá' : 'Revise antes do próximo turno'),
+      dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia antes de abrir a loja.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
+      treinarDeNovo: () => this.setState({ rodada: this.montarRodada(), iq: 0, escolha: null, acertos: 0, treinoFim: false }),
+      origemRodada: s.blocoTreino ? 'rodada sorteada do bloco ' + s.blocoTreino : 'rodada sorteada de todo o banco',
+      // Blocos na ordem da Trilha do Vendedor: Lentes, Armações, Negociação.
+      blocosTreino: [''].concat(['Lentes', 'Armações', 'Negociação'].filter(b => Object.keys(this.BANCOS).some(k => this.BANCOS[k].bloco === b))).map(b => Object.assign({
+        texto: b || 'Tudo',
+        escolher: () => { this.guardar('rdoteste_bloco', b); this.setState({ blocoTreino: b, tipoTreino: 'Sortear tudo', iq: 0, escolha: null, acertos: 0, treinoFim: false }, () => this.setState({ rodada: this.montarRodada() })); }
+      }, chip((s.blocoTreino || '') === b))),
+      totalBanco: temasDoBloco.reduce((a, k) => a + this.BANCOS[k].itens.length, 0),
+      totalTipos: temasDoBloco.length,
+      contagemBanco: temasDoBloco.map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
+      mostrarTemas: papel === 'vendedora' ? 'none' : 'block',
+      mostrarRodadas30: s.rodadas30 === null ? 'none' : 'block',
+      textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A Diretoria e a gerência acompanham os dias de treino, a nota e o tempo de cada rodada.',
+      mostrarLembrete: (s.conteudo && s.conteudo.lembrete && !s.treinouHoje) ? 'block' : 'none',
+      textoLembrete: (s.conteudo && s.conteudo.lembrete) || '',
+      tiposTreino: ['Sortear tudo'].concat(temasDoBloco.filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
+        texto: t,
+        selo: (t !== 'Sortear tudo' && this.BANCOS[t].itens.length < 5) ? 'inline' : 'none',
+        escolher: () => this.setState({ tipoTreino: t, rodada: this.montarRodada(t), iq: 0, escolha: null, acertos: 0, treinoFim: false })
+      }, chip(s.tipoTreino === t))),
+
+
+      kpis: [
+        kpi('Atendimentos', R.vazio, String(R.total), 'período: ' + String(s.periodo).toLowerCase()),
+        kpi('Vendas fechadas', R.vazio, String(R.vendas), ''),
+        kpi('Taxa de conversão', R.vazio, R.conversao + '%', R.vendas + ' de ' + R.total),
+        kpi('Ticket médio', R.vazio || !R.vendas, brl(R.ticket), 'sobre ' + R.vendas + ' venda(s)'),
+        kpi('Faturamento', R.vazio || !R.vendas, brl(R.faturamento), ''),
+        kpi('Tratamentos por atendimento', R.vazio, R.tratPorAtend.toFixed(1).replace('.', ','), ''),
+        kpi('Aderência ao passo a passo', R.vazio, R.aderencia + '%', 'etapas marcadas, de 14'),
+        kpi('Desconto médio concedido', R.vazio || !R.vendas, R.descontoMedio + '%', ''),
+        kpi('% multifocal nas vendas', R.vazio || !R.vendas, R.multifocal + '%', ''),
+        kpi('% com segundo par', R.vazio || !R.vendas, R.segundoPar + '%', '')
+      ],
+      orcamentosAbertos: R.pensando.slice().reverse().slice(0, 10).map(l => ({
+        cliente: 'Orçamento de ' + (String(l['Data'] || '').trim() || '—'),
+        nivel: resumoLinha(l),
+        dias: diasDe(l)
+      })),
+      mostrarSemOrcamento: R.pensando.length ? 'none' : 'block',
+      mix: ['Essencial', 'Intermediária', 'Premium', 'Personalizada'].map((nome, i) => ({
+        nome: nome,
+        pct: (R.vazio || !R.vendas) ? '—' : Math.round(((R.mix[nome] || 0) / R.vendas) * 100) + '%',
+        cor: [CZ, LA, AZ, '#E8B027'][i]
+      })),
+      atendimentosHoje: meus.slice().reverse().slice(0, 12).map(l => {
+        const res = String(l['Resultado'] || '').trim() || '—';
+        return {
+          // Sem nome de cliente: a planilha nao guarda esse campo, e guardar
+          // dado de cliente aqui entraria em LGPD sem necessidade.
+          cliente: 'Atendimento de ' + (String(l['Hora inicio'] || '').trim() || '—'),
+          hora: String(l['Data'] instanceof Date ? '' : (l['Data'] || '')).trim(),
+          nivel: resumoLinha(l),
+          estado: res,
+          fundo: fundoResultado(res),
+          cor: corResultado(res)
+        };
+      }),
+      irPainel: () => this.ir('loja'),
+      mostrarBotaoPainel: papel === 'vendedora' ? 'none' : 'inline-flex',
+
+      periodos: ['Hoje', 'Semana', 'Mês'].map(n => Object.assign({ nome: n, escolher: () => this.setState({ periodo: n }) }, chip(s.periodo === n))),
+      periodoAtual: s.periodo,
+      kpisLoja: [
+        kpi('Atendimentos da loja', RL.vazio, String(RL.total), 'período: ' + String(s.periodo).toLowerCase()),
+        kpi('Vendas fechadas', RL.vazio, String(RL.vendas), ''),
+        kpi('Conversão da loja', RL.vazio, RL.conversao + '%', RL.vendas + ' de ' + RL.total),
+        kpi('Ticket médio', RL.vazio || !RL.vendas, brl(RL.ticket), ''),
+        kpi('Faturamento', RL.vazio || !RL.vendas, brl(RL.faturamento), ''),
+        kpi('Desconto médio da loja', RL.vazio || !RL.vendas, RL.descontoMedio + '%', ''),
+        kpi('% multifocal', RL.vazio || !RL.vendas, RL.multifocal + '%', ''),
+        kpi('% com segundo par', RL.vazio || !RL.vendas, RL.segundoPar + '%', ''),
+        kpi('Aderência ao passo a passo', RL.vazio, RL.aderencia + '%', 'etapas marcadas, de 14')
+      ],
+      orcamentosLoja: RL.pensando.slice().reverse().slice(0, 12).map(l => {
+        const dias = diasDe(l);
+        return {
+          cliente: 'Orçamento de ' + (String(l['Data'] || '').trim() || '—'),
+          vendedora: String(l['Vendedora iniciou'] || '').trim() || '—',
+          dias: dias, nivel: resumoLinha(l),
+          janela: dias <= 1 ? '24h · confirmar dúvida e separar o modelo'
+                : (dias <= 7 ? '7 dias · levar novidade concreta'
+                : '30 dias · reabrir a necessidade'),
+          cor: dias <= 1 ? VD : (dias <= 7 ? '#7A5B04' : VM),
+          fundo: dias <= 1 ? '#E9F6EF' : (dias <= 7 ? '#FDF6E3' : '#FBECEA')
+        };
+      }),
+      ranking: Object.keys(porPessoa(daLoja)).sort().map(nome => {
+        const r = this.resumo(porPessoa(daLoja)[nome]);
+        return {
+          pos: '',
+          nome: nome, inicial: (nome.charAt(0) || '?').toUpperCase(),
+          conv: r.total ? r.conversao + '%' : '—',
+          barra: r.total ? r.conversao + '%' : '0%',
+          cor: AZ, selo: 'none',
+          abrir: () => this.setState({ perfil: nome, tela: 'perfil' })
+        };
+      }),
+      feed: daLoja.slice().reverse().slice(0, 8).map(l => {
+        const res = String(l['Resultado'] || '').trim() || '—';
+        return {
+          vendedora: String(l['Vendedora iniciou'] || '').trim() || '—',
+          cliente: resumoLinha(l),
+          min: String(l['Hora inicio'] || '').trim() || '—',
+          etapa: res, fundo: fundoResultado(res), cor: corResultado(res)
+        };
+      }),
+      // So alertas CALCULAVEIS do que esta gravado, e nenhum aponta pessoa.
+      // O alerta antigo dizia "uma vendedora esta abaixo da meta - toque no
+      // ranking para ver quem": mandava a gerente cacar a pessoa.
+      alertas: (function(){
+        const a = [];
+        if (RL.vazio) return a;
+        const ess = RL.vendas ? Math.round(((RL.mix['Essencial'] || 0) / RL.vendas) * 100) : 0;
+        if (RL.vendas >= 5 && ess >= 40) a.push({ titulo: 'Concentração no Essencial',
+          texto: ess + '% das vendas do período saíram no Essencial. Vale reforçar a apresentação dos 3 níveis juntos.',
+          cor: '#E8B027', fundo: '#FDF6E3' });
+        if (RL.vendas >= 5 && RL.descontoMedio > 25) a.push({ titulo: 'Desconto médio acima de 25%',
+          texto: 'O desconto médio da loja no período está em ' + RL.descontoMedio + '%. Acima de 25% o registro exige justificativa.',
+          cor: '#E8B027', fundo: '#FDF6E3' });
+        if (RL.total >= 5 && RL.aderencia < 70) a.push({ titulo: 'Aderência ao passo a passo',
+          texto: 'A média de etapas marcadas está em ' + RL.aderencia + '% das 14. Vale rever o passo a passo em equipe.',
+          cor: '#E8B027', fundo: '#FDF6E3' });
+        if (RL.pensando.length) a.push({ titulo: 'Orçamentos aguardando retorno',
+          texto: RL.pensando.length + ' orçamento(s) do período ainda sem desfecho registrado.',
+          cor: '#E8B027', fundo: '#FDF6E3' });
+        return a;
+      })(),
+      perfilNome: perfil ? perfil.nome : '',
+      perfilInicial: perfil ? perfil.primeiro.charAt(0) : '',
+      perfilRotuloSelo: emFormacao ? '✓ Em formação' : 'Marcar em formação',
+      perfilBordaSelo: emFormacao ? '#E8B027' : BL,
+      perfilFundoSelo: emFormacao ? '#FDF6E3' : '#fff',
+      perfilCorSelo: emFormacao ? '#7A5B04' : AZ,
+      alternarFormacao: () => { if (perfil) this.setState(st => ({ formacao: Object.assign({}, st.formacao, { [perfil.nome]: !st.formacao[perfil.nome] }) })); },
+      fecharPerfil: () => this.setState({ tela: 'loja', perfil: null }),
+      // Sem percentual de acerto do treino e sem comparacao com a media:
+      // a gerente ve rodadas, nunca o acerto, e nenhum alerta cita
+      // vendedora em situacao negativa.
+      perfilKpis: perfil ? [
+        kpi('Atendimentos', RP.vazio, String(RP.total), 'período: ' + String(s.periodo).toLowerCase()),
+        kpi('Vendas fechadas', RP.vazio, String(RP.vendas), ''),
+        kpi('Conversão', RP.vazio, RP.conversao + '%', RP.vendas + ' de ' + RP.total),
+        kpi('Ticket médio', RP.vazio || !RP.vendas, brl(RP.ticket), ''),
+        kpi('Aderência ao passo a passo', RP.vazio, RP.aderencia + '%', 'etapas marcadas, de 14'),
+        kpi('Desconto médio', RP.vazio || !RP.vendas, RP.descontoMedio + '%', ''),
+        kpi('% multifocal', RP.vazio || !RP.vendas, RP.multifocal + '%', ''),
+        kpi('% com segundo par', RP.vazio || !RP.vendas, RP.segundoPar + '%', ''),
+        kpi('Orçamentos aguardando retorno', RP.vazio, String(RP.pensando.length), '')
+      ] : []
+    };
+  }
+}
+</script>
+</body>
+</html>

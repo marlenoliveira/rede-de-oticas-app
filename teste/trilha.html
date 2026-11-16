@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>TESTE · Minha trilha</title>
+<!--
+  MINHA TRILHA — etapa 1 da trilha do treinamento (14/11/2026).
+
+  Pagina solta, sem o motor do app, no mesmo molde do painel.html: so desenha.
+  Quem decide e o servidor (src/Trilha.gs): o que esta aberto, as perguntas,
+  a correcao, o relogio da prova, o horario e as tentativas. O gabarito da
+  prova nunca chega aqui. Aqui nao mora regra de manual nem conteudo: tudo
+  desce depois do codigo validado. Texto vindo do servidor entra sempre como
+  texto, nunca como marcacao.
+
+  Desenho refeito em 14/11/2026, a pedido do Marlen ("tinha que ser mais
+  intuitivo, mais facil"): no alto, UM cartao grande com o que fazer agora;
+  o caminho inteiro fica guardado em "Ver o caminho todo". Nome da pessoa e
+  "Nao sou eu" em todas as telas (tablet da loja e de todo mundo).
+
+  Usa o codigo que o app ja guarda no aparelho (rdo_codigo).
+-->
+<style>
+  :root { --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6; }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 640px; padding: 12px 16px 96px; color: var(--tinta); background: #fff;
+    font: 19px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 6px 0 0; color: var(--azul); font-weight: 800; }
+  .sub { color: var(--cinza); font-size: 16px; margin: 4px 0 0; }
+  a { color: var(--azul); font-weight: 800; }
+  button { font: inherit; font-weight: 800; min-height: 56px; padding: 12px 18px; border-radius: 14px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; width: 100%; margin: 8px 0; }
+  button.leve { background: #fff; color: var(--azul); }
+  button.laranja { background: var(--laranja); border-color: var(--laranja); }
+  button.verde { background: var(--verde); border-color: var(--verde); }
+  button:disabled { opacity: .5; }
+  a.botao { display: block; text-align: center; text-decoration: none; font-weight: 800; min-height: 56px; box-sizing: border-box;
+    padding: 14px 18px; border-radius: 14px; border: 2px solid var(--azul); color: var(--azul); background: #fff; margin: 8px 0; }
+  /* Barra de cima: de quem e esta tela */
+  .quem { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; color: var(--cinza);
+    border-bottom: 1px solid var(--linha); padding-bottom: 8px; }
+  .quem b { color: var(--tinta); }
+  .quem button { width: auto; min-height: 40px; padding: 6px 12px; margin: 0; font-size: 15px; background: #fff; color: var(--azul); }
+  /* Progresso */
+  .barra { height: 14px; background: #EDEFF2; border-radius: 8px; overflow: hidden; margin: 8px 0 2px; }
+  .barra i { display: block; height: 100%; background: var(--verde); border-radius: 8px; }
+  /* O cartao do que fazer agora */
+  .agora { border: 3px solid var(--laranja); border-radius: 18px; padding: 16px; margin: 16px 0; background: #FFF9F2; }
+  .agora .rot { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--laranja); }
+  .agora .tit { font-size: 23px; font-weight: 800; line-height: 1.25; margin: 6px 0; }
+  .agora.espera { border-color: var(--amarelo); background: #FFFBEA; }
+  .agora.espera .rot { color: #8A6400; }
+  .agora.fim { border-color: var(--verde); background: #EEF9F2; }
+  .agora.fim .rot { color: var(--verde); }
+  /* Caminho todo */
+  details { border: 2px solid var(--linha); border-radius: 14px; padding: 4px 14px; margin: 16px 0; }
+  summary { font-weight: 800; color: var(--azul); padding: 12px 0; cursor: pointer; }
+  .passo { border-top: 1px solid var(--linha); padding: 10px 0; }
+  .passo .t { font-weight: 800; }
+  .passo.fechado { color: var(--cinza); }
+  .aula { display: block; width: 100%; text-align: left; background: #fff; color: var(--tinta); border: 0;
+    border-radius: 0; padding: 8px 0 8px 14px; min-height: 0; margin: 0; font-weight: 400; }
+  .aula b { font-weight: 700; }
+  .aula .e { display: block; font-size: 15px; color: var(--cinza); }
+  .rot.rever { font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--azul); margin: 18px 0 4px; }
+  .rever-lista { border: 2px solid var(--linha); border-radius: 14px; padding: 4px 6px; }
+  .rever-lista .aula { border-bottom: 1px solid var(--linha); text-decoration: none; }
+  .rever-lista .aula:last-child { border-bottom: 0; }
+  a.aula { display: block; color: var(--tinta); font-weight: 700; padding: 10px 0 10px 14px; }
+  /* Video e apostila dentro do app */
+  .video { position: relative; width: 100%; padding-top: 56.25%; margin: 10px 0; border-radius: 12px; overflow: hidden; background: #000; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .ap { margin-top: 8px; }
+  .audio-drive { width: 100%; height: 150px; margin: 8px 0; border-radius: 12px; overflow: hidden; background: #2A2B2E; }
+  .audio-drive iframe { width: 100%; height: 100%; border: 0; }
+  .ap-h2 { font-size: 22px; color: var(--azul); margin: 22px 0 6px; line-height: 1.25; }
+  .ap-h3 { font-size: 19px; color: var(--azul); margin: 18px 0 4px; }
+  .ap-parte { font-size: 14px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--laranja); margin: 18px 0 4px; }
+  .ap-p { margin: 8px 0; }
+  .ap-li { margin: 6px 0 6px 6px; }
+  .ap-quadro { border-left: 6px solid var(--azul); background: #EEF3FA; border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+  .ap-tab { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
+  .ap-tab table { border-collapse: collapse; font-size: 16px; min-width: 100%; }
+  .ap-tab th, .ap-tab td { border: 1px solid var(--linha); padding: 8px; text-align: left; vertical-align: top; }
+  .ap-tab th { background: #F3F5F8; }
+  .ap-fig { margin: 14px 0; }
+  .ap-fig-t { font-size: 14px; font-weight: 800; color: var(--cinza); margin-bottom: 6px; }
+  .ap-leg { font-size: 15px; color: var(--cinza); margin: 2px 0 10px; }
+  .ap-cap { font-size: 15px; color: var(--cinza); margin-top: 6px; }
+  img.figura { display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 6px 0; }
+  img.figura.carregando { min-height: 120px; background: #EDEFF2; }
+  img.figura.falhou { min-height: 40px; background: #FBECEA; }
+  /* Mensagens */
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .bom { border-left: 8px solid var(--verde); background: #E8F6EE; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  /* Aula */
+  .etapa { border: 2px solid var(--linha); border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .etapa .n { display: inline-flex; width: 32px; height: 32px; border-radius: 16px; background: var(--azul); color: #fff;
+    font-weight: 800; align-items: center; justify-content: center; margin-right: 8px; font-size: 17px; }
+  .etapa .t { font-weight: 800; font-size: 20px; }
+  .q { border-top: 2px solid var(--linha); padding: 12px 0 4px; }
+  .q .en { font-weight: 800; margin: 0 0 8px; }
+  .q .ins { font-size: 15px; color: var(--cinza); margin: 0 0 6px; }
+  .alt { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--linha); border-radius: 12px;
+    padding: 12px; margin: 8px 0; cursor: pointer; }
+  .alt input { width: 24px; height: 24px; margin-top: 2px; flex: 0 0 auto; }
+  .alt.certa { border-color: var(--verde); background: #E8F6EE; }
+  .alt.errada { border-color: var(--vermelho); background: #FBECEA; }
+  .exp { font-size: 16px; color: var(--cinza); margin: 4px 0 8px; }
+  /* Prova */
+  .relogio { position: sticky; top: 0; background: #fff; border-bottom: 2px solid var(--linha); padding: 8px 0;
+    font-size: 21px; font-weight: 800; color: var(--azul); display: flex; justify-content: space-between; z-index: 2; }
+  .relogio.pouco { color: var(--vermelho); }
+  .grande { font-size: 40px; font-weight: 800; color: var(--azul); margin: 6px 0; }
+  /* Aguarde (o servidor do Google leva alguns segundos) */
+  #aguarde { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--azul); color: #fff;
+    font-weight: 800; padding: 12px 20px; border-radius: 999px; font-size: 17px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 9; }
+  .oculto { display: none !important; }
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+
+<div id="raiz"><p class="sub">Carregando…</p></div>
+<div id="aguarde" class="oculto">Aguarde…</div>
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbyYoBctgbFxsAc2tN-n7HpOQLA63xAAysfzm46LXHq50awvC49Zjy8XHmfvtanfiXbogw/exec';
+  var ESPERA_MAXIMA_MS = 40000;
+
+  var ERROS = {
+    nao_matriculada: 'Você não está na trilha. Use o app normalmente.',
+    loja_de_teste: 'A trilha não funciona na loja de teste.',
+    fechada: 'Esta aula ainda está fechada: termine a anterior.',
+    amanha: 'Você já começou hoje o conteúdo de um dia. Esta aula abre no próximo dia.',
+    perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
+    sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
+    aula_expirada: 'Estas perguntas não valem mais (a aula foi aberta de novo em outro lugar). Abra a aula outra vez.',
+    prova_em_andamento: 'Sua Prova Final está aberta. Termine a prova antes de voltar às aulas.',
+    aulas_abertas: 'A Prova Final abre quando todas as aulas estiverem fechadas.',
+    refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da Trilha.',
+    aguardando_data: 'A próxima tentativa ainda não abriu.',
+    aguarda_diretoria: 'Sua trilha está parada aqui até a Diretoria decidir.',
+    aprovada: 'Você já passou nesta prova.',
+    prova_encerrada: 'Esta prova já foi encerrada.',
+    tempo_esgotado: 'O tempo da prova acabou.',
+    prova_perdida: 'Houve uma falha com a sua prova. Volte à trilha: a tentativa não vai contar.',
+    fora_do_horario: 'Fora do horário da trilha.',
+    fora_do_horario_prova: 'A prova leva 60 minutos e precisa terminar dentro do horário da trilha.',
+    codigo_invalido: 'Seu código não foi reconhecido. Entre de novo pelo app.',
+    inativo: 'Seu acesso está desativado. Fale com quem acompanha a loja.',
+    sem_conexao: 'Sem resposta do servidor. Confira a internet e tente de novo.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
+  };
+
+  function guardado(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { if (v) window.localStorage.setItem(k, v); else window.localStorage.removeItem(k); } catch (e) {} }
+  function aparelho() {
+    var a = guardado('rdoteste_aparelho');
+    if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); guardar('rdoteste_aparelho', a); }
+    return a;
+  }
+  function el(tag, classe, texto) {
+    var n = document.createElement(tag);
+    if (classe) n.className = classe;
+    if (texto !== undefined && texto !== null) n.textContent = texto;
+    return n;
+  }
+  function botao(texto, classe, acao) {
+    var b = el('button', classe || '', texto);
+    b.type = 'button';
+    b.addEventListener('click', acao);
+    return b;
+  }
+  function linkBotao(texto, href) {
+    var a = el('a', 'botao', texto);
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    return a;
+  }
+  function raiz() { var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
+
+  var CODIGO = guardado('rdoteste_codigo');
+  var pendentes = 0;
+  function aguarde(mais) {
+    pendentes = Math.max(0, pendentes + mais);
+    var a = document.getElementById('aguarde');
+    if (a) a.className = pendentes ? '' : 'oculto';
+  }
+  /** Fala com o servidor. `quieto`: sem o aviso "Aguarde" (gravacao de fundo da prova). */
+  function chamar(fn, extra, pronto, quieto) {
+    var args = [CODIGO, aparelho()];
+    if (extra !== undefined) args.push(extra);
+    var acabou = false;
+    function fim(d) { if (acabou) return; acabou = true; if (!quieto) aguarde(-1); pronto(d); }
+    if (!quieto) aguarde(1);
+    setTimeout(function () { fim({ ok: false, erro: 'sem_conexao' }); }, ESPERA_MAXIMA_MS);
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} fim(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { fim({ ok: false, erro: 'sem_conexao' }); });
+  }
+  function msgErro(r) {
+    var m = ERROS[(r && r.erro) || ''] || 'Algo deu errado. Tente de novo em alguns segundos.';
+    if (r && r.horario) m += ' A trilha abre ' + r.horario + '.';
+    return m;
+  }
+  function voltarAoApp() { try { window.location.href = './'; } catch (e) {} }
+  function naoSouEu() {
+    guardar('rdoteste_codigo', '');
+    try { window.sessionStorage.removeItem('rdoteste_trilha_vista'); } catch (e) {}
+    voltarAoApp();
+  }
+  /** Barra de cima, em todas as telas: de quem e a trilha, e "Nao sou eu". */
+  function barraQuem(r) {
+    if (!NOME) return;
+    var q = el('div', 'quem');
+    var t = el('span', '', 'Trilha de ');
+    t.appendChild(el('b', '', NOME));
+    q.appendChild(t);
+    q.appendChild(botao('Não sou eu', '', naoSouEu));
+    r.appendChild(q);
+  }
+  function rodape(r) {
+    var p = el('p', '', '');
+    p.style.marginTop = '28px';
+    var a = el('a', '', 'Ir para o app de treino');
+    a.href = './';
+    p.appendChild(a);
+    r.appendChild(p);
+  }
+  function telaErro(r, texto, acao, rotulo) {
+    r.appendChild(el('div', 'erro', texto));
+    r.appendChild(botao(rotulo || 'Tentar de novo', '', acao || carregar));
+  }
+
+  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null;
+  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; }
+
+  // ================= Minha trilha =================
+  function carregar() {
+    var r = raiz();
+    r.appendChild(el('p', 'sub', 'Carregando a sua trilha…'));
+    chamar('estadoTrilha', undefined, function (t) {
+      var x = raiz();
+      if (!t.ok) { telaErro(x, msgErro(t)); rodape(x); return; }
+      if (!t.matriculada) { x.appendChild(el('div', 'aviso', ERROS.nao_matriculada)); rodape(x); return; }
+      receber(t);
+      desenharTrilha();
+    });
+  }
+
+  var ICONE = { feito: '✔', atual: '▶', fechado: '🔒' };
+  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia',
+    perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
+
+  function desenharTrilha() {
+    var e = ESTADO, r = raiz();
+    barraQuem(r);
+    r.appendChild(el('h1', '', 'Minha trilha'));
+    if (!e.concluida) {
+      r.appendChild(el('p', 'sub', e.atual.fase + ' · você está no passo ' + e.atual.n + ' de ' + e.totalJornada + '.'));
+    }
+    var b = el('div', 'barra'), i = el('i');
+    var pct = e.concluida ? 100 : Math.round(100 * (e.aulasFeitas + e.videosFeitos) / (e.aulasTotal + e.videosTotal));
+    i.style.width = pct + '%';
+    b.appendChild(i);
+    r.appendChild(b);
+    r.appendChild(el('p', 'sub', e.aulasFeitas + ' de ' + e.aulasTotal + ' aulas feitas'));
+    if (HORARIO && !HORARIO.aberto && !e.concluida) {
+      r.appendChild(el('div', 'aviso', 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
+    }
+    if (e.modoTeste) {
+      r.appendChild(el('div', 'aviso', 'Modo de teste: tudo liberado para você ver o app inteiro, fora de ordem e fora do horário. As vendedoras seguem a ordem: uma aula depois da outra e o conteúdo de um dia por dia.'));
+    }
+    r.appendChild(cartaoAgora(e));
+    r.appendChild(blocoRever(e));
+    var det = el('details');
+    det.appendChild(el('summary', '', 'Ver o caminho todo'));
+    e.passos.forEach(function (p) {
+      var c = el('div', 'passo ' + p.estado);
+      c.appendChild(el('div', 't', ICONE[p.estado] + ' ' + p.titulo));
+      if (p.tipo === 'aulas') listaAulas(c, p);
+      if (p.tipo === 'video' && p.estado === 'feito') {
+        c.appendChild(botao('Assistir de novo', 'leve', function () { telaVideo(p); }));
+      }
+      if (p.tipo === 'prova') {
+        if (e.prova.estado === 'liberada' || e.prova.estado === 'em_andamento') c.appendChild(botao('Abrir a Prova Final', 'laranja', telaProvaIntro));
+        (e.prova.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
+          c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
+        });
+      }
+      if (p.id === 'simulacoes') {
+        e.simulacoes.forEach(function (s) {
+          c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + ' (' + String(s.notas).split(';').join(', ') + ')'));
+        });
+      }
+      det.appendChild(c);
+    });
+    r.appendChild(det);
+    rodape(r);
+  }
+
+  /**
+   * "Rever o que voce ja fez", sempre a vista (o Marlen, 14/11/2026: "o que a
+   * pessoa ja fez tem que estar liberado para ela"). Um toque abre a aula de novo.
+   */
+  function blocoRever(e) {
+    var box = el('div');
+    var feitas = e.aulas.filter(function (a) { return a.estado === 'feita'; });
+    var videos = e.passos.filter(function (p) { return p.tipo === 'video' && p.estado === 'feito'; });
+    if (!feitas.length && !videos.length) return box;
+    box.appendChild(el('div', 'rot rever', 'Rever o que você já fez'));
+    var lista = el('div', 'rever-lista');
+    videos.forEach(function (p) {
+      var b = el('button', 'aula');
+      b.type = 'button';
+      b.appendChild(el('b', '', '✔ ' + p.titulo));
+      b.appendChild(el('span', 'e', 'toque para assistir de novo'));
+      b.addEventListener('click', function () { telaVideo(p); });
+      lista.appendChild(b);
+    });
+    feitas.forEach(function (a) {
+      var b = el('button', 'aula');
+      b.type = 'button';
+      b.appendChild(el('b', '', (a.refazer ? '↻ ' : '✔ ') + a.titulo));
+      b.appendChild(el('span', 'e', a.refazer ? 'refazer as perguntas antes da próxima tentativa' : 'feita em ' + a.feitaEm + ' · toque para abrir de novo'));
+      b.addEventListener('click', function () { telaAula(a); });
+      lista.appendChild(b);
+    });
+    box.appendChild(lista);
+    return box;
+  }
+
+  function listaAulas(c, p) {
+    ESTADO.aulas.filter(function (a) { return a.passo === p.n; }).forEach(function (a) {
+      var b = el('button', 'aula');
+      b.type = 'button';
+      var ic = a.refazer ? '↻ ' : (a.estado === 'feita' ? '✔ ' : (a.estado === 'aberta' ? '▶ ' : '🔒 '));
+      b.appendChild(el('b', '', ic + a.titulo));
+      b.appendChild(el('span', 'e', a.refazer ? 'refazer as perguntas antes da próxima tentativa'
+        : (a.estado === 'feita' ? 'feita em ' + a.feitaEm + ' · toque para rever' : ROTULO_AULA[a.estado] || a.estado)));
+      if (a.estado === 'aberta' || a.estado === 'feita') b.addEventListener('click', function () { telaAula(a); });
+      c.appendChild(b);
+    });
+  }
+
+  /** Video ja feito, para assistir de novo, sem sair do app. */
+  function telaVideo(p) {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
+    r.appendChild(el('h1', '', p.titulo));
+    r.appendChild(videoNaTela(p.videoId, p.titulo));
+  }
+
+  /** O cartao grande: a UMA coisa que a pessoa tem de fazer agora. */
+  function cartaoAgora(e) {
+    var c = el('div', 'agora');
+    function rot(t) { c.appendChild(el('div', 'rot', t)); }
+    function tit(t) { c.appendChild(el('div', 'tit', t)); }
+    function txt(t) { c.appendChild(el('p', '', t)); }
+    var foraHora = HORARIO && !HORARIO.aberto;
+    if (e.concluida) {
+      c.className = 'agora fim';
+      rot('Parabéns');
+      tit('Você concluiu esta parte da trilha');
+      txt('Abertura, Ponte, Trilha do Vendedor, Prova Final e simulações. A próxima parte é o Bloco Lentes.');
+      return c;
+    }
+    var at = e.atual;
+    if (at.tipo === 'video') {
+      var p = e.passos.filter(function (x) { return x.id === at.id; })[0];
+      rot('Agora');
+      tit(p.titulo);
+      txt('Assista ao vídeo aqui e depois toque em "Assisti. Concluí".');
+      c.appendChild(videoNaTela(p.videoId, p.titulo));
+      c.appendChild(botao('Assisti. Concluí', 'laranja', function (ev) {
+        ev.target.disabled = true;
+        chamar('concluirVideo', { video: at.id }, function (res) {
+          if (!res.ok) { ev.target.disabled = false; c.appendChild(el('div', 'erro', msgErro(res))); return; }
+          if (res.trilha) { receber(res.trilha); desenharTrilha(); } else carregar();
+        });
+      }));
+      return c;
+    }
+    if (at.tipo === 'pessoa') {
+      c.className = 'agora espera';
+      rot('Agora é com quem aplica');
+      tit(at.titulo);
+      var pp = e.passos.filter(function (x) { return x.id === at.id; })[0];
+      if (pp && pp.explica) txt(pp.explica);
+      txt('Não depende de você. Assim que for lançado, a próxima etapa abre aqui.');
+      if (at.id === 'simulacoes' && e.simulacoes.length) {
+        var u = e.simulacoes[e.simulacoes.length - 1];
+        c.appendChild(el('p', 'sub', 'Último lançamento (' + u.data + '): ' + String(u.notas).split(';').join(', ') + (u.resultado === 'aprovada' ? '' : ' · refazer')));
+      }
+      c.appendChild(botao('Atualizar', 'leve', carregar));
+      return c;
+    }
+    if (at.tipo === 'prova') return cartaoProva(e, c, foraHora);
+    // Aulas
+    var refazer = e.aulas.filter(function (a) { return a.refazer; });
+    var aberta = e.aulas.filter(function (a) { return a.estado === 'aberta'; })[0];
+    var prox = e.aulas.filter(function (a) { return a.estado !== 'feita'; })[0];
+    if (refazer.length) return cartaoProva(e, c, foraHora);
+    if (aberta) {
+      rot('Sua aula de agora');
+      tit(aberta.titulo);
+      txt('Ouça, leia e responda 4 perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
+      var bc = botao('Começar a aula', 'laranja', function () { telaAula(aberta); });
+      if (foraHora) bc.disabled = true;
+      c.appendChild(bc);
+      return c;
+    }
+    c.className = 'agora espera';
+    if (prox && prox.estado === 'amanha') {
+      rot('Por hoje é só');
+      tit('A próxima aula abre no próximo dia');
+      txt('Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. Amanhã: ' + prox.titulo + '.');
+    } else if (prox && (prox.estado === 'perguntas_pendentes' || prox.estado === 'sem_perguntas')) {
+      rot('Aguarde');
+      tit(prox.titulo);
+      txt(ROTULO_AULA[prox.estado] + '. Avise quem acompanha a loja.');
+    } else {
+      rot('Aguarde');
+      tit('Nada para fazer agora');
+    }
+    return c;
+  }
+
+  function cartaoProva(e, c, foraHora) {
+    var pr = e.prova, regra = REGRAS.prova;
+    var refazer = e.aulas.filter(function (a) { return a.refazer; });
+    rot2(c, 'Prova Final');
+    if (pr.estado === 'em_andamento') {
+      c.appendChild(el('div', 'tit', 'Sua prova está aberta'));
+      c.appendChild(el('p', '', 'O relógio não para. Volte e termine.'));
+      c.appendChild(botao('Voltar à prova', 'laranja', telaProvaIntro));
+    } else if (pr.estado === 'liberada') {
+      c.appendChild(el('div', 'tit', 'Tentativa ' + pr.tentativa + ' de ' + regra.tentativas));
+      c.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta.'));
+      var bp = botao('Abrir a Prova Final', 'laranja', telaProvaIntro);
+      if (HORARIO && !HORARIO.provaCabe) { bp.disabled = true; c.appendChild(el('p', 'sub', 'A prova leva 60 minutos e precisa terminar dentro do horário: ' + HORARIO.texto + '.')); }
+      c.appendChild(bp);
+    } else if (pr.estado === 'refazer_aulas' || refazer.length) {
+      c.className = 'agora espera';
+      c.appendChild(el('div', 'tit', 'Refaça as perguntas de ' + refazer.length + (refazer.length === 1 ? ' aula' : ' aulas')));
+      c.appendChild(el('p', '', 'Antes da ' + pr.tentativa + 'ª tentativa, refaça as perguntas das aulas marcadas com ↻.' +
+        (pr.abreEm ? ' A tentativa abre a partir de ' + pr.abreEm + '.' : '')));
+      if (refazer[0]) {
+        var br = botao('Refazer: ' + refazer[0].titulo, 'laranja', function () { telaAula(refazer[0]); });
+        if (foraHora) br.disabled = true;
+        c.appendChild(br);
+      }
+    } else if (pr.estado === 'aguardando_data') {
+      c.className = 'agora espera';
+      c.appendChild(el('div', 'tit', 'A ' + pr.tentativa + 'ª tentativa abre em ' + pr.abreEm));
+      c.appendChild(el('p', '', 'Você já refez as aulas. Agora é esperar a data.'));
+    } else if (pr.estado === 'aguarda_diretoria') {
+      c.className = 'agora espera';
+      c.appendChild(el('div', 'tit', 'Sua trilha está parada aqui'));
+      c.appendChild(el('p', '', 'Não passou na 3ª tentativa. A Diretoria decide o próximo passo. Continue atendendo no que você já está liberada.'));
+    } else {
+      c.className = 'agora espera';
+      c.appendChild(el('div', 'tit', 'Abre quando as aulas fecharem'));
+    }
+    (pr.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
+      c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes));
+    });
+    return c;
+  }
+  function rot2(c, t) { c.appendChild(el('div', 'rot', t)); }
+
+  // ================= Aula =================
+  function proximaAberta(depoisDe) {
+    var lista = ESTADO.aulas, achou = false;
+    for (var i = 0; i < lista.length; i++) {
+      if (achou && (lista[i].estado === 'aberta' || lista[i].refazer)) return lista[i];
+      if (lista[i].id === depoisDe) achou = true;
+    }
+    return null;
+  }
+
+  /** Video do Drive tocando dentro da tela (a pasta 1 esta "qualquer pessoa com o link"). */
+  function videoNaTela(id, titulo) {
+    var caixa = el('div', 'video');
+    var f = document.createElement('iframe');
+    f.src = 'https://drive.google.com/file/d/' + id + '/preview';
+    f.title = titulo || 'Vídeo';
+    f.setAttribute('allow', 'autoplay; fullscreen');
+    f.setAttribute('allowfullscreen', '');
+    f.loading = 'lazy';
+    caixa.appendChild(f);
+    return caixa;
+  }
+
+  /** Texto com **negrito**: vira texto + <b>, nunca marcacao vinda de fora. */
+  function rico(tag, classe, texto) {
+    var n = el(tag, classe);
+    String(texto || '').split('**').forEach(function (parte, i) {
+      if (!parte) return;
+      if (i % 2) n.appendChild(el('b', '', parte)); else n.appendChild(document.createTextNode(parte));
+    });
+    return n;
+  }
+
+  /**
+   * Figura da apostila, direto do Drive da Universidade (pasta aberta por link).
+   * Sem mandar o endereco desta pagina: com ele o Google recusa a imagem.
+   */
+  function figuraDoDrive(id, alt) {
+    var img = el('img', 'figura carregando');
+    img.alt = alt || 'Figura';
+    img.referrerPolicy = 'no-referrer';
+    img.setAttribute('referrerpolicy', 'no-referrer');
+    img.loading = 'lazy';
+    img.addEventListener('load', function () { img.className = 'figura'; });
+    img.addEventListener('error', function () { img.className = 'figura falhou'; img.alt = 'A figura não carregou. Confira a internet.'; });
+    if (id) img.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
+    return img;
+  }
+
+  /** Desenha os blocos da apostila: titulos, paragrafos, itens, tabelas, quadros e figuras. */
+  function desenharTexto(destino, blocos) {
+    blocos.forEach(function (b) {
+      if (b.t === 'h2') destino.appendChild(el('h2', 'ap-h2', b.x));
+      else if (b.t === 'h3') destino.appendChild(el('h3', 'ap-h3', b.x));
+      else if (b.t === 'parte') destino.appendChild(el('div', 'ap-parte', b.x));
+      else if (b.t === 'p') destino.appendChild(rico('p', 'ap-p', b.x));
+      else if (b.t === 'li') destino.appendChild(rico('div', 'ap-li', (b.n ? b.n + '. ' : '• ') + b.x));
+      else if (b.t === 'chk') destino.appendChild(rico('div', 'ap-li', '☐ ' + b.x));
+      else if (b.t === 'q') destino.appendChild(rico('div', 'ap-quadro', b.x));
+      else if (b.t === 'tab') {
+        var rolar = el('div', 'ap-tab');
+        var t = el('table');
+        b.l.forEach(function (linha, k) {
+          var tr = el('tr');
+          linha.forEach(function (c) { tr.appendChild(rico(k === 0 ? 'th' : 'td', '', c)); });
+          t.appendChild(tr);
+        });
+        rolar.appendChild(t);
+        destino.appendChild(rolar);
+      } else if (b.t === 'fig') {
+        var f = el('div', 'ap-fig');
+        if (b.x) f.appendChild(el('div', 'ap-fig-t', b.x));
+        b.imgs.forEach(function (im) {
+          f.appendChild(figuraDoDrive(im.id, im.leg || b.x));
+          if (im.leg) f.appendChild(el('div', 'ap-leg', im.leg));
+        });
+        if (b.cap) f.appendChild(rico('div', 'ap-cap', b.cap));
+        destino.appendChild(f);
+      }
+    });
+  }
+
+  function telaAula(a) {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
+    r.appendChild(el('p', 'sub', 'Aula'));
+    r.appendChild(el('h1', '', a.titulo));
+    function etapa(n, titulo, sub) {
+      var d = el('div', 'etapa');
+      var h = el('div');
+      h.appendChild(el('span', 'n', String(n)));
+      h.appendChild(el('span', 't', titulo));
+      d.appendChild(h);
+      if (sub) d.appendChild(el('p', 'sub', sub));
+      r.appendChild(d);
+      return d;
+    }
+    var e1 = etapa(1, 'Ouvir', 'A aula em áudio, de 3 a 8 minutos.');
+    if (a.audio.noApp) {
+      // O tocador do proprio Drive, dentro da aula (download liberado; ver AUDIO_NO_APP em Trilha.gs).
+      var caixaAudio = el('div', 'audio-drive');
+      var fa = document.createElement('iframe');
+      fa.src = 'https://drive.google.com/file/d/' + a.audio.id + '/preview';
+      fa.title = 'Áudio da aula';
+      fa.setAttribute('allow', 'autoplay');
+      caixaAudio.appendChild(fa);
+      e1.appendChild(caixaAudio);
+    } else {
+      // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
+      e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
+    }
+    if (a.video) {
+      var ev = etapa('▶', a.video.nome, '');
+      ev.appendChild(videoNaTela(a.video.id, a.video.nome));
+    }
+    var e2 = etapa(2, 'Ler', a.leitura.onde);
+    var texto = el('div', 'ap oculto');
+    var bLer = botao('📖 Ler a aula aqui', '', function () {
+      bLer.disabled = true;
+      chamar('lerAula', { aula: a.id }, function (res) {
+        bLer.className = 'oculto';
+        if (!res.ok) { e2.appendChild(el('div', 'erro', msgErro(res))); return; }
+        texto.className = 'ap';
+        desenharTexto(texto, res.blocos);
+        texto.appendChild(botao('Terminei de ler: responder as perguntas', 'laranja', function () { perguntasAula(a); }));
+      });
+    });
+    e2.appendChild(bLer);
+    e2.appendChild(texto);
+    var e3 = etapa(3, 'Responder', REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
+    e3.appendChild(botao('Responder as perguntas', 'laranja', function () { perguntasAula(a); }));
+  }
+
+  function alternativas(nome, lista, aoEscolher) {
+    var box = el('div');
+    lista.forEach(function (t, j) {
+      var lab = el('label', 'alt');
+      var inp = document.createElement('input');
+      inp.type = 'radio'; inp.name = nome; inp.value = String(j);
+      inp.addEventListener('change', function () { aoEscolher(j); });
+      lab.appendChild(inp);
+      lab.appendChild(el('span', '', t));
+      box.appendChild(lab);
+    });
+    return box;
+  }
+
+  function perguntasAula(a) {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(el('p', 'sub', 'Sorteando as perguntas…'));
+    chamar('abrirAula', { aula: a.id }, function (res) {
+      var x = raiz();
+      barraQuem(x);
+      x.appendChild(el('p', 'sub', a.titulo));
+      if (!res.ok) { telaErro(x, msgErro(res), desenharTrilha, 'Voltar à trilha'); return; }
+      var topo = el('div');
+      x.appendChild(topo);
+      var resp = [], blocos = [];
+      res.perguntas.forEach(function (q, i) {
+        var d = el('div', 'q');
+        if (q.instrucao) d.appendChild(el('p', 'ins', q.instrucao));
+        d.appendChild(el('p', 'en', (i + 1) + '. ' + q.enunciado));
+        d.appendChild(alternativas('a' + i, q.alternativas, function (j) { resp[i] = j; }));
+        blocos.push(d);
+        x.appendChild(d);
+      });
+      var msg = el('div');
+      x.appendChild(msg);
+      var enviar = botao('Corrigir', 'laranja', function () {
+        for (var i = 0; i < res.perguntas.length; i++) if (resp[i] === undefined) { msg.className = 'aviso'; msg.textContent = 'Responda todas as perguntas.'; return; }
+        enviar.disabled = true;
+        chamar('responderAula', { aula: a.id, sorteio: res.sorteio, respostas: resp }, function (c) {
+          if (!c.ok) { enviar.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(c); return; }
+          enviar.className = 'oculto';
+          if (c.trilha) receber(c.trilha);
+          c.correcao.forEach(function (k, i) {
+            var labs = blocos[i].querySelectorAll('.alt');
+            for (var j = 0; j < labs.length; j++) {
+              labs[j].querySelector('input').disabled = true;
+              if (j === k.certa) labs[j].className = 'alt certa';
+              else if (j === resp[i]) labs[j].className = 'alt errada';
+            }
+            blocos[i].appendChild(el('p', 'exp', (k.acertou ? '✔ ' : '✘ ') + k.explicacao));
+          });
+          // O resultado vai no ALTO, com o proximo passo; as respostas ficam embaixo.
+          var caixa = el('div', c.passou ? 'bom' : 'aviso',
+            c.passou ? (c.acertos + ' de ' + c.questoes + '. Aula concluída. A próxima abriu.')
+              : ('Você acertou ' + c.acertos + ' de ' + c.questoes + '. Precisa de ' + REGRAS.aula.abre + '. Leia as explicações abaixo e tente de novo.'));
+          topo.appendChild(caixa);
+          var prox = c.passou ? proximaAberta(a.id) : null;
+          if (prox) topo.appendChild(botao('Ir para a próxima aula: ' + prox.titulo, 'laranja', function () { telaAula(prox); }));
+          if (!c.passou) topo.appendChild(botao('Tentar de novo', 'laranja', function () { perguntasAula(a); }));
+          topo.appendChild(botao('Voltar à trilha', c.passou && !prox ? '' : 'leve', function () { if (c.trilha) desenharTrilha(); else carregar(); }));
+          topo.appendChild(el('p', 'sub', 'As respostas certas estão marcadas em verde, abaixo.'));
+          if (window.scrollTo) window.scrollTo(0, 0);
+        });
+      });
+      x.appendChild(enviar);
+    });
+  }
+
+  // ================= Prova =================
+  function telaProvaIntro() {
+    var pr = ESTADO.prova, regra = REGRAS.prova, r = raiz();
+    barraQuem(r);
+    r.appendChild(el('h1', '', 'Prova Final · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
+    r.appendChild(el('p', '', 'Prova de ' + NOME));
+    r.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta'));
+    r.appendChild(el('div', 'aviso', pr.estado === 'em_andamento' ? 'Sua prova já começou e o relógio está correndo.' : 'Depois que começar, o relógio não para, mesmo se você fechar o app. Ao fim você vê só a nota.'));
+    var msg = el('div');
+    r.appendChild(msg);
+    r.appendChild(botao(pr.estado === 'em_andamento' ? 'Voltar à prova' : 'Começar a prova', 'laranja', function (ev) {
+      ev.target.disabled = true;
+      chamar('iniciarProva', undefined, function (res) {
+        if (!res.ok) { ev.target.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(res); return; }
+        telaProva(res);
+      });
+    }));
+    r.appendChild(botao('Voltar à trilha', 'leve', desenharTrilha));
+  }
+
+  var relogioId = null;
+  function telaProva(p) {
+    var r = raiz();
+    var chaveLocal = 'rdoteste_prova_' + p.id;
+    var resp = {};
+    Object.keys(p.respostas || {}).forEach(function (k) { resp[k] = p.respostas[k]; });
+    try { var loc = JSON.parse(guardado(chaveLocal) || '{}'); Object.keys(loc).forEach(function (k) { resp[k] = loc[k]; }); } catch (e) {}
+    var fim = Date.now() + p.segundosRestantes * 1000;
+    var topo = el('div', 'relogio');
+    var tTempo = el('span', '', ''), tConta = el('span', '', '');
+    topo.appendChild(tTempo); topo.appendChild(tConta);
+    r.appendChild(topo);
+    r.appendChild(el('p', 'sub', 'Prova de ' + NOME + ' · ' + p.perguntas.length + ' questões · passa com ' + p.corte));
+    var alerta = el('div');
+    r.appendChild(alerta);
+    function conta() { var n = Object.keys(resp).length; tConta.textContent = n + ' de ' + p.perguntas.length; }
+    var salvarId = null;
+    function salvar() {
+      guardar(chaveLocal, JSON.stringify(resp));
+      if (salvarId) clearTimeout(salvarId);
+      salvarId = setTimeout(function () {
+        chamar('salvarRespostasProva', { id: p.id, respostas: resp }, function (s) {
+          // Sem internet: as respostas continuam guardadas neste aparelho. Avisa para entregar a tempo.
+          if (s && s.ok) { alerta.className = ''; alerta.textContent = ''; }
+          else { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho: entregue antes do tempo acabar.'; }
+        }, true);
+      }, 1500);
+    }
+    p.perguntas.forEach(function (q, i) {
+      var d = el('div', 'q');
+      d.appendChild(el('p', 'en', (i + 1) + '. ' + q.enunciado));
+      var box = alternativas('p' + i, q.alternativas, function (j) { resp[i] = j; conta(); salvar(); });
+      if (resp[i] !== undefined) { var inp = box.querySelectorAll('input')[resp[i]]; if (inp) inp.checked = true; }
+      d.appendChild(box);
+      r.appendChild(d);
+    });
+    conta();
+    var msg = el('div'); r.appendChild(msg);
+    var entregue = false;
+    function entregar() {
+      if (entregue) return;
+      entregue = true;
+      if (relogioId) clearInterval(relogioId);
+      if (salvarId) clearTimeout(salvarId);
+      msg.className = 'aviso'; msg.textContent = 'Corrigindo…';
+      chamar('entregarProva', { id: p.id, respostas: resp }, function (res) {
+        if (!res.ok) {
+          msg.className = 'erro'; msg.textContent = msgErro(res);
+          if (res.erro === 'prova_encerrada' || res.erro === 'tempo_esgotado') {
+            guardar(chaveLocal, '');
+            msg.appendChild(botao('Voltar à trilha', '', carregar));
+          } else {
+            entregue = false;
+            msg.appendChild(botao('Tentar entregar de novo', 'laranja', entregar));
+          }
+          return;
+        }
+        guardar(chaveLocal, '');
+        telaResultado(res);
+      });
+    }
+    r.appendChild(botao('Entregar a prova', 'laranja', function () {
+      var faltam = p.perguntas.length - Object.keys(resp).length;
+      if (faltam && !window.confirm('Faltam ' + faltam + ' questões sem resposta. Entregar assim mesmo?')) return;
+      entregar();
+    }));
+    function tique() {
+      var s = Math.max(0, Math.round((fim - Date.now()) / 1000));
+      tTempo.textContent = '⏱ ' + Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+      topo.className = 'relogio' + (s <= 300 ? ' pouco' : '');
+      if (s <= 0) entregar();
+    }
+    tique();
+    if (relogioId) clearInterval(relogioId);
+    relogioId = setInterval(tique, 1000);
+  }
+
+  function telaResultado(res) {
+    if (res.trilha) receber(res.trilha);
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(el('h1', '', 'Resultado'));
+    r.appendChild(el('div', 'grande', res.acertos + ' de ' + res.questoes));
+    var proximo;
+    if (res.passou) proximo = 'Agora vêm as 6 simulações, com quem aplica.';
+    else if (res.proxima === 'aguarda_diretoria') proximo = 'A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.';
+    else proximo = 'Refaça as perguntas das aulas da Trilha.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
+    r.appendChild(el('div', res.passou ? 'bom' : 'aviso', (res.passou ? 'Passou. ' : 'Não passou desta vez. ') + proximo));
+    r.appendChild(botao('Voltar à trilha', '', function () { if (res.trilha) desenharTrilha(); else carregar(); }));
+  }
+
+  if (!CODIGO) { var x = raiz(); x.appendChild(el('div', 'aviso', 'Entre primeiro no app com o seu código.')); rodape(x); }
+  else carregar();
+})();
+</script>
+</body>
+</html>
