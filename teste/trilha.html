@@ -143,17 +143,17 @@
     perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
     sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
     aula_expirada: 'Estas perguntas não valem mais (a aula foi aberta de novo em outro lugar). Abra a aula outra vez.',
-    prova_em_andamento: 'Sua Prova Final está aberta. Termine a prova antes de voltar às aulas.',
-    aulas_abertas: 'A Prova Final abre quando todas as aulas estiverem fechadas.',
-    refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da Trilha.',
-    aguardando_data: 'A próxima tentativa ainda não abriu.',
+    prova_em_andamento: 'Sua prova está aberta. Termine a prova antes de voltar às aulas.',
+    aulas_abertas: 'A prova abre quando todas as aulas da etapa estiverem fechadas.',
+    refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da etapa.',
+    aguardando_data: 'A prova ainda não abriu. Veja a data na trilha.',
     aguarda_diretoria: 'Sua trilha está parada aqui até a Diretoria decidir.',
     aprovada: 'Você já passou nesta prova.',
     prova_encerrada: 'Esta prova já foi encerrada.',
     tempo_esgotado: 'O tempo da prova acabou.',
     prova_perdida: 'Houve uma falha com a sua prova. Volte à trilha: a tentativa não vai contar.',
     fora_do_horario: 'Fora do horário da trilha.',
-    fora_do_horario_prova: 'A prova leva 60 minutos e precisa terminar dentro do horário da trilha.',
+    fora_do_horario_prova: 'O tempo da prova precisa caber inteiro dentro do horário da trilha.',
     codigo_invalido: 'Seu código não foi reconhecido. Entre de novo pelo app.',
     inativo: 'Seu acesso está desativado. Fale com quem acompanha a loja.',
     sem_conexao: 'Sem resposta do servidor. Confira a internet e tente de novo.',
@@ -301,15 +301,21 @@
         c.appendChild(botao('Assistir de novo', 'leve', function () { telaVideo(p); }));
       }
       if (p.tipo === 'prova') {
-        if (e.prova.estado === 'liberada' || e.prova.estado === 'em_andamento') c.appendChild(botao('Abrir a Prova Final', 'laranja', telaProvaIntro));
-        (e.prova.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
+        var sp = (e.provas && e.provas[p.id]) || e.prova;
+        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') c.appendChild(botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', telaProvaIntro));
+        (sp.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
           c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
         });
       }
-      if (p.id === 'simulacoes') {
-        e.simulacoes.forEach(function (s) {
+      if (p.tipo === 'pessoa' && e.praticas && e.praticas[p.id]) {
+        e.praticas[p.id].forEach(function (s) {
           c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '')));
         });
+      }
+      // O certificado da Trilha fica guardado no passo das simulacoes, depois de aprovadas.
+      if (p.id === 'simulacoes' && p.estado === 'feito' && CERTIFICADO) {
+        var cert0 = CERTIFICADO;
+        c.appendChild(botao('Baixar meu certificado da Trilha', 'verde', function () { comCertificado(function () { window.baixarCertificado(cert0); }); }));
       }
       det.appendChild(c);
     });
@@ -380,8 +386,8 @@
     if (e.concluida) {
       c.className = 'agora fim';
       rot('Parabéns');
-      tit('Você concluiu esta parte da trilha');
-      txt('Abertura, Ponte, Trilha do Vendedor, Prova Final e simulações. A próxima parte é o Bloco Lentes.');
+      tit('Você concluiu a trilha inteira');
+      txt('Trilha do Vendedor, Prova Final, simulações e os blocos Lentes, Armações e Negociação. Agora você é Vendedora em Formação.');
       if (CERTIFICADO) {
         var cert = CERTIFICADO;
         c.appendChild(botao('Baixar meu certificado', 'verde', function () { comCertificado(function () { window.baixarCertificado(cert); }); }));
@@ -411,8 +417,9 @@
       var pp = e.passos.filter(function (x) { return x.id === at.id; })[0];
       if (pp && pp.explica) txt(pp.explica);
       txt('Não depende de você. Assim que for lançado, a próxima etapa abre aqui.');
-      if (at.id === 'simulacoes' && e.simulacoes.length) {
-        var u = e.simulacoes[e.simulacoes.length - 1];
+      var lancs = (e.praticas && e.praticas[at.id]) || [];
+      if (lancs.length) {
+        var u = lancs[lancs.length - 1];
         c.appendChild(el('p', 'sub', 'Último lançamento (' + u.data + '): ' + (u.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (u.notas ? ' (' + String(u.notas).split(';').join(', ') + ')' : '')));
       }
       c.appendChild(botao('Atualizar', 'leve', carregar));
@@ -453,9 +460,9 @@
   }
 
   function cartaoProva(e, c, foraHora) {
-    var pr = e.prova, regra = REGRAS.prova;
+    var pr = e.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova;
     var refazer = e.aulas.filter(function (a) { return a.refazer; });
-    rot2(c, 'Prova Final');
+    rot2(c, pr.nome || 'Prova');
     if (pr.estado === 'em_andamento') {
       c.appendChild(el('div', 'tit', 'Sua prova está aberta'));
       c.appendChild(el('p', '', 'O relógio não para. Volte e termine.'));
@@ -463,8 +470,8 @@
     } else if (pr.estado === 'liberada') {
       c.appendChild(el('div', 'tit', 'Tentativa ' + pr.tentativa + ' de ' + regra.tentativas));
       c.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta.'));
-      var bp = botao('Abrir a Prova Final', 'laranja', telaProvaIntro);
-      if (HORARIO && !HORARIO.provaCabe) { bp.disabled = true; c.appendChild(el('p', 'sub', 'A prova leva 60 minutos e precisa terminar dentro do horário: ' + HORARIO.texto + '.')); }
+      var bp = botao('Abrir a ' + (pr.nome || 'prova'), 'laranja', telaProvaIntro);
+      if (HORARIO && !HORARIO.provaCabe) { bp.disabled = true; c.appendChild(el('p', 'sub', 'A prova leva ' + regra.minutos + ' minutos e precisa terminar dentro do horário: ' + HORARIO.texto + '.')); }
       c.appendChild(bp);
     } else if (pr.estado === 'refazer_aulas' || refazer.length) {
       c.className = 'agora espera';
@@ -478,12 +485,18 @@
       }
     } else if (pr.estado === 'aguardando_data') {
       c.className = 'agora espera';
-      c.appendChild(el('div', 'tit', 'A ' + pr.tentativa + 'ª tentativa abre em ' + pr.abreEm));
-      c.appendChild(el('p', '', 'Você já refez as aulas. Agora é esperar a data.'));
+      if (pr.tentativa > 1) {
+        c.appendChild(el('div', 'tit', 'A ' + pr.tentativa + 'ª tentativa abre em ' + pr.abreEm));
+        c.appendChild(el('p', '', 'Você já refez as aulas. Agora é esperar a data.'));
+      } else {
+        // Prova de bloco: no 5o dia util do bloco (os dias 2 a 4 sao de pratica com quem aplica).
+        c.appendChild(el('div', 'tit', 'A prova abre em ' + pr.abreEm));
+        c.appendChild(el('p', '', 'Até lá, pratique no balcão com quem aplica o que você estudou.'));
+      }
     } else if (pr.estado === 'aguarda_diretoria') {
       c.className = 'agora espera';
       c.appendChild(el('div', 'tit', 'Sua trilha está parada aqui'));
-      c.appendChild(el('p', '', 'Não passou na 3ª tentativa. A Diretoria decide o próximo passo. Continue atendendo no que você já está liberada.'));
+      c.appendChild(el('p', '', 'Não passou na ' + regra.tentativas + 'ª tentativa. A Diretoria decide o próximo passo. Continue atendendo no que você já está liberada.'));
     } else {
       c.className = 'agora espera';
       c.appendChild(el('div', 'tit', 'Abre quando as aulas fecharem'));
@@ -700,9 +713,9 @@
 
   // ================= Prova =================
   function telaProvaIntro() {
-    var pr = ESTADO.prova, regra = REGRAS.prova, r = raiz();
+    var pr = ESTADO.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova, r = raiz();
     barraQuem(r);
-    r.appendChild(el('h1', '', 'Prova Final · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
+    r.appendChild(el('h1', '', (pr.nome || 'Prova') + ' · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
     r.appendChild(el('p', '', 'Prova de ' + NOME));
     r.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta'));
     r.appendChild(el('div', 'aviso', pr.estado === 'em_andamento' ? 'Sua prova já começou e o relógio está correndo.' : 'Depois que começar, o relógio não para, mesmo se você fechar o app. Ao fim você vê só a nota.'));
@@ -710,7 +723,7 @@
     r.appendChild(msg);
     r.appendChild(botao(pr.estado === 'em_andamento' ? 'Voltar à prova' : 'Começar a prova', 'laranja', function (ev) {
       ev.target.disabled = true;
-      chamar('iniciarProva', undefined, function (res) {
+      chamar('iniciarProva', { prova: pr.id }, function (res) {
         if (!res.ok) { ev.target.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(res); return; }
         telaProva(res);
       });
@@ -802,9 +815,10 @@
     r.appendChild(el('h1', '', 'Resultado'));
     r.appendChild(el('div', 'grande', res.acertos + ' de ' + res.questoes));
     var proximo;
-    if (res.passou) proximo = 'Agora vêm as 6 simulações, com quem aplica.';
+    var depois = { prova_final: 'Agora vêm as 6 simulações, com quem aplica.', prova_onb: 'Agora vem a Conversa da Ponte, com quem aplica.' };
+    if (res.passou) proximo = depois[res.prova] || 'Agora vem a avaliação prática, com quem aplica.';
     else if (res.proxima === 'aguarda_diretoria') proximo = 'A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.';
-    else proximo = 'Refaça as perguntas das aulas da Trilha.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
+    else proximo = 'Refaça as perguntas das aulas desta etapa.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
     r.appendChild(el('div', res.passou ? 'bom' : 'aviso', (res.passou ? 'Passou. ' : 'Não passou desta vez. ') + proximo));
     r.appendChild(botao('Voltar à trilha', '', function () { if (res.trilha) desenharTrilha(); else carregar(); }));
   }

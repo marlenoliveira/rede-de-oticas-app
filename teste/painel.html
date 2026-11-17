@@ -335,18 +335,20 @@
     });
     if (r.podeMatricular && r.candidatas.length) {
       box.appendChild(el('h2', '', 'Matricular na trilha'));
-      box.appendChild(el('p', 'resumo', 'Só vendedora que já trabalha na loja. Lojas do piloto não aparecem.'));
+      box.appendChild(el('p', 'resumo', 'Quem já trabalha na loja começa pela Ponte; a vendedora nova, pelos Primeiros dias. Lojas do piloto não aparecem.'));
       var sel = el('select');
       r.candidatas.forEach(function (c, i) { var o = el('option', '', c.loja + ' · ' + c.nome); o.value = String(i); sel.appendChild(o); });
       box.appendChild(sel);
-      var b = el('button', '', 'Matricular');
-      b.type = 'button';
-      b.addEventListener('click', function () {
-        var c = r.candidatas[Number(sel.value)];
-        acaoTrilha('matricular', codigo, { loja: c.loja, nome: c.nome, id: c.id, tipo: 'ja_trabalha' },
-          'Matricular ' + c.nome + ' (' + c.loja + ') na trilha? Ela passa a ver "Minha trilha" ao entrar no app.');
+      [['ja_trabalha', 'Matricular: já trabalha na loja', 'começa pela Ponte'], ['nova', 'Matricular: vendedora nova', 'começa pelos Primeiros dias']].forEach(function (x) {
+        var b = el('button', x[0] === 'nova' ? 'leve' : '', x[1]);
+        b.type = 'button';
+        b.addEventListener('click', function () {
+          var c = r.candidatas[Number(sel.value)];
+          acaoTrilha('matricular', codigo, { loja: c.loja, nome: c.nome, id: c.id, tipo: x[0] },
+            'Matricular ' + c.nome + ' (' + c.loja + ') na trilha? Ela ' + x[2] + ' e passa a ver "Minha trilha" ao entrar no app.');
+        });
+        box.appendChild(b);
       });
-      box.appendChild(b);
     }
   }
 
@@ -358,7 +360,7 @@
     linha1.appendChild(el('b', '', p.nome));
     linha1.appendChild(el('span', '', p.loja));
     cab.appendChild(linha1);
-    var onde = p.concluida ? 'Etapa 1 concluída' : (p.atual.fase + ' · passo ' + p.atual.n + ' de ' + p.totalJornada + ' · ' + p.atual.titulo);
+    var onde = p.concluida ? 'Trilha inteira concluída · Vendedora em Formação' : (p.atual.fase + ' · passo ' + p.atual.n + ' de ' + p.totalJornada + ' · ' + p.atual.titulo);
     cab.appendChild(el('div', 'resumo', onde));
     if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
     c.appendChild(cab);
@@ -381,42 +383,62 @@
     f.appendChild(el('div', '', 'Começou em ' + p.desde + ' · ' + (p.tipo === 'ja_trabalha' ? 'já trabalhava na loja' : 'vendedora nova')));
     f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada !== null && p.parada !== undefined ? ' · ' + p.parada + ' dias úteis' : '')));
     f.appendChild(el('div', '', 'Aulas fechadas: ' + p.aulasFeitas + ' de ' + p.aulasTotal + ' · vídeos: ' + p.videosFeitos + ' de ' + p.videosTotal));
-    var t = (p.prova.tentativas || []).filter(function (x) { return x.estado === 'corrigida'; });
-    f.appendChild(el('div', '', 'Prova Final: ' + (t.length ? t.map(function (x) {
-      return x.n + 'ª ' + x.acertos + ' de ' + x.questoes + ' (' + x.data + (x.minutos !== null ? ', ' + x.minutos + ' min' : '') + ')';
-    }).join(' · ') + (p.prova.estado === 'aprovada' ? ' · aprovada' : '') : 'ainda não fez')));
-    if (p.simulacoes.length) f.appendChild(el('div', '', '6 simulações: ' + p.simulacoes.map(function (s) {
-      return s.data + ' ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '');
-    }).join(' · ')));
+    // Cada prova da jornada: so as que ja tiveram tentativa (a Prova Final aparece sempre).
+    var provas = p.provas || { prova_final: p.prova };
+    Object.keys(provas).forEach(function (k) {
+      var sp = provas[k];
+      var t = (sp.tentativas || []).filter(function (x) { return x.estado === 'corrigida'; });
+      if (!t.length && k !== 'prova_final') return;
+      f.appendChild(el('div', '', (sp.nome || 'Prova Final') + ': ' + (t.length ? t.map(function (x) {
+        return x.n + 'ª ' + x.acertos + ' de ' + x.questoes + ' (' + x.data + (x.minutos !== null ? ', ' + x.minutos + ' min' : '') + ')';
+      }).join(' · ') + (sp.estado === 'aprovada' ? ' · aprovada' : '') : 'ainda não fez')));
+    });
+    // Praticas marcadas por quem aplica (simulacoes, 5o dia, praticas dos blocos).
+    var NOME_PRATICA = { simulacoes: '6 simulações', avaliacao_dia5: 'Avaliação do 5º dia', pratica_lentes: 'Prática de Lentes',
+      pratica_armacoes: 'Prática de Armações', pratica_negociacao: 'Prática de Negociação' };
+    var praticas = p.praticas || { simulacoes: p.simulacoes || [] };
+    Object.keys(praticas).forEach(function (k) {
+      if (!praticas[k].length) return;
+      f.appendChild(el('div', '', (NOME_PRATICA[k] || k) + ': ' + praticas[k].map(function (s) {
+        return s.data + ' ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '');
+      }).join(' · ')));
+    });
     if (p.podeLancar && p.atual.id === 'ponte') {
       var bp = el('button', '', 'Lançar: Ponte feita');
       bp.type = 'button';
       bp.addEventListener('click', function () { acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: 'ponte' }, 'Confirmar que a conversa da Ponte com ' + p.nome + ' foi feita?'); });
       f.appendChild(bp);
     }
-    if (p.podeLancar && p.atual.id === 'simulacoes') {
+    if (p.podeLancar && p.atual.tipo === 'pessoa' && p.atual.id !== 'ponte') {
       // D5 (17/11/2026): a gerente ou a supervisora marca aprovada ou refazer. A marcação
       // aqui é o registro oficial, no lugar do papel assinado. O app não guarda a nota.
-      f.appendChild(el('div', '', 'As 6 simulações: depois de aplicar, marque o resultado. Passa com 8 de 10 em cada, pela Régua das 6 Simulações. Esta marcação é o registro oficial.'));
+      var COMO = {
+        simulacoes: 'As 6 simulações: depois de aplicar, marque o resultado. Passa com 8 de 10 em cada, pela Régua das 6 Simulações.',
+        avaliacao_dia5: 'O 5º dia: checklist completo e atendimento avaliado com média de 3,5 ou mais (Formulários do Onboarding).',
+        pratica_lentes: 'Avaliação prática de Lentes: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.',
+        pratica_armacoes: 'Avaliação prática de Armações: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.',
+        pratica_negociacao: 'Avaliação prática de Negociação: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.'
+      };
+      f.appendChild(el('div', '', (COMO[p.atual.id] || p.atual.titulo) + ' Esta marcação é o registro oficial.'));
       var ba = el('button', '', 'Aprovada');
       ba.type = 'button';
       ba.addEventListener('click', function () {
-        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: 'simulacoes', resultado: 'aprovada' },
-          'Marcar as 6 simulações de ' + p.nome + ' como APROVADAS (8 ou mais em cada uma, na Régua)?');
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: p.atual.id, resultado: 'aprovada' },
+          'Marcar "' + p.atual.titulo + '" de ' + p.nome + ' como APROVADA?');
       });
       f.appendChild(ba);
       var br = el('button', 'leve', 'Refazer');
       br.type = 'button';
       br.addEventListener('click', function () {
-        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: 'simulacoes', resultado: 'refazer' },
-          'Marcar as simulações de ' + p.nome + ' como REFAZER?');
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: p.atual.id, resultado: 'refazer' },
+          'Marcar "' + p.atual.titulo + '" de ' + p.nome + ' como REFAZER?');
       });
       f.appendChild(br);
     }
     if (p.podeLiberar) {
-      var bl = el('button', 'leve', 'Liberar nova série da Prova Final');
+      var bl = el('button', 'leve', 'Liberar nova série: ' + (p.prova.nome || 'Prova Final'));
       bl.type = 'button';
-      bl.addEventListener('click', function () { acaoTrilha('liberarNovaSerie', codigo, { loja: p.loja, nome: p.nome, id: p.id }, 'Liberar uma nova série para ' + p.nome + '? Ela refaz as aulas da Trilha antes.'); });
+      bl.addEventListener('click', function () { acaoTrilha('liberarNovaSerie', codigo, { loja: p.loja, nome: p.nome, id: p.id }, 'Liberar uma nova série da ' + (p.prova.nome || 'Prova Final') + ' para ' + p.nome + '? Ela refaz as aulas da etapa antes.'); });
       f.appendChild(bl);
     }
     if (podeMatricular && p.podeTirar !== false) {
