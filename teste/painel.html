@@ -310,7 +310,8 @@
       var box = id('trilha');
       box.textContent = '';
       if (!r || !r.ok || !Array.isArray(r.pessoas)) return; // servidor antigo ou sem permissao: o Painel continua como era
-      if (!r.pessoas.length && !(r.podeMatricular && r.candidatas.length)) return;
+      // Diretoria e supervisao veem a parte de matricula mesmo sem ninguem, com o aviso (17/11/2026).
+      if (!r.pessoas.length && !r.podeMatricular) return;
       desenharTrilha(box, r, codigo);
     });
   }
@@ -350,6 +351,10 @@
         });
         box.appendChild(b);
       });
+    } else if (r.podeMatricular) {
+      // Sem ninguem para matricular, a parte aparece com o aviso em vez de sumir (Marlen, 17/11/2026: "Sim, mostrar").
+      box.appendChild(el('h2', '', 'Matricular na trilha'));
+      box.appendChild(el('p', 'resumo', 'Ninguém para matricular agora. Lojas do piloto não aparecem.'));
     }
   }
 
