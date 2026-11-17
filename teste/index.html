@@ -1232,6 +1232,13 @@ class Component extends DCLogic {
     if (!bancos || !Object.keys(bancos).length) return [];
     const tipo = tipoEscolhido || this.state.tipoTreino || 'Sortear tudo';
     const girar = (arr, s) => { const k = arr.length ? ((s % arr.length) + arr.length) % arr.length : 0; return arr.slice(k).concat(arr.slice(0, k)); };
+    // Erradas do sorteio (17/11/2026): sem repetida ("Antirreflexo" e a certa de duas perguntas e podia
+    // aparecer duas vezes) e sem a que contem a certa ou esta contida nela ("TR90" x "Titanio ou TR90"),
+    // que tambem estaria certa. A mesma regra esta nas aulas da trilha (Trilha.gs, ambigua_).
+    const normA = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9.,%±+-]+/g, ' ').trim();
+    const ambigua = (c, x) => { const a = normA(c), b2 = normA(x); return a.length >= 3 && b2.length >= 3 && (b2.indexOf(a) > -1 || a.indexOf(b2) > -1); };
+    const poolDe = (b, it) => { const p0 = (b.pool || b.itens.map(x => x[1])).filter((x, i, arr) => x !== it[1] && arr.indexOf(x) === i);
+      const p1 = p0.filter(x => !ambigua(it[1], x)); return p1.length >= 3 ? p1 : p0; };
     const base = Math.floor(Math.random() * 97);
     const blocoSel = this.state.blocoTreino || '';
     const nomes = Object.keys(bancos).filter(k => !blocoSel || bancos[k].bloco === blocoSel);
@@ -1242,7 +1249,7 @@ class Component extends DCLogic {
       nomes.forEach(k => {
         const b = bancos[k];
         b.itens.forEach(it => {
-          const pool = (b.pool || b.itens.map(x => x[1])).filter(x => x !== it[1]);
+          const pool = poolDe(b, it);
           const fin = mistura(mistura(pool).slice(0, 3).concat([it[1]]));
           todas.push({ id: b.tipo + '::' + it[0], tipo: b.tipo, enunciado: it[0], instrucao: b.instrucao, opcoes: fin, certa: fin.indexOf(it[1]), explicacao: it[2] });
         });
@@ -1264,7 +1271,7 @@ class Component extends DCLogic {
       const itens = girar(b.itens, base + bi * 3);
       for (let i = 0; i < porBanco && i < itens.length && q.length < 8; i++) {
         const it = itens[i];
-        const pool = (b.pool || b.itens.map(x => x[1])).filter(x => x !== it[1]);
+        const pool = poolDe(b, it);
         const distr = girar(pool, base + bi * 7 + i * 3).slice(0, 3);
         const ops = distr.concat([it[1]]);
         for (let j = ops.length - 1; j > 0; j--) { const k2 = Math.floor(Math.random() * (j + 1)); const t = ops[j]; ops[j] = ops[k2]; ops[k2] = t; }
