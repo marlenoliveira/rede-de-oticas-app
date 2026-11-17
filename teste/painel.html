@@ -289,6 +289,7 @@
   var ERROS_TRILHA = {
     sem_permissao: 'Este código não pode fazer isso.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa.',
     notas_invalidas: 'Preencha as 6 notas, de 0 a 10.', resultado_invalido: 'Escolha: aprovada ou refazer.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.',
+    regras_nao_aceitas: 'Ela ainda não aceitou as Regras de uso no app.',
     loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
     pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.', nao_aguarda_diretoria: 'Esta pessoa não está aguardando a Diretoria.'
   };
@@ -363,6 +364,9 @@
     var onde = p.concluida ? 'Trilha inteira concluída · Vendedora em Formação' : (p.atual.fase + ' · passo ' + p.atual.n + ' de ' + p.totalJornada + ' · ' + p.atual.titulo);
     cab.appendChild(el('div', 'resumo', onde));
     if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
+    // Faixa da regua das Regras de uso, com as mesmas cores do treino (17/11/2026).
+    var FAIXA_TRILHA = { lembrete: 'Lembrete', conversa: 'Conversa com a gerente', advertencia: 'Advertência por escrito', diretoria: 'A Diretoria decide' };
+    if (p.faixa && FAIXA_TRILHA[p.faixa]) cab.appendChild(el('span', 'selo s-' + p.faixa, FAIXA_TRILHA[p.faixa]));
     c.appendChild(cab);
     // Chamar no WhatsApp quem esta parada (versao de teste, desde 16/11/2026). O app nao manda nada:
     // abre o WhatsApp de quem acompanha com a mensagem pronta; ela escolhe o contato e envia.
@@ -382,6 +386,9 @@
     var f = el('div', 'tr-ficha oculto');
     f.appendChild(el('div', '', 'Começou em ' + p.desde + ' · ' + (p.tipo === 'ja_trabalha' ? 'já trabalhava na loja' : 'vendedora nova')));
     f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada !== null && p.parada !== undefined ? ' · ' + p.parada + ' dias úteis' : '')));
+    // Regras de uso (17/11/2026): o aceite da propria vendedora no app. Sem foto, sem biometria.
+    var rg = p.regras || {};
+    f.appendChild(el('div', '', rg.aceitasEm ? 'Regras de uso aceitas em ' + rg.aceitasEm : 'Regras de uso: ainda não aceitas no app'));
     f.appendChild(el('div', '', 'Aulas fechadas: ' + p.aulasFeitas + ' de ' + p.aulasTotal + ' · vídeos: ' + p.videosFeitos + ' de ' + p.videosTotal));
     // Cada prova da jornada: so as que ja tiveram tentativa (a Prova Final aparece sempre).
     var provas = p.provas || { prova_final: p.prova };

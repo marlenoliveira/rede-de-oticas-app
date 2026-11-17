@@ -137,6 +137,8 @@
 
   var ERROS = {
     nao_matriculada: 'Você não está na trilha. Use o app normalmente.',
+    regras_nao_aceitas: 'Antes, leia e aceite as Regras de uso, na primeira tela da trilha.',
+    regras_mudaram: 'As Regras de uso mudaram. Leia de novo e aceite.',
     loja_de_teste: 'A trilha não funciona na loja de teste.',
     fechada: 'Esta aula ainda está fechada: termine a anterior.',
     amanha: 'Um dia da trilha por dia útil. Esta aula abre no próximo dia útil.',
@@ -241,8 +243,8 @@
     r.appendChild(botao(rotulo || 'Tentar de novo', '', acao || carregar));
   }
 
-  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null, CERTIFICADO = null;
-  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; CERTIFICADO = t.certificado || null; }
+  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null, CERTIFICADO = null, REGRAS_USO = null;
+  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; CERTIFICADO = t.certificado || null; REGRAS_USO = t.regrasUso || null; }
   /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
   function comCertificado(fn) {
     if (window.baixarCertificado) return fn();
@@ -270,7 +272,31 @@
   var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia útil',
     perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
 
+  /**
+   * Regras de uso (17/11/2026): a primeira tela da trilha, no lugar da folha
+   * assinada. Sem "Li e aceito", nada da trilha abre (o servidor tambem trava).
+   */
+  function telaRegrasUso() {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(el('h1', '', 'Regras de uso do treinamento'));
+    r.appendChild(el('p', 'sub', 'Leia antes de começar. A trilha abre depois que você aceitar.'));
+    (REGRAS_USO.itens || []).forEach(function (x, i) { r.appendChild(rico('div', 'ap-li', (i + 1) + '. ' + x)); });
+    r.appendChild(el('div', 'aviso', REGRAS_USO.declaracao || 'Declaro que li e entendi estas regras.'));
+    var msg = el('div');
+    r.appendChild(msg);
+    r.appendChild(botao('Li e aceito', 'laranja', function (ev) {
+      ev.target.disabled = true;
+      chamar('aceitarRegras', { versao: REGRAS_USO.versao }, function (res) {
+        if (!res.ok) { ev.target.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(res); if (res.erro === 'regras_mudaram') carregar(); return; }
+        receber(res); desenharTrilha();
+      });
+    }));
+    rodape(r);
+  }
+
   function desenharTrilha() {
+    if (REGRAS_USO && !REGRAS_USO.aceitas) return telaRegrasUso();
     var e = ESTADO, r = raiz();
     barraQuem(r);
     r.appendChild(el('h1', '', 'Minha trilha'));
@@ -620,10 +646,11 @@
       // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
       e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
     }
-    if (a.video) {
-      var ev = etapa('▶', a.video.nome, '');
-      ev.appendChild(videoNaTela(a.video.id, a.video.nome));
-    }
+    // Um ou mais videos dentro da aula (SsOtica, Demonstrativo).
+    [].concat(a.video || []).forEach(function (v) {
+      var ev = etapa('▶', v.nome, '');
+      ev.appendChild(videoNaTela(v.id, v.nome));
+    });
     var e2 = etapa(2, 'Ler', a.leitura.onde);
     var texto = el('div', 'ap oculto');
     var bLer = botao('📖 Ler a aula aqui', '', function () {
