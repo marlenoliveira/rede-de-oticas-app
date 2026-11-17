@@ -992,11 +992,13 @@ class Component extends DCLogic {
   montarEntrega(nome, codigo, loja) {
     const primeiro = String(nome || '').split(' ')[0];
     const texto =
-      'Oi, ' + primeiro + '! Esse é o app da Casa do Olhar para você registrar os atendimentos.\n\n' +
+      // Formato fixo de toda mensagem da rede (Marlen, 26/10/2026): abre com "Oi tudo bem?", fecha
+      // com "Obrigado!", sem o nome de quem recebe. Ajustado em 17/11/2026 (antes: "Oi, <nome>!").
+      'Oi tudo bem?\n\nEsse é o app da Casa do Olhar para você registrar os atendimentos.\n\n' +
       '1) Abra este link no celular:\n' + this.LINK_DO_APP + '\n\n' +
       '2) Digite o seu código de acesso: ' + codigo + '\n\n' +
       '3) Para ficar com o ícone na tela inicial: toque no botão de compartilhar do navegador e escolha "Adicionar à Tela de Início".\n\n' +
-      'Guarde esse código, ele é só seu. Qualquer dúvida me chama.';
+      'Guarde esse código, ele é só seu.\n\nObrigado!';
     return { nome: nome, primeiro: primeiro, codigo: codigo, loja: loja, texto: texto, copiado: false };
   }
 
@@ -1063,6 +1065,9 @@ class Component extends DCLogic {
    * de dentro do quadro isolado - a que nao guarda o codigo.
    */
   get LINK_DO_APP() {
+    // Versao de teste: o link do teste (17/11/2026: a mensagem mandava quem foi cadastrado no teste
+    // para o app das lojas, onde o codigo dela nao existe).
+    if (typeof window !== 'undefined' && window.AMBIENTE_TESTE) return 'https://marlenoliveira.github.io/rede-de-oticas-app/teste/';
     return 'https://marlenoliveira.github.io/rede-de-oticas-app/';
   }
 
