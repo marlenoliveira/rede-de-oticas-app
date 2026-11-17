@@ -139,7 +139,7 @@
     nao_matriculada: 'Você não está na trilha. Use o app normalmente.',
     loja_de_teste: 'A trilha não funciona na loja de teste.',
     fechada: 'Esta aula ainda está fechada: termine a anterior.',
-    amanha: 'Você já começou hoje o conteúdo de um dia. Esta aula abre no próximo dia.',
+    amanha: 'Um dia da trilha por dia útil. Esta aula abre no próximo dia útil.',
     perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
     sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
     aula_expirada: 'Estas perguntas não valem mais (a aula foi aberta de novo em outro lugar). Abra a aula outra vez.',
@@ -267,7 +267,7 @@
   }
 
   var ICONE = { feito: '✔', atual: '▶', fechado: '🔒' };
-  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia',
+  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia útil',
     perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
 
   function desenharTrilha() {
@@ -308,7 +308,7 @@
       }
       if (p.id === 'simulacoes') {
         e.simulacoes.forEach(function (s) {
-          c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + ' (' + String(s.notas).split(';').join(', ') + ')'));
+          c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '')));
         });
       }
       det.appendChild(c);
@@ -413,7 +413,7 @@
       txt('Não depende de você. Assim que for lançado, a próxima etapa abre aqui.');
       if (at.id === 'simulacoes' && e.simulacoes.length) {
         var u = e.simulacoes[e.simulacoes.length - 1];
-        c.appendChild(el('p', 'sub', 'Último lançamento (' + u.data + '): ' + String(u.notas).split(';').join(', ') + (u.resultado === 'aprovada' ? '' : ' · refazer')));
+        c.appendChild(el('p', 'sub', 'Último lançamento (' + u.data + '): ' + (u.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (u.notas ? ' (' + String(u.notas).split(';').join(', ') + ')' : '')));
       }
       c.appendChild(botao('Atualizar', 'leve', carregar));
       return c;
@@ -435,9 +435,12 @@
     }
     c.className = 'agora espera';
     if (prox && prox.estado === 'amanha') {
+      // Um dia do Roteiro por dia util (D6): no sabado nao comeca dia novo.
+      var sabado = new Date().getDay() === 6;
       rot('Por hoje é só');
-      tit('A próxima aula abre no próximo dia');
-      txt('Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. Amanhã: ' + prox.titulo + '.');
+      tit('A próxima aula abre no próximo dia útil');
+      txt(sabado ? 'No sábado não começa dia novo da trilha. Pratique no balcão o que estudou. Na segunda-feira: ' + prox.titulo + '.'
+        : 'Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. No próximo dia útil: ' + prox.titulo + '.');
     } else if (prox && (prox.estado === 'perguntas_pendentes' || prox.estado === 'sem_perguntas')) {
       rot('Aguarde');
       tit(prox.titulo);
