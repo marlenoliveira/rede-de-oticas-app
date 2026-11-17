@@ -442,6 +442,14 @@
       });
       f.appendChild(br);
     }
+    // Certificado de conclusao da Trilha (versao de teste, desde 16/11/2026). Tinha saido sem querer na
+    // reforma do passo 2 (17/11/2026); o servidor continuava mandando e o botao nao aparecia.
+    if (p.certificado) {
+      var bc = el('button', '', 'Baixar o certificado');
+      bc.type = 'button';
+      bc.addEventListener('click', function () { comCertificado(function () { window.baixarCertificado(p.certificado); }); });
+      f.appendChild(bc);
+    }
     if (p.podeLiberar) {
       var bl = el('button', 'leve', 'Liberar nova série: ' + (p.prova.nome || 'Prova Final'));
       bl.type = 'button';
