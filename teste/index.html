@@ -790,9 +790,9 @@ a{color:#062D7B}a:hover{color:#F96B05}
       </div>
     </div>
 
-    <div style="display:{{ mostrarAbas }};position:sticky;bottom:0;background:#fff;border-top:1px solid #EDEFF2;padding:8px 8px 16px;gap:4px;z-index:20">
+    <div style="display:{{ mostrarAbas }};flex-wrap:wrap;position:sticky;bottom:0;background:#fff;border-top:1px solid #EDEFF2;padding:8px 8px 16px;gap:4px;z-index:20">
       <sc-for list="{{ abas }}" as="n" hint-placeholder-count="5">
-        <button style="flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:11px;font-weight:800;letter-spacing:.02em" onClick="{{ n.ir }}">
+        <button style="flex:0 0 {{ n.largura }};min-width:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:11px;font-weight:800;letter-spacing:.02em;line-height:1.15;text-align:center" onClick="{{ n.ir }}">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ n.cor }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>
           {{ n.rotulo }}
         </button>
@@ -1637,7 +1637,12 @@ class Component extends DCLogic {
       grid3: desktop ? 'repeat(3,1fr)' : '1fr',
       gridKpi: s.w >= 1000 ? 'repeat(3,1fr)' : (s.w >= 700 ? 'repeat(2,1fr)' : '1fr'),
       navegacao: itensNav.filter(n => !escondeAba(n.id)).map(mapNav),
-      abas: itensNav.filter(n => !escondeAba(n.id)).map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '' })),
+      // Barra de baixo (17/11/2026): com mais de 6 itens a linha passava da largura da tela (11 itens da
+      // gerente = 600 px numa tela de 390) e o celular afastava a pagina inteira, deixando tudo pequeno.
+      // Ate 6 itens, uma linha; de 7 a 12, duas linhas com itens do mesmo tamanho.
+      abas: (() => { const lista = itensNav.filter(n => !escondeAba(n.id)); const k = lista.length <= 6 ? lista.length : Math.ceil(lista.length / 2);
+        const largura = 'calc((100% - ' + ((k - 1) * 4) + 'px) / ' + k + ')';
+        return lista.map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '', largura: largura })); })(),
 
       emNiveis: telaAtiva === 'niveis', emAtendimento: telaAtiva === 'atendimento',
       emTreino: telaAtiva === 'treino', emConsulta: telaAtiva === 'consulta',
