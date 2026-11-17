@@ -241,8 +241,17 @@
     r.appendChild(botao(rotulo || 'Tentar de novo', '', acao || carregar));
   }
 
-  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null;
-  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; }
+  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null, CERTIFICADO = null;
+  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; CERTIFICADO = t.certificado || null; }
+  /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
+  function comCertificado(fn) {
+    if (window.baixarCertificado) return fn();
+    var s = document.createElement('script');
+    s.src = 'certificado.js';
+    s.onload = fn;
+    s.onerror = function () { window.alert('Não deu certo. Confira a internet e tente de novo.'); };
+    document.head.appendChild(s);
+  }
 
   // ================= Minha trilha =================
   function carregar() {
@@ -373,6 +382,10 @@
       rot('Parabéns');
       tit('Você concluiu esta parte da trilha');
       txt('Abertura, Ponte, Trilha do Vendedor, Prova Final e simulações. A próxima parte é o Bloco Lentes.');
+      if (CERTIFICADO) {
+        var cert = CERTIFICADO;
+        c.appendChild(botao('Baixar meu certificado', 'verde', function () { comCertificado(function () { window.baixarCertificado(cert); }); }));
+      }
       return c;
     }
     var at = e.atual;

@@ -72,6 +72,9 @@
   .tr-diretoria { border-left-color: #6E1A12; } .tr-em_dia { border-left-color: var(--verde); }
   .tr-ficha { margin-top: 8px; font-size: 16px; }
   .tr-ficha div { margin: 3px 0; }
+  a.zap { display: block; text-align: center; text-decoration: none; font-weight: 800; min-height: 48px; box-sizing: border-box;
+    padding: 11px 18px; border-radius: 12px; border: 2px solid var(--verde); background: var(--verde); color: #fff; margin: 8px 0 2px; }
+  .zap-dica { font-size: 14px; color: var(--cinza); margin: 0 0 4px; }
   .tr-notas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .tr-notas input { margin: 0; }
   select { font: inherit; width: 100%; min-height: 52px; border-radius: 12px; border: 2px solid var(--linha); padding: 8px 10px; margin: 8px 0; background: #fff; }
@@ -289,6 +292,15 @@
     loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
     pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.', nao_aguarda_diretoria: 'Esta pessoa não está aguardando a Diretoria.'
   };
+  /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
+  function comCertificado(fn) {
+    if (window.baixarCertificado) return fn();
+    var s = document.createElement('script');
+    s.src = 'certificado.js';
+    s.onload = fn;
+    s.onerror = function () { window.alert('Não deu certo. Confira a internet e tente de novo.'); };
+    document.head.appendChild(s);
+  }
   var LISTAS = [['parada', 'Parada', 'tr-parada'], ['pessoa', 'Esperando uma pessoa', 'tr-pessoa-esp'],
                 ['diretoria', 'Aguarda a Diretoria', 'tr-diretoria'], ['em_dia', 'Em dia', 'tr-em_dia']];
 
@@ -350,6 +362,21 @@
     cab.appendChild(el('div', 'resumo', onde));
     if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
     c.appendChild(cab);
+    // Chamar no WhatsApp quem esta parada (versao de teste, desde 16/11/2026). O app nao manda nada:
+    // abre o WhatsApp de quem acompanha com a mensagem pronta; ela escolhe o contato e envia.
+    if (p.chamar && p.chamar.texto) {
+      var z = el('a', 'zap', 'Chamar no WhatsApp');
+      z.href = 'https://wa.me/?text=' + encodeURIComponent(p.chamar.texto);
+      z.target = '_blank'; z.rel = 'noopener';
+      z.addEventListener('click', function (ev) {
+        if (p.chamar.ateMs && Date.now() > p.chamar.ateMs) {
+          ev.preventDefault();
+          window.alert('Fora do horário comercial. Mande no próximo horário: segunda a sexta, das 8h às 18h, e sábado, das 8h às 12h.');
+        }
+      });
+      c.appendChild(z);
+      c.appendChild(el('p', 'zap-dica', 'Abre o WhatsApp com a mensagem pronta. Você escolhe o contato e envia.'));
+    }
     var f = el('div', 'tr-ficha oculto');
     f.appendChild(el('div', '', 'Começou em ' + p.desde + ' · ' + (p.tipo === 'ja_trabalha' ? 'já trabalhava na loja' : 'vendedora nova')));
     f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada !== null && p.parada !== undefined ? ' · ' + p.parada + ' dias úteis' : '')));
@@ -380,6 +407,12 @@
           'Lançar as notas ' + notas.join(', ') + ' para ' + p.nome + '?');
       });
       f.appendChild(bs);
+    }
+    if (p.certificado) {
+      var bc = el('button', '', 'Baixar o certificado');
+      bc.type = 'button';
+      bc.addEventListener('click', function () { comCertificado(function () { window.baixarCertificado(p.certificado); }); });
+      f.appendChild(bc);
     }
     if (p.podeLiberar) {
       var bl = el('button', 'leve', 'Liberar nova série da Prova Final');
