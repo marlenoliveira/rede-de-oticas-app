@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<title>TESTE · Minha loja</title>
+<!--
+  MINHA LOJA — desde 16/11/2026, só na VERSÃO DE TESTE.
+
+  A tela da gerente: abre quando ela entra no app. Cinco números da loja em
+  verde, amarelo e vermelho (treino na semana, paradas na trilha, nota do
+  treino, recados sem leitura e, em breve, a venda por vendedora) e os
+  avisos da avaliação de experiência. Diretoria e supervisão escolhem a loja.
+
+  Página solta, sem o motor: quem decide é o servidor (minhaLoja, Gente.gs).
+-->
+<style>
+  :root { --azul: #02306E; --laranja: #E06E0A; --verde: #1E9E5A; --vermelho: #C0392B; --amarelo: #E8B027;
+    --tinta: #1B2430; --cinza: #5F6772; --linha: #DDE1E6; }
+  html { background: #fff; }
+  body { margin: 0 auto; max-width: 720px; padding: 20px 16px 72px; color: var(--tinta); background: #fff;
+    font: 18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; color: var(--azul); font-weight: 800; }
+  h2 { font-size: 22px; margin: 26px 0 8px; color: var(--azul); font-weight: 800; }
+  .sub { color: var(--cinza); font-size: 15px; margin: 4px 0 0; }
+  button { font: inherit; font-weight: 800; min-height: 48px; padding: 10px 18px; border-radius: 12px;
+    border: 2px solid var(--azul); background: var(--azul); color: #fff; cursor: pointer; }
+  input, select { font: inherit; width: 100%; box-sizing: border-box; min-height: 52px; padding: 10px 14px;
+    border-radius: 12px; border: 2px solid var(--linha); margin: 10px 0 4px; background: #fff; }
+  .numero { border: 2px solid var(--linha); border-left-width: 12px; border-radius: 14px; padding: 12px 16px; margin: 12px 0; }
+  .numero .t { font-size: 16px; font-weight: 800; color: var(--cinza); }
+  .numero .v { font-size: 34px; font-weight: 800; line-height: 1.15; margin: 2px 0 4px; }
+  .numero ul { margin: 4px 0 0; padding-left: 20px; font-size: 16px; }
+  .numero.verde { border-left-color: var(--verde); } .numero.verde .v { color: var(--verde); }
+  .numero.amarelo { border-left-color: var(--amarelo); background: #FFFBEA; } .numero.amarelo .v { color: #8A6400; }
+  .numero.vermelho { border-left-color: var(--vermelho); background: #FDF1EF; } .numero.vermelho .v { color: var(--vermelho); }
+  .numero.cinza .v { color: var(--cinza); }
+  .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 12px 0; }
+  .aviso.ruim { border-left-color: var(--vermelho); background: #FBECEA; }
+  .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 16px 0; }
+  .vazia { border: 2px dashed var(--linha); border-radius: 12px; padding: 14px 16px; color: var(--cinza); }
+  .links a { display: inline-block; margin: 6px 14px 0 0; color: var(--azul); font-weight: 800; }
+  .oculto { display: none; }
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+
+
+<h1>Minha loja</h1>
+<p class="sub" id="quem">Carregando…</p>
+<p style="margin:12px 0 0"><a href="./" style="color:#02306E;font-weight:800;font-size:17px">← Voltar ao app</a></p>
+
+<div id="entrada" class="oculto">
+  <div class="aviso">Digite o seu código do app.</div>
+  <form id="formEntrada">
+    <input id="codigo" type="password" inputmode="numeric" autocomplete="off" placeholder="Seu código">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="mensagem"></div>
+<div id="conteudo"></div>
+
+<script>
+(function () {
+  'use strict';
+  var URL_SERVIDOR = 'https://script.google.com/macros/s/AKfycbyYoBctgbFxsAc2tN-n7HpOQLA63xAAysfzm46LXHq50awvC49Zjy8XHmfvtanfiXbogw/exec';
+  var ERROS = {
+    sem_permissao: 'Esta tela é da gerente, da supervisão e da Diretoria.',
+    codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
+    sem_codigo: 'Digite o seu código.',
+    inativo: 'Este código está desativado.',
+    muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos.',
+    so_na_versao_de_teste: 'Esta tela ainda não está no app das lojas.',
+    loja_teste_sem_gente: 'A loja de teste não usa esta tela.',
+    loja_invalida: 'Escolha uma loja da lista.',
+    sem_conexao: 'Sem conexão com o servidor. Confira a internet.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.'
+  };
+
+  function id(x) { return document.getElementById(x); }
+  function guardado(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function guardar(k, v) { try { if (v) window.localStorage.setItem(k, v); else window.localStorage.removeItem(k); } catch (e) {} }
+  function aparelho() {
+    var a = guardado('rdoteste_aparelho');
+    if (!a) { a = 'ap' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); guardar('rdoteste_aparelho', a); }
+    return a;
+  }
+  function el(tag, classe, texto) { var n = document.createElement(tag); if (classe) n.className = classe; if (texto !== undefined && texto !== null) n.textContent = texto; return n; }
+  function chamar(fn, args, pronto) {
+    fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function (r) { return r.text(); })
+      .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
+      .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
+  }
+  function msg(classe, texto) { var m = id('mensagem'); m.innerHTML = ''; if (texto) m.appendChild(el('div', classe, texto)); }
+
+  var codigo = guardado('rdoteste_codigo');
+  var lojaEscolhida = '';
+
+  function carregar() {
+    if (!codigo) { id('entrada').classList.remove('oculto'); id('quem').textContent = ''; return; }
+    msg('', '');
+    chamar('minhaLoja', [codigo, aparelho(), { loja: lojaEscolhida }], function (r) {
+      if (!r.ok) {
+        if (r.erro === 'codigo_invalido' || r.erro === 'inativo') { guardar('rdoteste_codigo', ''); codigo = ''; id('entrada').classList.remove('oculto'); }
+        id('quem').textContent = '';
+        msg('erro', ERROS[r.erro] || ('Não deu certo (' + r.erro + ').'));
+        return;
+      }
+      id('entrada').classList.add('oculto');
+      desenhar(r);
+    });
+  }
+
+  function desenhar(r) {
+    var papel = { diretoria: 'Diretoria', supervisao: 'Supervisão', gerente: 'Gerente' }[r.eu.papel] || r.eu.papel;
+    id('quem').textContent = r.loja.nome + ' · ' + r.eu.nome + ' · ' + papel + (r.geradoEm ? ' · ' + r.geradoEm : '');
+    var c = id('conteudo'); c.innerHTML = '';
+    if (r.lojas && r.lojas.length) {
+      var s = el('select'); s.setAttribute('aria-label', 'Loja');
+      r.lojas.forEach(function (l) { var o = el('option', '', l.nome); o.value = l.codigo; if (l.codigo === r.loja.codigo) o.selected = true; s.appendChild(o); });
+      s.onchange = function () { lojaEscolhida = s.value; c.innerHTML = ''; c.appendChild(el('div', 'vazia', 'Carregando…')); carregar(); };
+      c.appendChild(s);
+    }
+    (r.avisos || []).forEach(function (x) {
+      var t = x.tipo === 'aguarda_diretoria'
+        ? x.nome + ': a recomendação foi não efetivar. Aguarda a Diretoria.'
+        : (x.tipo === 'atrasada'
+          ? 'A avaliação de experiência de ' + x.nome + ' (' + x.marco + ' dias) venceu em ' + x.vence + '. Faça em Gente → Equipe.'
+          : 'A avaliação de experiência de ' + x.nome + ' (' + x.marco + ' dias) vence em ' + x.vence + '. Faça em Gente → Equipe.');
+      c.appendChild(el('div', x.tipo === 'aviso' ? 'aviso' : 'aviso ruim', t));
+    });
+    r.numeros.forEach(function (n) {
+      var k = el('div', 'numero ' + n.cor);
+      k.appendChild(el('div', 't', n.titulo));
+      k.appendChild(el('div', 'v', n.valor));
+      if (n.detalhe && n.detalhe.length) {
+        var ul = el('ul');
+        n.detalhe.forEach(function (d) { ul.appendChild(el('li', '', d)); });
+        k.appendChild(ul);
+      }
+      c.appendChild(k);
+    });
+    var l = el('div', 'links');
+    [['painel.html', 'Painel do treino'], ['gente.html', 'Gente'], ['recados.html', 'Recados']].forEach(function (x) {
+      var a = el('a', '', x[1]); a.href = x[0]; l.appendChild(a);
+    });
+    c.appendChild(l);
+  }
+
+  id('formEntrada').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    codigo = id('codigo').value.replace(/\D/g, '');
+    if (!codigo) return;
+    guardar('rdoteste_codigo', codigo);
+    carregar();
+  });
+  carregar();
+})();
+</script>
+</body>
+</html>

@@ -1129,6 +1129,10 @@ class Component extends DCLogic {
         // "Minha trilha" (trilha.html), uma vez por sessao do navegador. Para
         // todo o resto, nada muda.
         if (r && r.trilha && this.primeiraVezNaSessao()) { this.abrirTrilha(); return; }
+        // Versao de teste (16/11/2026): a gerente entra direto em "Minha loja"
+        // (loja.html), uma vez por sessao do navegador. No app das lojas, nada muda.
+        if (r && r.papel === 'gerente' && !r.teste && typeof window !== 'undefined' && window.AMBIENTE_TESTE
+            && this.primeiraVezNaSessao()) { this.abrirPagina('loja.html'); return; }
         this.setState({ identCarregando: false, entrando: false, ident: r,
                         erroLogin: null, codigoDigitado: '' },
           () => { this.carregarLojas(); this.carregarAtendimentos(); this.carregarBanco(); });
@@ -1508,7 +1512,9 @@ class Component extends DCLogic {
                           || (papel === 'supervisao' && id === 'equipe')
                           || (id === 'trilha' && !(s.ident && s.ident.trilha))
                           // Recados e Gente: so na versao de teste (montar-teste.js liga a chave).
-                          || ((id === 'recados' || id === 'gente') && !(typeof window !== 'undefined' && window.AMBIENTE_TESTE));
+                          || ((id === 'recados' || id === 'gente') && !(typeof window !== 'undefined' && window.AMBIENTE_TESTE))
+                          // Minha loja: so na versao de teste, e nunca para a vendedora.
+                          || (id === 'minhaloja' && (papel === 'vendedora' || !(typeof window !== 'undefined' && window.AMBIENTE_TESTE)));
     const telaBloqueada = escondeAba(s.tela)
                        || (papel === 'vendedora' && s.tela === 'perfil');
     const telaAtiva = telaBloqueada ? 'desempenho' : s.tela;
@@ -1526,6 +1532,8 @@ class Component extends DCLogic {
       // Nao e uma tela deste app: abre a pagina painel.html, no mesmo endereco.
       // Ela usa o codigo que o app ja guarda no aparelho, entao nao pede de novo.
       { id: 'painel', rotulo: 'Painel', selo: 'gerente', d: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
+      // Versao de teste (16/11/2026): pagina loja.html, os 5 numeros da loja.
+      { id: 'minhaloja', rotulo: 'Minha loja', selo: 'gerente', d: 'M3 10l9-6 9 6v10H3V10zm6 10v-6h6v6' },
       // So aparece para quem esta matriculada na trilha (o servidor diz quem).
       { id: 'trilha', rotulo: 'Minha trilha', d: 'M5 20V4l7 4 7-4v16l-7-4-7 4z' },
       // Versao de teste (16/11/2026): paginas recados.html e gente.html.
@@ -1538,7 +1546,8 @@ class Component extends DCLogic {
       fundo: s.tela === n.id ? BL : 'transparent',
       peso: s.tela === n.id ? 800 : 600,
       ir: () => n.id === 'painel' ? this.abrirPainel() : (n.id === 'trilha' ? this.abrirTrilha()
-        : ((n.id === 'recados' || n.id === 'gente') ? this.abrirPagina(n.id + '.html') : this.ir(n.id)))
+        : ((n.id === 'recados' || n.id === 'gente') ? this.abrirPagina(n.id + '.html')
+        : (n.id === 'minhaloja' ? this.abrirPagina('loja.html') : this.ir(n.id))))
     });
 
     const feitosCount = Object.keys(s.feitos).filter(k => s.feitos[k]).length;

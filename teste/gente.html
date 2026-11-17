@@ -53,6 +53,7 @@
   .item b { color: var(--azul); }
   .aviso { border-left: 8px solid var(--amarelo); background: #FFF6DC; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
   .erro { border-left: 8px solid var(--vermelho); background: #FBECEA; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
+  .aviso.ruim { border-left-color: var(--vermelho); background: #FBECEA; }
   .feito { border-left: 8px solid var(--verde); background: #EAF6EF; border-radius: 10px; padding: 12px 14px; margin: 14px 0; }
   .vazia { border: 2px dashed var(--linha); border-radius: 12px; padding: 12px 14px; color: var(--cinza); }
   .criterio { border: 2px solid var(--linha); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
@@ -115,7 +116,15 @@
     prontidao_invalida: 'Escolha a prontidão.',
     resultado_invalido: 'O resultado é um número de 0 a 300 (% da meta).',
     sem_conexao: 'Sem conexão com o servidor. Confira a internet.',
-    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.'
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.',
+    admissao_invalida: 'Data de admissão inválida.',
+    sem_admissao: 'Informe primeiro a data de admissão.',
+    sem_marco_aberto: 'Não há avaliação de experiência em aberto para esta pessoa.',
+    marco_invalido: 'Esta avaliação de experiência não está mais em aberto. Toque em Atualizar.',
+    falta_recomendacao: 'Escolha a recomendação.',
+    comentario_obrigatorio: 'Escreva o comentário (o que ela faz bem e o que precisa melhorar).',
+    so_vendedora: 'A avaliação de experiência é só para vendedora.',
+    pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.'
   };
   var COMO = ['Muito mal', 'Mal', 'Mais ou menos', 'Bem', 'Muito bem'];
 
@@ -270,6 +279,15 @@
       pessoas = pessoas.filter(function (p) { return p.loja === lojaEscolhida; });
       pessoas.sort(function (a, b) { return (a.papel === 'gerente' ? 0 : 1) - (b.papel === 'gerente' ? 0 : 1); });
     }
+    (D.avisosExperiencia || []).forEach(function (x) {
+      var quem = x.nome + (ehRede() ? ' (' + x.loja + ')' : '');
+      var t = x.tipo === 'aguarda_diretoria'
+        ? quem + ': a recomendação foi não efetivar. Aguarda a Diretoria, que ouve a advogada antes de decidir.'
+        : (x.tipo === 'atrasada'
+          ? 'A avaliação de experiência de ' + quem + ' (' + x.marco + ' dias) venceu em ' + x.vence + ' e ainda não foi feita.'
+          : 'A avaliação de experiência de ' + quem + ' (' + x.marco + ' dias) vence em ' + x.vence + '.');
+      c.appendChild(el('div', x.tipo === 'aviso' ? 'aviso' : 'aviso ruim', t));
+    });
     c.appendChild(el('p', 'sub', 'Conversa mensal: a cada ' + D.conteudo.diasConversa + ' dias. Vermelho = atrasada ou nunca feita.'));
     if (!pessoas.length) c.appendChild(el('div', 'vazia', 'Ninguém ativo aqui.'));
     pessoas.forEach(function (p) {
@@ -283,12 +301,26 @@
       ch.appendChild(el('span', 'chip ' + (p.autoFeita ? 'bom' : 'meio'), p.autoFeita ? 'Autoavaliação feita' : 'Sem autoavaliação'));
       ch.appendChild(el('span', 'chip ' + (p.liderFeita ? 'bom' : 'meio'), p.liderFeita ? 'Avaliação do líder feita' : 'Falta avaliação do líder'));
       if (p.liberado) ch.appendChild(el('span', 'chip bom', 'Relatório liberado'));
+      var x = p.experiencia;
+      if (x) {
+        if (x.situacao === 'sem_admissao') ch.appendChild(el('span', 'chip meio', 'Admissão: não informada'));
+        else if (x.situacao === 'em_experiencia') ch.appendChild(el('span', 'chip ' + ({ futuro: '', aviso: 'meio', atrasada: 'ruim' }[x.proximo.estado] || ''),
+          'Experiência: ' + x.proximo.dias + ' dias ' + (x.proximo.estado === 'atrasada' ? 'venceu em ' : 'vence em ') + x.proximo.vence));
+        else if (x.situacao === 'efetivada') ch.appendChild(el('span', 'chip bom', 'Experiência: recomendou efetivar'));
+        else if (x.situacao === 'aguarda_diretoria') ch.appendChild(el('span', 'chip ruim', 'Experiência: aguarda a Diretoria'));
+        else ch.appendChild(el('span', 'chip', 'Experiência: encerrada'));
+      }
       k.appendChild(ch);
       var ac = el('div', 'acoes');
       ac.appendChild(botao('Conversa do mês', '', function () { formConversa(p); }));
       ac.appendChild(botao('Elogiar', 'leve', function () { formElogio(p); }));
       ac.appendChild(botao('Avaliar', 'leve', function () { formAvaliacao(p, 'lider'); }));
       ac.appendChild(botao('Relatório', 'leve', function () { relatorio(p); }));
+      if (p.experiencia) {
+        if (p.experiencia.proximo) ac.appendChild(botao('Avaliar experiência', '', function () { formExperiencia(p); }));
+        if (p.experiencia.feitas.length) ac.appendChild(botao('Ver experiência', 'leve', function () { verExperiencia(p); }));
+        ac.appendChild(botao(p.experiencia.admissao ? 'Admissão: ' + p.experiencia.admissao : 'Informar admissão', 'leve', function () { formAdmissao(p); }));
+      }
       if (D.eu.papel !== 'supervisao') ac.appendChild(botao('Registrar saída', 'perigo', function () { formSaida(p); }));
       k.appendChild(ac);
       c.appendChild(k);
@@ -352,6 +384,70 @@
     var dif = campo(c, 'Que diferença fez', 'area', 'Ex.: A cliente voltou e indicou a irmã.');
     var b = botao('Salvar elogio', '', function () { gravar('salvarElogio', { loja: p.loja, nome: p.nome, valor: s.value, oQueFez: oq.value, diferenca: dif.value }, 'Elogio registrado.', b); });
     c.appendChild(b); voltar(c); window.scrollTo(0, 0);
+  }
+
+  // ---------------- Período de experiência (desde 16/11/2026) ----------------
+  function formAdmissao(p) {
+    var c = limpar('Data de admissão · ' + p.nome); msg();
+    c.appendChild(el('p', 'sub', 'A data do contrato de trabalho. Com ela, o app avisa antes de cada avaliação de experiência.'));
+    c.appendChild(el('label', '', 'Data de admissão'));
+    var d = el('input'); d.type = 'date'; c.appendChild(d);
+    var b = botao('Salvar', '', function () { gravar('salvarAdmissao', { loja: p.loja, nome: p.nome, data: d.value }, 'Admissão registrada.', b); });
+    c.appendChild(b); voltar(c); window.scrollTo(0, 0);
+  }
+
+  function formExperiencia(p) {
+    var c = limpar('Avaliação de experiência · ' + p.nome); msg();
+    c.appendChild(el('div', 'vazia', 'Carregando…'));
+    chamar('abrirExperiencia', [codigo, aparelho(), { loja: p.loja, nome: p.nome }], function (r) {
+      c = limpar('Avaliação de experiência · ' + p.nome);
+      if (!r.ok) { erro(r); voltar(c); return; }
+      c.appendChild(el('p', 'sub', r.marco + ' dias · vence em ' + r.vence + ' · admissão em ' + r.admissao + '. Ela não vê esta avaliação.'));
+      c.appendChild(el('div', 'feito', 'Na trilha hoje: ' + r.trilha));
+      var notas = {};
+      var rotulos = r.niveis.map(function (n) { return n.n + ' · ' + n.rotulo; });
+      r.criterios.forEach(function (cr) {
+        var k = el('div', 'criterio');
+        k.appendChild(el('div', 't', cr.nome)); k.appendChild(el('div', 'd', cr.texto));
+        k.appendChild(escala(rotulos, function (n) { notas[cr.id] = n; }, 'niveis'));
+        c.appendChild(k);
+      });
+      c.appendChild(el('label', '', 'Sua recomendação'));
+      var rec = '';
+      c.appendChild(escala(r.recomendacoes.map(function (x) { return x.rotulo; }), function (n) { rec = r.recomendacoes[n - 1].id; }, 'escala'));
+      c.appendChild(el('p', 'sub', 'A recomendação não decide sozinha. "Não efetivar" vai para a Diretoria, que ouve a advogada antes de decidir.' +
+        (r.marco === 45 ? ' Prorrogar precisa estar previsto no contrato: confira com o contador.' : '')));
+      var com = campo(c, 'Comentário (obrigatório)', 'area', 'O que ela faz bem e o que precisa melhorar, com exemplo.');
+      var b = botao('Salvar avaliação de experiência', '', function () {
+        gravar('salvarExperiencia', { loja: p.loja, nome: p.nome, marco: r.marco, notas: notas, recomendacao: rec, comentario: com.value },
+          'Avaliação de experiência salva.', b);
+      });
+      c.appendChild(b); voltar(c);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function verExperiencia(p) {
+    var c = limpar('Experiência · ' + p.nome); msg();
+    c.appendChild(el('div', 'vazia', 'Carregando…'));
+    chamar('verExperiencia', [codigo, aparelho(), { loja: p.loja, nome: p.nome }], function (r) {
+      c = limpar('Experiência · ' + p.nome);
+      if (!r.ok) { erro(r); voltar(c); return; }
+      c.appendChild(el('p', 'sub', 'Admissão em ' + (r.admissao || 'não informada') + '. Ela não vê estas avaliações.'));
+      if (!r.avaliacoes.length) c.appendChild(el('div', 'vazia', 'Nenhuma avaliação de experiência ainda.'));
+      r.avaliacoes.forEach(function (a) {
+        var k = el('div', 'cartao');
+        k.appendChild(el('div', 'papel', a.marco + ' dias · ' + a.data + ' · por ' + a.por));
+        k.appendChild(el('div', 'nome', a.recomendacao));
+        if (a.situacao === 'aguarda_diretoria') k.appendChild(el('div', 'chips')).appendChild(el('span', 'chip ruim', 'Aguarda a Diretoria'));
+        a.notas.forEach(function (n) { k.appendChild(linhaRotulo(n.nome, String(n.nota) + ' de 4')); });
+        k.appendChild(linhaRotulo('Comentário', a.comentario));
+        k.appendChild(linhaRotulo('Trilha na data', a.trilha));
+        c.appendChild(k);
+      });
+      voltar(c);
+    });
+    window.scrollTo(0, 0);
   }
 
   function formAvaliacao(p, tipo) {
