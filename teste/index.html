@@ -549,7 +549,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
                 <div style="font-size:16px;font-weight:700;color:#062D7B">{{ o.cliente }}</div>
                 <div style="font-size:13px;color:#8A9099">{{ o.nivel }}</div>
               </div>
-              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#062D7B;font-variant-numeric:tabular-nums">há {{ o.dias }} dias</span>
+              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#062D7B;font-variant-numeric:tabular-nums">{{ o.diasTexto }}</span>
             </div>
           </sc-for>
         </div>
@@ -631,7 +631,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
                 <div>
                   <div style="font-size:16px;font-weight:700;color:#062D7B">{{ fd.vendedora }}</div>
-                  <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ fd.cliente }} · há {{ fd.min }} min</div>
+                  <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ fd.cliente }} · às {{ fd.min }}</div>
                 </div>
                 <span style="font-size:12px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ fd.fundo }};color:{{ fd.cor }}">{{ fd.etapa }}</span>
               </div>
@@ -1480,8 +1480,11 @@ class Component extends DCLogic {
     });
     const brl = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
     const umDia = 86400000;
-    const diasDe = l => { const d = this.comoData(l['Data']);
-      return d ? Math.max(0, Math.round((new Date().getTime() - d.getTime()) / umDia)) : 0; };
+    // Dias de calendario (17/11/2026): contar por horas arredondadas dizia "ha 1 dias" para orcamento de hoje.
+    const diasDe = l => { const d = this.comoData(l['Data']); if (!d) return 0;
+      const h0 = new Date(); h0.setHours(0, 0, 0, 0); const d0 = new Date(d.getTime()); d0.setHours(0, 0, 0, 0);
+      return Math.max(0, Math.round((h0.getTime() - d0.getTime()) / umDia)); };
+    const diasTexto = n => n === 0 ? 'hoje' : (n === 1 ? 'há 1 dia' : 'há ' + n + ' dias');
     const resumoLinha = l => [String(l['Nivel']||'').trim(), String(l['Tipo visao']||'').trim(),
                               String(l['Tratamentos']||'').trim()].filter(Boolean).join(' · ') || '—';
     const corResultado = r => r === 'Vendeu' ? VD : (r === 'Vai pensar' ? '#7A5B04' : CZ);
@@ -1905,7 +1908,7 @@ class Component extends DCLogic {
       orcamentosAbertos: R.pensando.slice().reverse().slice(0, 10).map(l => ({
         cliente: 'Orçamento de ' + (String(l['Data'] || '').trim() || '—'),
         nivel: resumoLinha(l),
-        dias: diasDe(l)
+        dias: diasDe(l), diasTexto: diasTexto(diasDe(l))
       })),
       mostrarSemOrcamento: R.pensando.length ? 'none' : 'block',
       mix: ['Essencial', 'Intermediária', 'Premium', 'Personalizada'].map((nome, i) => ({
@@ -1918,7 +1921,7 @@ class Component extends DCLogic {
         return {
           // Sem nome de cliente: a planilha nao guarda esse campo, e guardar
           // dado de cliente aqui entraria em LGPD sem necessidade.
-          cliente: 'Atendimento de ' + (String(l['Hora inicio'] || '').trim() || '—'),
+          cliente: 'Atendimento das ' + (String(l['Hora inicio'] || '').trim() || '—'),
           hora: String(l['Data'] instanceof Date ? '' : (l['Data'] || '')).trim(),
           nivel: resumoLinha(l),
           estado: res,
