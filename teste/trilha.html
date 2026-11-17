@@ -309,8 +309,12 @@
     b.appendChild(i);
     r.appendChild(b);
     r.appendChild(el('p', 'sub', e.aulasFeitas + ' de ' + e.aulasTotal + ' aulas feitas'));
-    if (HORARIO && !HORARIO.aberto && !e.concluida) {
-      r.appendChild(el('div', 'aviso', 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
+    // Aula a qualquer hora; prova so na loja, no horario (17/11/2026). Com a aula livre, o aviso so
+    // aparece quando a vez e da prova.
+    if (HORARIO && !HORARIO.aberto && !e.concluida && (!HORARIO.aulaLivre || (e.atual && e.atual.tipo === 'prova'))) {
+      r.appendChild(el('div', 'aviso', HORARIO.aulaLivre
+        ? 'A prova é feita na loja, no horário: ' + HORARIO.texto + '. As aulas você faz quando quiser.'
+        : 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
     }
     if (e.modoTeste) {
       r.appendChild(el('div', 'aviso', 'Modo de teste: tudo liberado para você ver o app inteiro, fora de ordem e fora do horário. As vendedoras seguem a ordem: uma aula depois da outra e o conteúdo de um dia por dia.'));
@@ -408,7 +412,7 @@
     function rot(t) { c.appendChild(el('div', 'rot', t)); }
     function tit(t) { c.appendChild(el('div', 'tit', t)); }
     function txt(t) { c.appendChild(el('p', '', t)); }
-    var foraHora = HORARIO && !HORARIO.aberto;
+    var foraHora = HORARIO && !HORARIO.aberto && !HORARIO.aulaLivre;   // so trava aula se a aula nao for livre
     if (e.concluida) {
       c.className = 'agora fim';
       rot('Parabéns');
