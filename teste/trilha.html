@@ -144,7 +144,7 @@
     amanha: 'Um dia da trilha por dia útil. Esta aula abre no próximo dia útil.',
     perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
     sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
-    aula_expirada: 'Estas perguntas não valem mais (a aula foi aberta de novo em outro lugar). Abra a aula outra vez.',
+    aula_expirada: 'Estas perguntas não valem mais. Se a internet caiu na hora de corrigir, a sua resposta pode ter chegado: volte à trilha para ver. Se não chegou, sorteie novas perguntas.',
     prova_em_andamento: 'Sua prova está aberta. Termine a prova antes de voltar às aulas.',
     aulas_abertas: 'A prova abre quando todas as aulas da etapa estiverem fechadas.',
     refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da etapa.',
@@ -155,9 +155,10 @@
     tempo_esgotado: 'O tempo da prova acabou.',
     prova_perdida: 'Houve uma falha com a sua prova. Volte à trilha: a tentativa não vai contar.',
     fora_do_horario: 'Fora do horário da trilha.',
-    fora_do_horario_prova: 'O tempo da prova precisa caber inteiro dentro do horário da trilha.',
+    fora_do_horario_prova: 'A prova é feita na loja e precisa caber inteira no horário.',
     codigo_invalido: 'Seu código não foi reconhecido. Entre de novo pelo app.',
     inativo: 'Seu acesso está desativado. Fale com quem acompanha a loja.',
+    muitas_tentativas: 'Muitas tentativas com código errado. Espere 5 minutos e entre de novo pelo app.',
     sem_conexao: 'Sem resposta do servidor. Confira a internet e tente de novo.',
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
   };
@@ -186,7 +187,8 @@
     a.href = href; a.target = '_blank'; a.rel = 'noopener';
     return a;
   }
-  function raiz() { var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
+  var TELA = '', DESENHADA_EM = 0;
+  function raiz() { TELA = ''; var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
 
   var CODIGO = guardado('rdoteste_codigo');
   var pendentes = 0;
@@ -211,7 +213,8 @@
   }
   function msgErro(r) {
     var m = ERROS[(r && r.erro) || ''] || 'Algo deu errado. Tente de novo em alguns segundos.';
-    if (r && r.horario) m += ' A trilha abre ' + r.horario + '.';
+    // A aula e livre; so a prova tem horario (17/11/2026). "A trilha abre..." so vale se a aula voltar ao horario.
+    if (r && r.horario) m += (r.erro === 'fora_do_horario_prova' ? ' O horário é ' : ' A trilha abre ') + r.horario + '.';
     return m;
   }
   function voltarAoApp() { try { window.location.href = './'; } catch (e) {} }
@@ -256,11 +259,18 @@
   }
 
   // ================= Minha trilha =================
-  function carregar() {
+  var FALHAS_DE_REDE = { sem_conexao: 1, resposta_invalida: 1, falha_no_servidor: 1 };
+  var SEM_NOVA_TENTATIVA = { codigo_invalido: 1, inativo: 1, sem_codigo: 1, muitas_tentativas: 1 };
+  function carregar(tentativa) {
     var r = raiz();
     r.appendChild(el('p', 'sub', 'Carregando a sua trilha…'));
     chamar('estadoTrilha', undefined, function (t) {
+      // Internet caindo ou falha passageira do Google: tenta mais uma vez sozinho antes de mostrar o erro.
+      if (!t.ok && tentativa !== 2 && FALHAS_DE_REDE[t.erro]) { setTimeout(function () { carregar(2); }, 1500); return; }
       var x = raiz();
+      // Codigo que nao vale mais (trocado, desativado ou bloqueado): tentar de novo nao adianta, e cada toque
+      // contava como tentativa errada (5 seguidas travam o aparelho por 5 minutos). O caminho e entrar de novo.
+      if (!t.ok && SEM_NOVA_TENTATIVA[t.erro]) { telaErro(x, msgErro(t), voltarAoApp, 'Entrar de novo pelo app'); return; }
       if (!t.ok) { telaErro(x, msgErro(t)); rodape(x); return; }
       if (!t.matriculada) { x.appendChild(el('div', 'aviso', ERROS.nao_matriculada)); rodape(x); return; }
       receber(t);
@@ -350,7 +360,9 @@
       det.appendChild(c);
     });
     r.appendChild(det);
+    r.appendChild(botao('Atualizar a trilha', 'leve', carregar));
     rodape(r);
+    TELA = 'trilha'; DESENHADA_EM = Date.now();
   }
 
   /**
@@ -464,7 +476,7 @@
     if (aberta) {
       rot('Sua aula de agora');
       tit(aberta.titulo);
-      txt('Ouça, leia e responda 4 perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
+      txt('Ouça, leia e responda ' + REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
       var bc = botao('Começar a aula', 'laranja', function () { telaAula(aberta); });
       if (foraHora) bc.disabled = true;
       c.appendChild(bc);
@@ -657,17 +669,20 @@
     });
     var e2 = etapa(2, 'Ler', a.leitura.onde);
     var texto = el('div', 'ap oculto');
+    var erroLer = el('div', 'oculto');
     var bLer = botao('📖 Ler a aula aqui', '', function () {
       bLer.disabled = true;
       chamar('lerAula', { aula: a.id }, function (res) {
-        bLer.className = 'oculto';
-        if (!res.ok) { e2.appendChild(el('div', 'erro', msgErro(res))); return; }
+        // Falhou (internet): o botao continua ali para tentar de novo, sem sair da aula.
+        if (!res.ok) { bLer.disabled = false; bLer.textContent = '📖 Tentar de novo: ler a aula aqui'; erroLer.className = 'erro'; erroLer.textContent = msgErro(res); return; }
+        bLer.className = 'oculto'; erroLer.className = 'oculto';
         texto.className = 'ap';
         desenharTexto(texto, res.blocos);
         texto.appendChild(botao('Terminei de ler: responder as perguntas', 'laranja', function () { perguntasAula(a); }));
       });
     });
     e2.appendChild(bLer);
+    e2.appendChild(erroLer);
     e2.appendChild(texto);
     var e3 = etapa(3, 'Responder', REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
     e3.appendChild(botao('Responder as perguntas', 'laranja', function () { perguntasAula(a); }));
@@ -713,8 +728,13 @@
         for (var i = 0; i < res.perguntas.length; i++) if (resp[i] === undefined) { msg.className = 'aviso'; msg.textContent = 'Responda todas as perguntas.'; return; }
         enviar.disabled = true;
         chamar('responderAula', { aula: a.id, sorteio: res.sorteio, respostas: resp }, function (c) {
-          if (!c.ok) { enviar.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(c); return; }
-          enviar.className = 'oculto';
+          if (!c.ok) {
+            enviar.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(c);
+            // O sorteio nao vale mais (ou a resposta chegou e a internet caiu na volta): nada de ficar presa aqui.
+            if (c.erro === 'aula_expirada') { enviar.className = 'oculto'; msg.appendChild(botao('Sortear novas perguntas', 'laranja', function () { perguntasAula(a); })); }
+            return;
+          }
+          enviar.className = 'oculto'; voltar.className = 'oculto';
           if (c.trilha) receber(c.trilha);
           c.correcao.forEach(function (k, i) {
             var labs = blocos[i].querySelectorAll('.alt');
@@ -739,6 +759,9 @@
         });
       });
       x.appendChild(enviar);
+      // Sempre ha como voltar: sem isto, um erro ao corrigir deixava a pessoa presa nesta tela (so restava "Não sou eu").
+      var voltar = botao('Voltar à trilha', 'leve', carregar);
+      x.appendChild(voltar);
     });
   }
 
@@ -846,13 +869,24 @@
     r.appendChild(el('h1', '', 'Resultado'));
     r.appendChild(el('div', 'grande', res.acertos + ' de ' + res.questoes));
     var proximo;
-    var depois = { prova_final: 'Agora vêm as 6 simulações, com quem aplica.', prova_onb: 'Agora vem a Conversa da Ponte, com quem aplica.' };
-    if (res.passou) proximo = depois[res.prova] || 'Agora vem a avaliação prática, com quem aplica.';
+    var at = res.trilha && res.trilha.estado ? res.trilha.estado.atual : undefined;
+    if (res.passou) proximo = at ? ('Agora vem: ' + at.titulo + (at.tipo === 'pessoa' ? ', com quem aplica.' : '.'))
+      : (at === null ? 'Você concluiu a trilha inteira.' : 'Volte à trilha para ver o próximo passo.');
     else if (res.proxima === 'aguarda_diretoria') proximo = 'A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.';
     else proximo = 'Refaça as perguntas das aulas desta etapa.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
     r.appendChild(el('div', res.passou ? 'bom' : 'aviso', (res.passou ? 'Passou. ' : 'Não passou desta vez. ') + proximo));
     r.appendChild(botao('Voltar à trilha', '', function () { if (res.trilha) desenharTrilha(); else carregar(); }));
   }
+
+  // Tela parada (tablet da loja, icone na tela de inicio do celular): ao voltar para ela depois de um minuto, a
+  // trilha se atualiza sozinha. Sem isto, "Por hoje é só" e o botao apagado da prova ficavam velhos no dia seguinte.
+  // Com um video no cartao (passo de video) nao atualiza: recarregar pararia o video no meio.
+  function aoVoltar() {
+    var noVideo = ESTADO && ESTADO.atual && ESTADO.atual.tipo === 'video';
+    if (TELA === 'trilha' && !noVideo && !pendentes && Date.now() - DESENHADA_EM > 60000 && (!document.visibilityState || document.visibilityState === 'visible')) carregar();
+  }
+  document.addEventListener('visibilitychange', aoVoltar);
+  window.addEventListener('pageshow', aoVoltar);
 
   if (!CODIGO) { var x = raiz(); x.appendChild(el('div', 'aviso', 'Entre primeiro no app com o seu código.')); rodape(x); }
   else carregar();

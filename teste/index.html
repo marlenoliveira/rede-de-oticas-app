@@ -98,6 +98,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
     <div style="margin-top:12px;min-height:72px;border:2px solid {{ bordaCodigo }};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#062D7B;letter-spacing:.28em;font-variant-numeric:tabular-nums;background:#fff">{{ codigoNaTela }}</div>
 
     <div style="display:{{ mostrarErroLogin }};margin-top:16px;padding:12px 16px;border-radius:12px;background:#FBECEA;border:2px solid #C0392B;font-size:15px;font-weight:700;color:#8E2A1F;line-height:1.4">{{ erroLogin }}</div>
+    <button style="display:{{ mostrarTentarDeNovo }};width:100%;min-height:60px;margin-top:12px;border-radius:16px;background:#062D7B;color:#fff;font-size:19px;font-weight:800" onClick="{{ tentarDeNovo }}">Tentar de novo</button>
 
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px">
       <sc-for list="{{ teclas }}" as="t" hint-placeholder-count="12">
@@ -510,7 +511,12 @@ a{color:#062D7B}a:hover{color:#F96B05}
       <sc-if value="{{ emDesempenho }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
           <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Meu desempenho</h1>
-          <div style="font-size:14px;color:#8A9099">{{ vendedora }} · comparado à semana anterior</div>
+          <div style="font-size:14px;color:#8A9099">{{ vendedora }} · {{ periodoRotulo }}</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <sc-for list="{{ periodos }}" as="pe" hint-placeholder-count="3">
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ pe.borda }};background:{{ pe.fundo }};color:{{ pe.cor }};font-size:15px;font-weight:700" onClick="{{ pe.escolher }}">{{ pe.nome }}</button>
+          </sc-for>
         </div>
         <div style="display:grid;grid-template-columns:{{ gridKpi }};gap:16px;margin-top:16px">
           <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
@@ -533,7 +539,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
             </sc-for>
           </div>
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Atendimentos de hoje</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">{{ tituloAtendimentos }}</div>
             <div style="display:{{ mostrarVazio }};font-size:15px;color:#8A9099;padding:8px 0">Nenhum atendimento registrado ainda.</div>
             <sc-for list="{{ atendimentosHoje }}" as="at" hint-placeholder-count="5">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
@@ -754,7 +760,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
               </div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
-              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">Salvar pessoa</button>
+              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">{{ rotuloSalvarPessoa }}</button>
               <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ fecharForm }}">Cancelar</button>
             </div>
           </div>
@@ -825,7 +831,7 @@ class Component extends DCLogic {
     menu: false,
     lojas: [], lojaSel: null, equipe: [], carregando: true, erroEquipe: null, okEquipe: null,
     ident: null, identErro: null, identCarregando: true,
-    codigoDigitado: '', entrando: false, erroLogin: null,
+    codigoDigitado: '', entrando: false, erroLogin: null, codigoParaTentar: null,
     horaInicio: null, tratamentos: {}, salvando: false, erroSalvar: null,
     atendimentos: [], atendCarregando: true, atendErro: null,
     conteudo: null, erroBanco: null,
@@ -855,6 +861,7 @@ class Component extends DCLogic {
       cidade_obrigatoria: 'Informe a cidade da loja.',
       aba_nao_encontrada: 'Uma aba da planilha não foi encontrada. Fale com a diretoria.',
       pessoa_nao_encontrada: 'Essa pessoa não está na lista de usuários.',
+      pessoa_ja_existe: 'Já existe uma pessoa ativa com esse nome nessa loja. Use nome e sobrenome, ou reative o cadastro que já existe.',
       erro_desconhecido: 'Algo deu errado. Tente de novo em alguns segundos.',
       email_duplicado: 'Esse e-mail aparece em mais de uma linha da aba USUARIOS. Peça à diretoria para deixar só uma linha antes de continuar.',
       papel_exige_todas: 'Diretoria e Supervisão só existem com Loja = TODAS. Escolha outro papel ou deixe a loja como TODAS.',
@@ -899,6 +906,11 @@ class Component extends DCLogic {
     // Content-Type text/plain de proposito. Com application/json o
     // navegador faz uma checagem previa (OPTIONS) que o Apps Script nao
     // responde, e a conversa morre antes de comecar.
+    // Limite de espera (18/11/2026): com a internet travada a chamada nao voltava nunca e a tela ficava em
+    // "carregando" sem fim. Depois de 40 segundos vale como "sem conexao"; resposta que chegar depois e ignorada.
+    let acabou = false;
+    const fim = f => { if (acabou) return; acabou = true; f(); };
+    setTimeout(() => fim(() => falha('sem_conexao', null)), 40000);
     fetch(this.URL_SERVIDOR, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -908,10 +920,10 @@ class Component extends DCLogic {
       .then(t => {
         let d = null;
         try { d = JSON.parse(t); } catch (e) {}
-        if (!d) return falha('resposta_invalida', null);
-        abrir(d);
+        if (!d) return fim(() => falha('resposta_invalida', null));
+        fim(() => abrir(d));
       })
-      .catch(() => falha('sem_conexao', null));
+      .catch(() => fim(() => falha('sem_conexao', null)));
   }
 
 
@@ -968,6 +980,9 @@ class Component extends DCLogic {
     // Diretoria e supervisao nao pertencem a loja nenhuma: o servidor exige TODAS.
     const lojaAlvo = (papel === 'diretoria' || papel === 'supervisao') ? 'TODAS' : s.lojaSel;
     const pessoa = { nome: s.fNome.trim(), email: s.fEmail.trim(), papel: papel, loja: lojaAlvo, ativo: true };
+    // Toque duplo (18/11/2026): sem esta trava, dois toques em "Salvar pessoa" cadastravam a pessoa duas vezes,
+    // com dois codigos, e o primeiro codigo nem aparecia na tela.
+    if (s.entregando) return;
     this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
     this.gs('salvarPessoa', [pessoa], r => {
       // O codigo volta UMA vez. Se a gerente fechar esta tela sem anotar,
@@ -982,6 +997,7 @@ class Component extends DCLogic {
 
   /** Gera outro código para alguém que perdeu o dela. */
   novoCodigoPara(pessoa) {
+    if (this.state.entregando) return;   // toque duplo geraria dois codigos, e o primeiro ja nao valeria
     this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
     this.gs('gerarNovoCodigo', [{ linha: pessoa.linha, nome: pessoa.nome }], r => {
       this.setState({ entrega: this.montarEntrega(r.nome, r.codigoNovo, r.loja), entregando: false },
@@ -1040,6 +1056,7 @@ class Component extends DCLogic {
 
   salvarLoja() {
     const s = this.state;
+    if (s.entregando) return;
     this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
     const nova = { codigo: (s.lCodigo || '').trim().toUpperCase(),
                    nome: (s.lNome || '').trim(), cidade: (s.lCidade || '').trim() };
@@ -1124,7 +1141,7 @@ class Component extends DCLogic {
    * Valida o codigo NO SERVIDOR. O navegador nunca decide se o codigo
    * presta - ele so entrega e espera a resposta.
    */
-  identificar(codigo, guardarDepois) {
+  identificar(codigo, guardarDepois, tentativa) {
     this._codigo = String(codigo || '').replace(/\D/g, '');
     this._aparelho = this.idDoAparelho();
     if (!this._codigo) {
@@ -1155,8 +1172,13 @@ class Component extends DCLogic {
           this.guardar('rdoteste_codigo', '');
           this._codigo = '';
         }
+        // Internet caindo ou falha passageira do Google (18/11/2026): tenta mais uma vez sozinho. Se falhar de
+        // novo, a tela de codigo mostra "Tentar de novo", que entra com o codigo ja guardado (sem redigitar).
+        const deRede = cod === 'sem_conexao' || cod === 'resposta_invalida' || cod === 'falha_no_servidor';
+        if (deRede && !tentativa) { setTimeout(() => this.identificar(codigo, guardarDepois, 1), 1500); return; }
         this.setState({ identCarregando: false, entrando: false, ident: null,
-          erroLogin: this.MENSAGEM_LOGIN(cod, resposta) });
+          erroLogin: this.MENSAGEM_LOGIN(cod, resposta),
+          codigoParaTentar: deRede ? { codigo: this._codigo, guardar: !!guardarDepois } : null });
       });
   }
 
@@ -1171,10 +1193,12 @@ class Component extends DCLogic {
     if (cod === 'aba_nao_encontrada') return 'Uma aba da planilha não foi encontrada. Fale com a diretoria.';
     if (cod === 'fora_do_apps_script') return 'Abra o app pelo link oficial que a gerente enviou.';
     if (cod === 'codigo_invalido' || cod === 'sem_codigo') return 'Código não confere. Confira com a gerente.';
+    if (cod === 'sem_conexao') return 'Sem conexão com o servidor. Confira a internet e toque em Tentar de novo.';
     return 'Não consegui entrar agora. Tente de novo em alguns segundos.';
   }
 
   sair() {
+    this._chaveAtend = '';   // o rascunho de atendimento de quem saiu nao vale para a proxima pessoa
     this.guardar('rdoteste_codigo', '');
     // Tablet da loja: a proxima pessoa matriculada tambem tem de cair na trilha.
     try { window.sessionStorage.removeItem('rdoteste_trilha_vista'); } catch (e) {}
@@ -1218,6 +1242,11 @@ class Component extends DCLogic {
    * e quanto tempo levou. O tempo conta da primeira a ultima resposta.
    * Se o servidor falhar, o placar aparece do mesmo jeito; o registro e
    * acessorio, o treino nao.
+   *
+   * 18/11/2026: o registro e o que o Painel do treino mostra, e rodada que falhava ao gravar (internet,
+   * fila, falha passageira do Google) se perdia calada. Agora a tela tenta de novo sozinha, duas vezes
+   * (5 e 20 segundos depois). A chave da rodada garante que ela nunca entra duas vezes. Se a pessoa sair
+   * do app ou outra entrar no aparelho, a nova tentativa nao sai: a rodada e de quem a fez.
    */
   fecharRodada() {
     const s = this.state;
@@ -1226,10 +1255,18 @@ class Component extends DCLogic {
     this._t0Rodada = 0;
     // treinouHoje apaga o lembrete da tela: quem acabou de treinar nao precisa dele.
     this.setState({ treinoFim: true, rodadas30: null, treinouHoje: true });
-    this.gs('registrarRodada', [{ bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n,
-        acertos: s.acertos, segundos: segundos }],
-      r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
-      () => {});
+    const pedido = { bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n,
+      acertos: s.acertos, segundos: segundos,
+      chave: 'rd-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36) };
+    const dono = this._codigo;
+    const NAO_REPETE = { codigo_invalido: 1, inativo: 1, muitas_tentativas: 1, sem_codigo: 1, funcao_desconhecida: 1 };
+    const mandar = vez => {
+      if (this._codigo !== dono) return;
+      this.gs('registrarRodada', [pedido],
+        r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
+        cod => { if (vez < 3 && !NAO_REPETE[cod]) setTimeout(() => mandar(vez + 1), vez === 1 ? 5000 : 20000); });
+    };
+    mandar(1);
   }
 
   montarRodada(tipoEscolhido) {
@@ -1243,8 +1280,11 @@ class Component extends DCLogic {
     // que tambem estaria certa. A mesma regra esta nas aulas da trilha (Trilha.gs, ambigua_).
     const normA = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9.,%±+-]+/g, ' ').trim();
     const ambigua = (c, x) => { const a = normA(c), b2 = normA(x); return a.length >= 3 && b2.length >= 3 && (b2.indexOf(a) > -1 || a.indexOf(b2) > -1); };
+    // `fora` (18/11/2026): respostas do tema que TAMBEM servem para esta pergunta, ditas com outras palavras; o
+    // servidor manda a lista conferida contra o manual (ERRADAS_FORA_, Codigo.gs).
     const poolDe = (b, it) => { const p0 = (b.pool || b.itens.map(x => x[1])).filter((x, i, arr) => x !== it[1] && arr.indexOf(x) === i);
-      const p1 = p0.filter(x => !ambigua(it[1], x)); return p1.length >= 3 ? p1 : p0; };
+      const fora = (b.fora && b.fora[it[0]]) || [];
+      const p1 = p0.filter(x => !ambigua(it[1], x) && fora.indexOf(x) < 0); return p1.length >= 3 ? p1 : p0; };
     const base = Math.floor(Math.random() * 97);
     const blocoSel = this.state.blocoTreino || '';
     const nomes = Object.keys(bancos).filter(k => !blocoSel || bancos[k].bloco === blocoSel);
@@ -1439,12 +1479,15 @@ class Component extends DCLogic {
       justificativa: (s.justificativa || '').trim(),
       valor:         vendeu ? this.valorNumero(s.valorTexto) : 0,
       tratamentos:   trat.join('; '),
-      etapas:        etapas
+      etapas:        etapas,
+      // Chave deste atendimento (18/11/2026): se a internet cair na volta e ela tocar em salvar de novo, o
+      // servidor reconhece a chave e nao grava a mesma venda duas vezes.
+      chave:         this._chaveAtend || (this._chaveAtend = 'at-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36))
     };
 
     this.setState({ salvando: true, erroSalvar: null });
     this.gs('salvarAtendimento', [registro],
-      () => this.setState({ salvando: false, erroSalvar: null, fase: 'salvo' }),
+      () => { this._chaveAtend = ''; this.setState({ salvando: false, erroSalvar: null, fase: 'salvo' }); },
       (codigo) => this.setState({ salvando: false,
         erroSalvar: (this.ERROS[codigo] || 'Não consegui salvar. Confira sua internet e tente de novo.') +
                     ' O atendimento continua aqui na tela — nada foi perdido.' }));
@@ -1484,9 +1527,11 @@ class Component extends DCLogic {
     // nao ha dado, em vez de mostrar zero disfarcado de resultado.
     const atendTodos = Array.isArray(s.atendimentos) ? s.atendimentos : [];
     const noPeriodo  = this.filtrarPeriodo(atendTodos, s.periodo);
-    const meuEmail   = String(id.email || '').toLowerCase().trim();
     const lojaFoco   = veRede ? String(s.lojaSel || '').trim() : identLoja;
-    const meus   = noPeriodo.filter(l => String(l['Email'] || '').toLowerCase().trim() === meuEmail);
+    // "Meu desempenho" e de quem atendeu, pelo NOME gravado na linha (como o servidor faz). Ate 18/11/2026 o
+    // filtro era pelo e-mail: com o e-mail em branco (ele deixou de ser obrigatorio), a gerente via como dela
+    // os atendimentos de todas as vendedoras da loja que tambem nao tinham e-mail.
+    const meus   = noPeriodo.filter(l => String(l['Vendedora iniciou'] || '').trim() === identNome);
     const daLoja = noPeriodo.filter(l => String(l['Loja'] || '').trim() === lojaFoco);
     const R  = this.resumo(meus);
     const RL = this.resumo(daLoja);
@@ -1610,6 +1655,9 @@ class Component extends DCLogic {
       erroLogin: s.erroLogin || '',
       mostrarErroLogin: s.erroLogin ? 'block' : 'none',
       rotuloEntrar: s.entrando ? 'Entrando…' : 'Entrar',
+      // So aparece quando a entrada falhou por internet: entra de novo com o codigo que ja estava guardado ou digitado.
+      mostrarTentarDeNovo: (s.codigoParaTentar && s.erroLogin) ? 'block' : 'none',
+      tentarDeNovo: () => { const c = s.codigoParaTentar; if (c && !s.entrando) this.identificar(c.codigo, c.guardar); },
       fundoEntrar: (s.entrando || digitado.length < 6) ? '#8A9099' : LA,
       entrar: () => {
         if (s.entrando) return;
@@ -1746,6 +1794,7 @@ class Component extends DCLogic {
         escolher: () => this.setState({ fPapel: p })
       }, chip(s.fPapel === p))),
       confirmarPessoa: () => this.salvarPessoa(),
+      rotuloSalvarPessoa: s.entregando ? 'Salvando…' : 'Salvar pessoa',
 
       // Frases de manual: vem do servidor. Enquanto nao chegam, a tela
       // diz 'carregando'. Texto generico no lugar de regra e pior que
@@ -1856,7 +1905,7 @@ class Component extends DCLogic {
             ? (s.orcamento === 'Sim' ? 'Orçamento deixado com o cliente. Follow-up agendado para 24h — leve um motivo legítimo.' : 'Cliente vai pensar, sem orçamento deixado. Vale o convite para voltar com a receita.')
             : 'Atendimento registrado como “só olhando”. Vale o convite para voltar com a receita.'),
       aderencia: Math.round((feitosCount / totalGeral) * 100) + '%',
-      novoAtendimento: () => this.setState({ passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null, valorTexto: '', descontoTexto: '0', justificativa: '', visao: null, segundoPar: null, armacao: null, orcamento: null, tratamentos: {}, horaInicio: this.agora(), erroSalvar: null, salvando: false }),
+      novoAtendimento: () => { this._chaveAtend = ''; this.setState({ passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null, valorTexto: '', descontoTexto: '0', justificativa: '', visao: null, segundoPar: null, armacao: null, orcamento: null, tratamentos: {}, horaInicio: this.agora(), erroSalvar: null, salvando: false }); },
       irDesempenho: () => this.ir('desempenho'),
 
       treinoAtivo: !s.treinoFim && !!q, treinoFim: s.treinoFim,
@@ -1962,6 +2011,9 @@ class Component extends DCLogic {
 
       periodos: ['Hoje', 'Semana', 'Mês'].map(n => Object.assign({ nome: n, escolher: () => this.setState({ periodo: n }) }, chip(s.periodo === n))),
       periodoAtual: s.periodo,
+      // O rotulo dizia "comparado a semana anterior", e nada na tela e comparado: agora diz o periodo mostrado.
+      periodoRotulo: { 'Hoje': 'hoje', 'Semana': 'últimos 7 dias', 'Mês': 'últimos 30 dias' }[s.periodo] || '',
+      tituloAtendimentos: { 'Hoje': 'Atendimentos de hoje', 'Semana': 'Atendimentos dos últimos 7 dias', 'Mês': 'Atendimentos dos últimos 30 dias' }[s.periodo] || 'Atendimentos',
       kpisLoja: [
         kpi('Atendimentos da loja', RL.vazio, String(RL.total), 'período: ' + String(s.periodo).toLowerCase()),
         kpi('Vendas fechadas', RL.vazio, String(RL.vendas), ''),

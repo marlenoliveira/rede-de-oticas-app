@@ -78,6 +78,9 @@
   .tr-notas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .tr-notas input { margin: 0; }
   select { font: inherit; width: 100%; min-height: 52px; border-radius: 12px; border: 2px solid var(--linha); padding: 8px 10px; margin: 8px 0; background: #fff; }
+  /* Aguarde (o servidor do Google leva alguns segundos) */
+  #aguarde { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--azul); color: #fff;
+    font-weight: 800; padding: 12px 20px; border-radius: 999px; font-size: 17px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 9; }
 </style>
 </head>
 <body>
@@ -107,6 +110,7 @@
 <div id="lojas"></div>
 
 <div class="regua oculto" id="regua"></div>
+<div id="aguarde" class="oculto">Aguarde…</div>
 
 <script>
 (function () {
@@ -145,7 +149,16 @@
     return n;
   }
 
+  var ESPERA_MAXIMA_MS = 40000;
+  /** Uma resposta so por chamada: a do servidor, ou "sem conexao" quando passa do limite de espera. */
+  function umaVez(pronto) {
+    var acabou = false;
+    function fim(d) { if (acabou) return; acabou = true; pronto(d); }
+    setTimeout(function () { fim({ ok: false, erro: 'sem_conexao' }); }, ESPERA_MAXIMA_MS);
+    return fim;
+  }
   function chamar(codigo, pronto) {
+    pronto = umaVez(pronto);
     fetch(URL_SERVIDOR, {
       method: 'POST',
       // text/plain de proposito: com application/json o navegador faz uma
@@ -278,6 +291,7 @@
   // poder matricular, esta parte nao aparece e o Painel fica como era.
   // ------------------------------------------------------------
   function chamarFn(fn, codigo, extra, pronto) {
+    pronto = umaVez(pronto);
     var args = [codigo, aparelho()];
     if (extra !== undefined) args.push(extra);
     fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -306,9 +320,18 @@
                 ['diretoria', 'Aguarda a Diretoria', 'tr-diretoria'], ['em_dia', 'Em dia', 'tr-em_dia']];
 
   function carregarTrilha(codigo) {
+    // A parte da trilha chega alguns segundos depois do resto. Sem este aviso ela aparecia de repente, no alto,
+    // e empurrava a tela para baixo no meio da leitura (18/11/2026).
+    var caixa = id('trilha');
+    if (!caixa.firstChild) caixa.appendChild(el('p', 'sub', 'Carregando a trilha…'));
     chamarFn('painelTrilha', codigo, undefined, function (r) {
       var box = id('trilha');
       box.textContent = '';
+      // Internet ou falha passageira: avisa, em vez de a parte da trilha sumir calada.
+      if (r && !r.ok && (r.erro === 'sem_conexao' || r.erro === 'resposta_invalida' || r.erro === 'falha_no_servidor')) {
+        box.appendChild(el('div', 'aviso', 'A parte da trilha não carregou agora. Confira a internet e toque em Atualizar.'));
+        return;
+      }
       if (!r || !r.ok || !Array.isArray(r.pessoas)) return; // servidor antigo ou sem permissao: o Painel continua como era
       // Diretoria e supervisao veem a parte de matricula mesmo sem ninguem, com o aviso (17/11/2026).
       if (!r.pessoas.length && !r.podeMatricular) return;
@@ -316,10 +339,18 @@
     });
   }
 
+  // Uma acao por vez: o servidor leva alguns segundos e, sem aviso, o toque repetido lancava duas vezes
+  // (ou dava "este passo nao e o da vez" na segunda).
+  var ocupado = false;
   function acaoTrilha(fn, codigo, extra, aviso) {
+    if (ocupado) return;
     if (aviso && !window.confirm(aviso)) return;
+    ocupado = true;
+    id('aguarde').className = '';
     chamarFn(fn, codigo, extra, function (r) {
-      if (!r || !r.ok) { window.alert(ERROS_TRILHA[(r && r.erro) || ''] || 'Não deu certo. Tente de novo.'); return; }
+      ocupado = false;
+      id('aguarde').className = 'oculto';
+      if (!r || !r.ok) { window.alert(ERROS_TRILHA[(r && r.erro) || ''] || (r && r.erro === 'sem_conexao' ? 'Sem conexão com o servidor. Confira a internet e toque em Atualizar para ver se foi gravado.' : 'Não deu certo. Tente de novo.')); return; }
       carregarTrilha(codigo);
     });
   }
@@ -382,7 +413,7 @@
       z.addEventListener('click', function (ev) {
         if (p.chamar.ateMs && Date.now() > p.chamar.ateMs) {
           ev.preventDefault();
-          window.alert('Fora do horário comercial. Mande no próximo horário: segunda a sexta, das 8h às 18h, e sábado, das 8h às 12h.');
+          window.alert('Fora do horário comercial. Mande no próximo horário: segunda a sexta, das 8h às 18h.');
         }
       });
       c.appendChild(z);
@@ -390,7 +421,7 @@
     }
     var f = el('div', 'tr-ficha oculto');
     f.appendChild(el('div', '', 'Começou em ' + p.desde + ' · ' + (p.tipo === 'ja_trabalha' ? 'já trabalhava na loja' : 'vendedora nova')));
-    f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada !== null && p.parada !== undefined ? ' · ' + p.parada + ' dias úteis' : '')));
+    f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada ? ' · há ' + p.parada + (p.parada === 1 ? ' dia útil' : ' dias úteis') + ' sem atividade' : '')));
     // Regras de uso (17/11/2026): o aceite da propria vendedora no app. Sem foto, sem biometria.
     var rg = p.regras || {};
     f.appendChild(el('div', '', rg.aceitasEm ? 'Regras de uso aceitas em ' + rg.aceitasEm : 'Regras de uso: ainda não aceitas no app'));
