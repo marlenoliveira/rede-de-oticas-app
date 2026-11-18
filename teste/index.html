@@ -395,6 +395,9 @@ a{color:#062D7B}a:hover{color:#F96B05}
               </sc-for>
             </div>
           </div>
+          <!-- Pergunta primeiro (17/11/2026): os temas e a contagem do banco ficam atras deste botao; a vendedora nao ve. -->
+          <button style="display:{{ mostrarBotaoTemas }};min-height:48px;padding:10px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:15px;font-weight:700" onClick="{{ alternarTemas }}">{{ textoBotaoTemas }}</button>
+          <div style="display:{{ mostrarTemasAberto }};margin-top:12px">
           <div style="display:{{ mostrarTemas }}">
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Dirigir reforço por tema</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -410,6 +413,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
             <sc-for list="{{ contagemBanco }}" as="cb" hint-placeholder-count="12">
               <span style="font-size:12px;color:#8A9099;font-variant-numeric:tabular-nums">{{ cb.nome }} <strong style="color:#062D7B">{{ cb.n }}</strong></span>
             </sc-for>
+          </div>
           </div>
         </div>
         <sc-if value="{{ treinoAtivo }}" hint-placeholder-val="{{ true }}">
@@ -450,6 +454,8 @@ a{color:#062D7B}a:hover{color:#F96B05}
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
             <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ treinarDeNovo }}">Treinar de novo</button>
             <button style="min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
+            <!-- Placar abaixo de 5: o botao leva direto a Consulta rapida (17/11/2026). -->
+            <button style="display:{{ mostrarIrConsulta }};min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #062D7B;background:#fff;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ irConsulta }}">Abrir a Consulta rápida</button>
           </div>
         </sc-if>
       </sc-if>
@@ -792,7 +798,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
 
     <div style="display:{{ mostrarAbas }};flex-wrap:wrap;position:sticky;bottom:0;background:#fff;border-top:1px solid #EDEFF2;padding:8px 8px 16px;gap:4px;z-index:20">
       <sc-for list="{{ abas }}" as="n" hint-placeholder-count="5">
-        <button style="flex:0 0 {{ n.largura }};min-width:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:11px;font-weight:800;letter-spacing:.02em;line-height:1.15;text-align:center" onClick="{{ n.ir }}">
+        <button style="flex:0 0 {{ n.largura }};min-width:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:{{ n.fonte }};font-weight:800;letter-spacing:.02em;line-height:1.15;text-align:center" onClick="{{ n.ir }}">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ n.cor }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>
           {{ n.rotulo }}
         </button>
@@ -810,7 +816,7 @@ class Component extends DCLogic {
     resultado: null, nivelVendido: null,
     valorTexto: '', descontoTexto: '0', justificativa: '',
     visao: null, segundoPar: null, armacao: null, orcamento: null,
-    tipoTreino: 'Sortear tudo',
+    tipoTreino: 'Sortear tudo', verTemas: false,
     // Bloco da Trilha escolhido para treinar (Lentes, Armações, Negociação ou tudo). Fica no aparelho.
     blocoTreino: (function () { try { return window.localStorage.getItem('rdoteste_bloco') || ''; } catch (e) { return ''; } })(),
     rodadas30: null,
@@ -994,7 +1000,7 @@ class Component extends DCLogic {
     const texto =
       // Formato fixo de toda mensagem da rede (Marlen, 26/10/2026): abre com "Oi tudo bem?", fecha
       // com "Obrigado!", sem o nome de quem recebe. Ajustado em 17/11/2026 (antes: "Oi, <nome>!").
-      'Oi tudo bem?\n\nEsse é o app da Casa do Olhar para você registrar os atendimentos.\n\n' +
+      'Oi tudo bem?\n\nEsse é o app de treino e atendimento da Casa do Olhar.\n\n' +
       '1) Abra este link no celular:\n' + this.LINK_DO_APP + '\n\n' +
       '2) Digite o seu código de acesso: ' + codigo + '\n\n' +
       '3) Para ficar com o ícone na tela inicial: toque no botão de compartilhar do navegador e escolha "Adicionar à Tela de Início".\n\n' +
@@ -1523,7 +1529,9 @@ class Component extends DCLogic {
     // Vendedora nao entra em Loja, Equipe nem Perfil.
     // Supervisao le tudo, mas nao entra em Equipe (nao cadastra ninguem).
     // Painel do treino: Diretoria, supervisao e gerencia (decisao do Marlen em 14/11/2026).
+    // Diretoria e supervisao nao atendem no balcao: "Atender" e "Meu desempenho" ficavam sempre vazios (17/11/2026, melhoria 5).
     const escondeAba = id => (papel === 'vendedora' && (id === 'equipe' || id === 'loja' || id === 'painel'))
+                          || ((papel === 'diretoria' || papel === 'supervisao') && (id === 'atendimento' || id === 'desempenho'))
                           || (papel === 'supervisao' && id === 'equipe')
                           || (id === 'trilha' && !(s.ident && s.ident.trilha))
                           // Recados e Gente: so na versao de teste (montar-teste.js liga a chave).
@@ -1532,7 +1540,7 @@ class Component extends DCLogic {
                           || (id === 'minhaloja' && (papel === 'vendedora' || !(typeof window !== 'undefined' && window.AMBIENTE_TESTE)));
     const telaBloqueada = escondeAba(s.tela)
                        || (papel === 'vendedora' && s.tela === 'perfil');
-    const telaAtiva = telaBloqueada ? 'desempenho' : s.tela;
+    const telaAtiva = telaBloqueada ? ((papel === 'diretoria' || papel === 'supervisao') ? 'niveis' : 'desempenho') : s.tela;
     const passos = this.PASSOS;
     const pa = passos[s.passo] || { nome:'', ajuda:'', fala:'', nunca:'', chave:'', itens:[] };
 
@@ -1657,7 +1665,9 @@ class Component extends DCLogic {
       // Ate 6 itens, uma linha; de 7 a 12, duas linhas com itens do mesmo tamanho.
       abas: (() => { const lista = itensNav.filter(n => !escondeAba(n.id)); const k = lista.length <= 6 ? lista.length : Math.ceil(lista.length / 2);
         const largura = 'calc((100% - ' + ((k - 1) * 4) + 'px) / ' + k + ')';
-        return lista.map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '', largura: largura })); })(),
+        // Letra maior (melhoria 6): 13 px com ate 5 itens por linha; 12 px na linha de 6, para "Consulta" caber.
+        const fonte = k >= 6 ? '12px' : '13px';
+        return lista.map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '', largura: largura, fonte: fonte })); })(),
 
       emNiveis: telaAtiva === 'niveis', emAtendimento: telaAtiva === 'atendimento',
       emTreino: telaAtiva === 'treino', emConsulta: telaAtiva === 'consulta',
@@ -1883,6 +1893,8 @@ class Component extends DCLogic {
       corPlacar: s.acertos >= 5 ? VD : (s.acertos >= 3 ? '#7A5B04' : VM),
       mensagemPlacar: s.acertos >= 5 ? 'Pronta para o salão' : (s.acertos >= 3 ? 'Quase lá' : 'Revise antes do próximo turno'),
       dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia antes de abrir a loja.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
+      mostrarIrConsulta: s.acertos >= 5 ? 'none' : 'inline-block',
+      irConsulta: () => this.ir('consulta'),
       treinarDeNovo: () => this.setState({ rodada: this.montarRodada(), iq: 0, escolha: null, acertos: 0, treinoFim: false }),
       origemRodada: s.blocoTreino ? 'rodada sorteada do bloco ' + s.blocoTreino : 'rodada sorteada de todo o banco',
       // Blocos na ordem da Trilha do Vendedor: Lentes, Armações, Negociação.
@@ -1894,6 +1906,10 @@ class Component extends DCLogic {
       totalTipos: temasDoBloco.length,
       contagemBanco: temasDoBloco.map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
       mostrarTemas: papel === 'vendedora' ? 'none' : 'block',
+      mostrarBotaoTemas: papel === 'vendedora' ? 'none' : 'block',
+      mostrarTemasAberto: (papel !== 'vendedora' && s.verTemas) ? 'block' : 'none',
+      textoBotaoTemas: s.verTemas ? 'Fechar os temas ▴' : 'Escolher um tema ▾',
+      alternarTemas: () => this.setState({ verTemas: !s.verTemas }),
       mostrarRodadas30: s.rodadas30 === null ? 'none' : 'block',
       textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A Diretoria e a gerência acompanham os dias de treino, a nota e o tempo de cada rodada.',
       mostrarLembrete: (s.conteudo && s.conteudo.lembrete && !s.treinouHoje) ? 'block' : 'none',
@@ -1901,7 +1917,7 @@ class Component extends DCLogic {
       tiposTreino: ['Sortear tudo'].concat(temasDoBloco.filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
         texto: t,
         selo: (t !== 'Sortear tudo' && this.BANCOS[t].itens.length < 5) ? 'inline' : 'none',
-        escolher: () => this.setState({ tipoTreino: t, rodada: this.montarRodada(t), iq: 0, escolha: null, acertos: 0, treinoFim: false })
+        escolher: () => this.setState({ tipoTreino: t, rodada: this.montarRodada(t), iq: 0, escolha: null, acertos: 0, treinoFim: false, verTemas: false })
       }, chip(s.tipoTreino === t))),
 
 

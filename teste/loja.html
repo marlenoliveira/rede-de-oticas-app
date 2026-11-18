@@ -101,10 +101,10 @@
   var codigo = guardado('rdoteste_codigo');
   var lojaEscolhida = '';
 
-  function carregar() {
+  function carregar(atualizar) {
     if (!codigo) { id('entrada').classList.remove('oculto'); id('quem').textContent = ''; return; }
     msg('', '');
-    chamar('minhaLoja', [codigo, aparelho(), { loja: lojaEscolhida }], function (r) {
+    chamar('minhaLoja', [codigo, aparelho(), { loja: lojaEscolhida, atualizar: !!atualizar }], function (r) {
       if (!r.ok) {
         if (r.erro === 'codigo_invalido' || r.erro === 'inativo') { guardar('rdoteste_codigo', ''); codigo = ''; id('entrada').classList.remove('oculto'); }
         id('quem').textContent = '';
@@ -120,6 +120,11 @@
     var papel = { diretoria: 'Diretoria', supervisao: 'Supervisão', gerente: 'Gerente' }[r.eu.papel] || r.eu.papel;
     id('quem').textContent = r.loja.nome + ' · ' + r.eu.nome + ' · ' + papel + (r.geradoEm ? ' · ' + r.geradoEm : '');
     var c = id('conteudo'); c.innerHTML = '';
+    // Os numeros vem guardados por ate 5 minutos; este botao refaz a conta na hora.
+    var bA = el('button', 'leve', 'Atualizar agora');
+    bA.type = 'button';
+    bA.onclick = function () { c.innerHTML = ''; c.appendChild(el('div', 'vazia', 'Carregando…')); carregar(true); };
+    c.appendChild(bA);
     if (r.lojas && r.lojas.length) {
       var s = el('select'); s.setAttribute('aria-label', 'Loja');
       r.lojas.forEach(function (l) { var o = el('option', '', l.nome); o.value = l.codigo; if (l.codigo === r.loja.codigo) o.selected = true; s.appendChild(o); });
