@@ -1941,7 +1941,7 @@ class Component extends DCLogic {
       placar: s.acertos + '/' + (s.rodada ? s.rodada.length : 6),
       corPlacar: s.acertos >= 5 ? VD : (s.acertos >= 3 ? '#7A5B04' : VM),
       mensagemPlacar: s.acertos >= 5 ? 'Pronta para o salão' : (s.acertos >= 3 ? 'Quase lá' : 'Revise antes do próximo turno'),
-      dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia antes de abrir a loja.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
+      dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
       mostrarIrConsulta: s.acertos >= 5 ? 'none' : 'inline-block',
       irConsulta: () => this.ir('consulta'),
       treinarDeNovo: () => this.setState({ rodada: this.montarRodada(), iq: 0, escolha: null, acertos: 0, treinoFim: false }),
