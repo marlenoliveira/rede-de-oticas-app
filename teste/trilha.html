@@ -475,6 +475,16 @@
       return c;
     }
     var at = e.atual;
+    // Prova aberta vem antes de tudo: o relógio não para. Nas lojas ela é sempre o passo atual (e o cartão da prova,
+    // abaixo, já mostra); no modo de teste, com as provas fora de ordem, pode não ser.
+    var ab = provaAberta(e);
+    if (ab && !(at.tipo === 'prova' && at.id === ab.id)) {
+      rot(ab.nome || 'Prova');
+      tit('Sua prova está aberta');
+      txt('O relógio não para. Volte e termine.');
+      c.appendChild(botao('Voltar à prova', 'laranja', function () { telaProvaIntro(ab); }));
+      return c;
+    }
     if (at.tipo === 'video') {
       var p = e.passos.filter(function (x) { return x.id === at.id; })[0];
       rot('Agora');
@@ -598,6 +608,12 @@
     return c;
   }
   function rot2(c, t) { c.appendChild(el('div', 'rot', t)); }
+  /** A prova em andamento, se houver (uma por pessoa). */
+  function provaAberta(e) {
+    var ps = (e && e.provas) || {};
+    for (var k in ps) if (ps.hasOwnProperty(k) && ps[k] && ps[k].estado === 'em_andamento') return ps[k];
+    return null;
+  }
 
   // ================= Aula =================
   function proximaAberta(depoisDe) {
@@ -820,6 +836,15 @@
   function telaProvaIntro(prova) {
     var pr = (prova && prova.id) ? prova : ESTADO.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova, r = raiz();
     barraQuem(r);
+    // Outra prova já aberta (só acontece no modo de teste): uma por vez. Avisa e leva de volta à aberta.
+    var ab = provaAberta(ESTADO);
+    if (ab && ab.id !== pr.id) {
+      r.appendChild(el('h1', '', pr.nome || 'Prova'));
+      r.appendChild(el('div', 'aviso', 'Você tem a ' + (ab.nome || 'prova') + ' aberta, e o relógio dela não para. Termine essa antes de começar outra.'));
+      r.appendChild(botao('Voltar à ' + (ab.nome || 'prova'), 'laranja', function () { telaProvaIntro(ab); }));
+      r.appendChild(botao('Voltar à trilha', 'leve', desenharTrilha));
+      return;
+    }
     r.appendChild(el('h1', '', (pr.nome || 'Prova') + ' · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
     r.appendChild(el('p', '', 'Prova de ' + NOME));
     r.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta'));
