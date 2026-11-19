@@ -346,7 +346,7 @@
       }
       if (p.tipo === 'prova') {
         var sp = (e.provas && e.provas[p.id]) || e.prova;
-        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') c.appendChild(botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', telaProvaIntro));
+        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') c.appendChild(botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', function () { telaProvaIntro(sp); }));
         (sp.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
           c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
         });
@@ -815,8 +815,10 @@
   }
 
   // ================= Prova =================
-  function telaProvaIntro() {
-    var pr = ESTADO.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova, r = raiz();
+  // `prova`: a prova que o botão nomeia (no caminho todo, no modo de teste, pode haver várias abertas);
+  // sem ela, a prova da vez. Um clique direto manda o evento, que não tem `id`.
+  function telaProvaIntro(prova) {
+    var pr = (prova && prova.id) ? prova : ESTADO.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova, r = raiz();
     barraQuem(r);
     r.appendChild(el('h1', '', (pr.nome || 'Prova') + ' · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
     r.appendChild(el('p', '', 'Prova de ' + NOME));
