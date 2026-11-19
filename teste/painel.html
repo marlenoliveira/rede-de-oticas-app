@@ -405,7 +405,7 @@
     linha1.appendChild(el('b', '', p.nome));
     linha1.appendChild(el('span', '', p.loja));
     cab.appendChild(linha1);
-    var onde = p.concluida ? 'Trilha inteira concluída · Vendedora em Formação' : (p.atual.fase + ' · passo ' + p.atual.n + ' de ' + p.totalJornada + ' · ' + p.atual.titulo);
+    var onde = p.concluida ? 'Trilha inteira concluída · Vendedora em Formação' : (p.atual.fase + ' · passo ' + (p.atual.ordem || p.atual.n) + ' de ' + (p.totalPassos || p.totalJornada) + ' · ' + p.atual.titulo);
     cab.appendChild(el('div', 'resumo', onde));
     if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
     // Faixa da regua das Regras de uso, com as mesmas cores do treino (17/11/2026).

@@ -313,7 +313,9 @@
     barraQuem(r);
     r.appendChild(el('h1', '', 'Minha trilha'));
     if (!e.concluida) {
-      r.appendChild(el('p', 'sub', e.atual.fase + ' · você está no passo ' + e.atual.n + ' de ' + e.totalJornada + '.'));
+      // A conta DELA (19/11/2026): quem já trabalha não faz os Primeiros dias e ia do passo 2 direto ao 10.
+      // Servidor antigo não manda `ordem` nem `totalPassos`: vale a numeração de antes.
+      r.appendChild(el('p', 'sub', e.atual.fase + ' · você está no passo ' + (e.atual.ordem || e.atual.n) + ' de ' + (e.totalPassos || e.totalJornada) + '.'));
     }
     var b = el('div', 'barra'), i = el('i');
     var pct = e.concluida ? 100 : Math.round(100 * (e.aulasFeitas + e.videosFeitos) / (e.aulasTotal + e.videosTotal));
@@ -363,8 +365,42 @@
     });
     r.appendChild(det);
     r.appendChild(botao('Atualizar a trilha', 'leve', carregar));
+    linkRegrasUso(r);
     rodape(r);
     TELA = 'trilha'; DESENHADA_EM = Date.now();
+  }
+
+  /**
+   * Reler as Regras de uso depois de aceitar (19/11/2026): ela aceita regras que falam de advertência e
+   * precisa ter onde ler de novo. O link fica no pé da trilha e abre as regras só para leitura.
+   */
+  function linkRegrasUso(r) {
+    if (!REGRAS_USO || !REGRAS_USO.aceitas) return;
+    var p = el('p', '', '');
+    p.style.marginTop = '28px';
+    var a = el('a', '', 'Regras de uso' + (REGRAS_USO.aceitasEm ? ' (aceitas em ' + REGRAS_USO.aceitasEm + ')' : ''));
+    a.href = '#';
+    var msg = el('div');
+    a.addEventListener('click', function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      chamar('lerRegrasUso', undefined, function (res) {
+        if (!res.ok) { msg.className = 'erro'; msg.textContent = msgErro(res); return; }
+        telaRegrasLeitura(res);
+      });
+    });
+    p.appendChild(a);
+    r.appendChild(p);
+    r.appendChild(msg);
+  }
+  function telaRegrasLeitura(res) {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
+    r.appendChild(el('h1', '', 'Regras de uso do treinamento'));
+    var em = res.aceitasEm || (REGRAS_USO && REGRAS_USO.aceitasEm) || '';
+    if (em) r.appendChild(el('p', 'sub', 'Você leu e aceitou estas regras em ' + em + '.'));
+    (res.itens || []).forEach(function (x, i) { r.appendChild(rico('div', 'ap-li', (i + 1) + '. ' + x)); });
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
   }
 
   /**
@@ -478,6 +514,12 @@
     if (aberta) {
       rot('Sua aula de agora');
       tit(aberta.titulo);
+      // "Aula 2 de 3 de hoje" (19/11/2026): quantas faltam para fechar o dia da trilha. Quando ela continua um
+      // dia aberto antes, a frase diz desde quando: depois dele, ainda pode começar outro hoje.
+      var ad = e.aulaDoDia;
+      if (ad && ad.total) {
+        c.appendChild(el('p', 'sub', 'Aula ' + ad.n + ' de ' + ad.total + (ad.deHoje ? ' de hoje.' : ' do dia da trilha que você começou em ' + ad.desde + '.')));
+      }
       txt('Ouça, leia e responda ' + REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
       var bc = botao('Começar a aula', 'laranja', function () { telaAula(aberta); });
       if (foraHora) bc.disabled = true;

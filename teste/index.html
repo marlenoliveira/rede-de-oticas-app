@@ -1902,7 +1902,7 @@ class Component extends DCLogic {
       resumoSalvo: s.resultado === 'vendeu'
         ? 'Venda registrada: nível ' + (s.nivelVendido || '—') + ', R$ ' + (s.valorTexto || '0,00') + (s.visao ? ' · ' + s.visao : '') + (s.segundoPar === 'Sim' ? ' · com segundo par' : '') + (desconto ? ' · desconto de ' + desconto + '%' : ' · sem desconto') + '.'
         : (s.resultado === 'pensar'
-            ? (s.orcamento === 'Sim' ? 'Orçamento deixado com o cliente. Follow-up agendado para 24h — leve um motivo legítimo.' : 'Cliente vai pensar, sem orçamento deixado. Vale o convite para voltar com a receita.')
+            ? (s.orcamento === 'Sim' ? 'Orçamento deixado com o cliente. Retorno marcado para 24h — depois disso, só com um motivo verdadeiro.' : 'Cliente vai pensar, sem orçamento deixado. Vale o convite para voltar com a receita.')
             : 'Atendimento registrado como “só olhando”. Vale o convite para voltar com a receita.'),
       aderencia: Math.round((feitosCount / totalGeral) * 100) + '%',
       novoAtendimento: () => { this._chaveAtend = ''; this.setState({ passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null, valorTexto: '', descontoTexto: '0', justificativa: '', visao: null, segundoPar: null, armacao: null, orcamento: null, tratamentos: {}, horaInicio: this.agora(), erroSalvar: null, salvando: false }); },
