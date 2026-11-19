@@ -358,6 +358,14 @@
   function desenharTrilha(box, r, codigo) {
     box.appendChild(el('h2', '', 'Trilha do treinamento'));
     box.appendChild(el('p', 'resumo', 'Só quem está matriculada na trilha. Toque no nome para abrir a ficha.'));
+    // Aba DIAS QUE NAO CONTAM (18/11/2026): se o app nao entendeu alguma linha (data que nao e data, loja que nao
+    // existe), a Diretoria e a supervisao veem aqui qual. Sem isto, um erro de digitacao faria o feriado da cidade
+    // voltar a contar como dia util, calado. So aparece quando ha linha com problema.
+    var ne = (r.diasFora && r.diasFora.naoEntendidas) || [];
+    if (ne.length) {
+      var quais = ne.map(function (x) { return 'linha ' + x.linha + ' (' + (x.motivo === 'data' ? 'data' : 'loja') + (x.texto ? ' "' + x.texto + '"' : '') + ')'; }).join(', ');
+      box.appendChild(el('div', 'aviso', 'Aba DIAS QUE NÃO CONTAM da planilha: o app não entendeu ' + quais + '. Corrija na planilha: enquanto isso, o dia dessa linha continua contando como dia útil.'));
+    }
     LISTAS.forEach(function (L) {
       var doGrupo = r.pessoas.filter(function (p) { return p.lista === L[0]; });
       if (!doGrupo.length) return;
