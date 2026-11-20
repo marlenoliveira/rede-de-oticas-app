@@ -33,14 +33,14 @@
 <meta property="og:site_name" content="Casa do Olhar">
 <meta property="og:title" content="Casa do Olhar">
 <meta property="og:description" content="Ver bem é viver melhor.">
-<meta property="og:url" content="https://marlenoliveira.github.io/rede-de-oticas-app/">
+<meta property="og:url" content="https://marlenoliveira.github.io/rede-de-oticas-app/teste/">
 <meta property="og:image" content="https://marlenoliveira.github.io/rede-de-oticas-app/icones/cartao-1200x630.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
-<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+<div style="background:#E8B027;color:#02306E;text-align:center;font:800 12px/22px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:.06em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
 
 <x-dc>
 <helmet data-dc-atomics>
@@ -421,7 +421,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
             <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">{{ tipoRodada }} · {{ nQuestao }} de {{ totalQuestoes }}</div>
             <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:15px;font-weight:700;color:#1E9E5A">{{ acertos }} acertos</span>
+              <span style="font-size:15px;font-weight:700;color:#1E9E5A">{{ acertosRotulo }}</span>
               <button style="min-height:48px;padding:8px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:14px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
             </div>
           </div>
@@ -887,7 +887,13 @@ class Component extends DCLogic {
     // lembrar de mandar - e nenhum consegue esquecer.
     const completos = [this._codigo || '', this._aparelho || ''].concat(args || []);
     const abrir = r => {
-      if (r && typeof r === 'object' && r.ok === false) return falha(r.erro || 'erro_desconhecido', r);
+      if (r && typeof r === 'object' && r.ok === false) {
+        // Codigo que deixou de valer no meio do uso (trocado, desativado ou repetido): a pessoa volta a tela de
+        // codigo na hora, com o aviso, em vez de cada botao falhar com uma mensagem diferente (20/11/2026).
+        const morto = r.erro === 'inativo' || r.erro === 'codigo_invalido' || r.erro === 'codigo_duplicado';
+        if (morto && this.state.ident) { this.sair(); this.setState({ erroLogin: this.MENSAGEM_LOGIN(r.erro, r) }); }
+        return falha(r.erro || 'erro_desconhecido', r);
+      }
       ok(r);
     };
     const g = typeof google !== 'undefined' && google.script && google.script.run;
@@ -1192,9 +1198,24 @@ class Component extends DCLogic {
     if (cod === 'codigo_duplicado') return 'Há um problema no seu cadastro. Fale com a diretoria.';
     if (cod === 'aba_nao_encontrada') return 'Uma aba da planilha não foi encontrada. Fale com a diretoria.';
     if (cod === 'fora_do_apps_script') return 'Abra o app pelo link oficial que a gerente enviou.';
-    if (cod === 'codigo_invalido' || cod === 'sem_codigo') return 'Código não confere. Confira com a gerente.';
+    if (cod === 'codigo_invalido' || cod === 'sem_codigo') {
+      // Aviso so na penultima tentativa (20/11/2026): a mensagem continua a mesma para codigo que existe ou nao.
+      const aviso = (resposta && resposta.restam === 1) ? ' Na próxima tentativa errada, este aparelho trava por ' + ((resposta && resposta.esperaMinutos) || 5) + ' minutos.' : '';
+      return 'Código não confere. Confira com a gerente.' + aviso;
+    }
     if (cod === 'sem_conexao') return 'Sem conexão com o servidor. Confira a internet e toque em Tentar de novo.';
     return 'Não consegui entrar agora. Tente de novo em alguns segundos.';
+  }
+
+  /** Ativar ou desativar uma pessoa: pergunta antes, e um toque por vez (o segundo toque, antes da resposta, desfazia o primeiro). */
+  alternarAtivo(p) {
+    if (this.state.entregando) return;
+    const pergunta = p.ativo ? 'Desativar ' + p.nome + '? Ela perde o acesso ao app na hora.' : 'Reativar ' + p.nome + '? Ela volta a entrar no app com o código dela.';
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function' && !window.confirm(pergunta)) return;
+    this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
+    this.gs('alternarAtivo', [{ linha: p.linha, nome: p.nome }],
+      () => { this.setState({ entregando: false }); this.carregarEquipe(); },
+      e => this.setState({ entregando: false, erroEquipe: this.ERROS[e] || 'Não foi possível alterar.' }));
   }
 
   sair() {
@@ -1203,9 +1224,16 @@ class Component extends DCLogic {
     // Tablet da loja: a proxima pessoa matriculada tambem tem de cair na trilha.
     try { window.sessionStorage.removeItem('rdoteste_trilha_vista'); } catch (e) {}
     this._codigo = '';
+    // Tudo da pessoa que saiu sai da tela (20/11/2026): a rodada de treino, o placar, as perguntas ja vistas, o cartao de
+    // entrega de codigo e os formularios abertos. Antes, a proxima pessoa do tablet continuava a rodada da anterior e a
+    // rodada era gravada no codigo dela, com os acertos da outra.
+    this._t0Rodada = 0; this._vistas = {}; this._erradas = {};
     this.setState({ ident: null, identCarregando: false, entrando: false,
                     codigoDigitado: '', erroLogin: null, menu: false,
-                    atendimentos: [], lojas: [], equipe: [] });
+                    atendimentos: [], lojas: [], equipe: [],
+                    rodada: null, iq: 0, escolha: null, acertos: 0, treinoFim: false, rodadas30: null, treinouHoje: false,
+                    entrega: null, formAberto: false, lojaAberta: false, perfil: null, verTemas: false,
+                    erroEquipe: null, okEquipe: null, fNome: '', fEmail: '', fPapel: 'vendedora', lCodigo: '', lNome: '', lCidade: '' });
   }
   componentWillUnmount() { window.removeEventListener('resize', this._r); }
 
@@ -1752,9 +1780,7 @@ class Component extends DCLogic {
         avisoSemCodigo: p.temCodigo === 'NAO' ? 'inline-flex' : 'none',
         // A pessoa é apontada pela LINHA da planilha, e o servidor confere
         // o nome antes de mexer. O e-mail deixou de ser chave.
-        alternar: () => this.gs('alternarAtivo', [{ linha: p.linha, nome: p.nome }],
-          () => this.carregarEquipe(),
-          e => this.setState({ erroEquipe: this.ERROS[e] || 'Não foi possível alterar.' })),
+        alternar: () => this.alternarAtivo(p),
         gerarCodigo: () => this.novoCodigoPara(p)
       })),
 
@@ -1913,6 +1939,7 @@ class Component extends DCLogic {
       nQuestao: s.iq + 1, totalQuestoes: s.rodada ? s.rodada.length : 6,
       progressoTreino: s.rodada ? Math.round(((s.iq + (respondeu ? 1 : 0)) / s.rodada.length) * 100) + '%' : '0%',
       acertos: s.acertos,
+      acertosRotulo: s.acertos + (s.acertos === 1 ? ' acerto' : ' acertos'),
       opcoes: q ? q.opcoes.map((o, i) => {
         const certa = i === q.certa, escolhida = i === s.escolha;
         let borda = BL, fundo = '#fff', cor = '#3A3F47', fundoMarca = '#C7CCD3', marca = '';

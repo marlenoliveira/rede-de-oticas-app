@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <meta name="robots" content="noindex">
 <title>TESTE · Painel do treino</title>
+<link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-32.png">
 <!--
   PAINEL DO TREINO — desde 13/11/2026 (pedido do Marlen).
 
@@ -84,7 +87,7 @@
 </style>
 </head>
 <body>
-<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+<div style="background:#E8B027;color:#02306E;text-align:center;font:800 12px/22px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:.06em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
 
 
 <div class="topo">
@@ -127,10 +130,16 @@
     sem_codigo: 'Digite o seu código.',
     muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos e tente de novo.',
     codigo_duplicado: 'Este código está repetido na planilha. Avise a Diretoria.',
+    inativo: 'Este código está desativado. Fale com quem acompanha a loja.',
+    falha_no_servidor: 'O servidor falhou agora. Toque em Atualizar em alguns segundos.',
     sem_conexao: 'Sem conexão com o servidor. Confira a internet e toque em Atualizar.',
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
   };
 
+  // Codigo que nao vale mais (trocado, desativado ou repetido): sai do aparelho; senao "Atualizar" insistia nele (20/11/2026).
+  var CODIGO_MORTO = { codigo_invalido: 1, inativo: 1, codigo_duplicado: 1 };
+  // Falha passageira (internet, Google): nao e motivo para pedir o codigo de novo.
+  var FALHA_PASSAGEIRA = { sem_conexao: 1, resposta_invalida: 1, falha_no_servidor: 1 };
   function id(x) { return document.getElementById(x); }
   function guardado(chave) { try { return window.localStorage.getItem(chave) || ''; } catch (e) { return ''; } }
   function guardar(chave, valor) {
@@ -302,9 +311,12 @@
   }
   var ERROS_TRILHA = {
     sem_permissao: 'Este código não pode fazer isso.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa.',
-    notas_invalidas: 'Preencha as 6 notas, de 0 a 10.', resultado_invalido: 'Escolha: aprovada ou refazer.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.',
+    resultado_invalido: 'Escolha: aprovada ou refazer.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.', tipo_invalido: 'Escolha: já trabalha ou nova.',
+    nao_matriculada: 'Esta pessoa não está na trilha. Toque em Atualizar.', loja_de_teste: 'A loja de teste não entra na trilha.',
+    falha_no_servidor: 'O servidor falhou agora. Tente de novo em alguns segundos.', falha_na_gravacao: 'A planilha não gravou agora. Tente de novo em alguns segundos.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.',
     regras_nao_aceitas: 'Ela ainda não aceitou as Regras de uso no app.',
-    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
+    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.',
     pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.', nao_aguarda_diretoria: 'Esta pessoa não está aguardando a Diretoria.'
   };
   /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
@@ -350,7 +362,15 @@
     chamarFn(fn, codigo, extra, function (r) {
       ocupado = false;
       id('aguarde').className = 'oculto';
-      if (!r || !r.ok) { window.alert(ERROS_TRILHA[(r && r.erro) || ''] || (r && r.erro === 'sem_conexao' ? 'Sem conexão com o servidor. Confira a internet e toque em Atualizar para ver se foi gravado.' : 'Não deu certo. Tente de novo.')); return; }
+      if (!r || !r.ok) {
+        var erro = (r && r.erro) || '';
+        // Codigo que deixou de valer no meio do uso: o Painel volta a pedir o codigo, em vez de um alerta sem saida.
+        if (CODIGO_MORTO[erro] || erro === 'muitas_tentativas') { codigoSaiu(erro); return; }
+        var texto = ERROS_TRILHA[erro] || (erro === 'sem_conexao' ? 'Sem conexão com o servidor. Confira a internet e toque em Atualizar para ver se foi gravado.' : 'Não deu certo. Tente de novo.');
+        if (erro === 'loja_em_piloto' && r.ate) texto = 'Loja em piloto até ' + r.ate + ': a trilha entra nela depois disso.';
+        window.alert(texto);
+        return;
+      }
       carregarTrilha(codigo);
     });
   }
@@ -516,10 +536,20 @@
     m.textContent = '';
     m.appendChild(el('div', 'erro', ERROS[codigoErro] || 'Algo deu errado. Tente de novo em alguns segundos.'));
   }
+  /** O codigo deixou de valer (ou o aparelho travou): limpa o Painel e pede o codigo de novo. */
+  function codigoSaiu(erro) {
+    if (CODIGO_MORTO[erro]) { guardar('rdoteste_codigo', ''); id('atualizar').className = 'leve oculto'; }
+    id('trilha').textContent = ''; id('lojas').textContent = ''; id('quando').textContent = ''; id('regua').className = 'regua oculto';
+    mostrarErro(erro);
+    id('entrada').className = '';
+    if (window.scrollTo) window.scrollTo(0, 0);
+  }
 
   function carregar(codigo, veioDoFormulario) {
     id('mensagem').textContent = '';
     id('quando').textContent = 'Carregando…';
+    // "Atualizar" desde a primeira carga com codigo guardado (20/11/2026): antes so aparecia depois de o treino chegar.
+    id('atualizar').className = codigo ? 'leve' : 'leve oculto';
     // Treino e trilha pedidos ao mesmo tempo (antes, a trilha esperava o treino chegar).
     carregarTrilha(codigo);
     chamar(codigo, function (r) {
@@ -531,8 +561,9 @@
       }
       id('quando').textContent = '';
       var erro = (r && r.erro) || 'resposta_invalida';
+      if (CODIGO_MORTO[erro] || erro === 'muitas_tentativas') { codigoSaiu(erro); return; }
       mostrarErro(erro);
-      if (erro !== 'sem_conexao' && erro !== 'resposta_invalida') id('entrada').className = '';
+      if (!FALHA_PASSAGEIRA[erro]) id('entrada').className = '';
     });
   }
 

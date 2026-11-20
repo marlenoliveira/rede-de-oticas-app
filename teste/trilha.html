@@ -7,6 +7,9 @@
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <title>TESTE · Minha trilha</title>
+<link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-32.png">
 <!--
   MINHA TRILHA — etapa 1 da trilha do treinamento (14/11/2026).
 
@@ -45,7 +48,7 @@
   .quem { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; color: var(--cinza);
     border-bottom: 1px solid var(--linha); padding-bottom: 8px; }
   .quem b { color: var(--tinta); }
-  .quem button { width: auto; min-height: 40px; padding: 6px 12px; margin: 0; font-size: 15px; background: #fff; color: var(--azul); }
+  .quem button { width: auto; min-height: 40px; padding: 6px 12px; margin: 0; font-size: 15px; background: #fff; color: var(--azul); white-space: nowrap; flex: none; }
   /* Progresso */
   .barra { height: 14px; background: #EDEFF2; border-radius: 8px; overflow: hidden; margin: 8px 0 2px; }
   .barra i { display: block; height: 100%; background: var(--verde); border-radius: 8px; }
@@ -85,7 +88,9 @@
   .ap-li { margin: 6px 0 6px 6px; }
   .ap-quadro { border-left: 6px solid var(--azul); background: #EEF3FA; border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
   .ap-tab { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
-  .ap-tab table { border-collapse: collapse; font-size: 16px; min-width: 100%; }
+  /* A tabela cabe na tela do celular: colunas iguais e texto quebrando (20/11/2026: a 375 px a 3a coluna saia cortada, sem sinal de que rolava). */
+  .ap-tab table { border-collapse: collapse; font-size: 16px; width: 100%; table-layout: fixed; overflow-wrap: anywhere; word-break: break-word; }
+  @media (max-width: 400px) { .ap-tab table { font-size: 14px; } .ap-tab th, .ap-tab td { padding: 6px; } }
   .ap-tab th, .ap-tab td { border: 1px solid var(--linha); padding: 8px; text-align: left; vertical-align: top; }
   .ap-tab th { background: #F3F5F8; }
   .ap-fig { margin: 14px 0; }
@@ -125,7 +130,7 @@
 </style>
 </head>
 <body>
-<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+<div style="background:#E8B027;color:#02306E;text-align:center;font:800 12px/22px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:.06em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
 
 <div id="raiz"><p class="sub">Carregando…</p></div>
 <div id="aguarde" class="oculto">Aguarde…</div>
@@ -159,6 +164,12 @@
     codigo_invalido: 'Seu código não foi reconhecido. Entre de novo pelo app.',
     inativo: 'Seu acesso está desativado. Fale com quem acompanha a loja.',
     muitas_tentativas: 'Muitas tentativas com código errado. Espere 5 minutos e entre de novo pelo app.',
+    codigo_duplicado: 'Há um problema no seu cadastro. Fale com a Diretoria.',
+    papel_invalido: 'Há um problema no seu cadastro. Fale com a Diretoria.',
+    sem_codigo: 'Entre primeiro no app com o seu código.',
+    aba_nao_encontrada: 'Uma aba da planilha não foi encontrada. Fale com a Diretoria.',
+    falha_no_servidor: 'O servidor falhou agora. Tente de novo em alguns segundos.',
+    falha_na_gravacao: 'A planilha não gravou agora. Tente de novo em alguns segundos.',
     sem_conexao: 'Sem resposta do servidor. Confira a internet e tente de novo.',
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
   };
@@ -188,7 +199,8 @@
     return a;
   }
   var TELA = '', DESENHADA_EM = 0;
-  function raiz() { TELA = ''; var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
+  var VEZ = 0;   // sobe a cada tela nova: a resposta de uma chamada feita numa tela que ja saiu nao redesenha nada
+  function raiz() { TELA = ''; VEZ++; var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
 
   var CODIGO = guardado('rdoteste_codigo');
   var pendentes = 0;
@@ -201,8 +213,16 @@
   function chamar(fn, extra, pronto, quieto) {
     var args = [CODIGO, aparelho()];
     if (extra !== undefined) args.push(extra);
-    var acabou = false;
-    function fim(d) { if (acabou) return; acabou = true; if (!quieto) aguarde(-1); pronto(d); }
+    var acabou = false, vez = VEZ;
+    function fim(d) {
+      if (acabou) return; acabou = true; if (!quieto) aguarde(-1);
+      // Codigo que nao vale mais (trocado, desativado, repetido ou travado): uma tela so, para TODA chamada (20/11/2026).
+      // Antes, no meio de uma acao, o erro vinha com "Tentar de novo", e cada toque contava como tentativa errada.
+      if (d && !d.ok && SEM_NOVA_TENTATIVA[d.erro]) { codigoMorto(d); return; }
+      // Resposta atrasada de uma tela que ja saiu (a pessoa voltou a trilha antes de ela chegar): nao redesenha nada.
+      if (vez !== VEZ) return;
+      pronto(d);
+    }
     if (!quieto) aguarde(1);
     setTimeout(function () { fim({ ok: false, erro: 'sem_conexao' }); }, ESPERA_MAXIMA_MS);
     fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -218,6 +238,21 @@
     return m;
   }
   function voltarAoApp() { try { window.location.href = './'; } catch (e) {} }
+  /** Codigo que nao vale mais: o guardado sai do aparelho (trocado, desativado ou repetido; travado por 5 minutos, nao) e a tela manda entrar de novo pelo app. */
+  function codigoMorto(d) {
+    if (d.erro === 'codigo_invalido' || d.erro === 'inativo' || d.erro === 'codigo_duplicado') guardar('rdoteste_codigo', '');
+    if (relogioId) { clearInterval(relogioId); relogioId = null; }
+    var x = raiz();
+    telaErro(x, msgErro(d), voltarAoApp, 'Entrar de novo pelo app');
+  }
+  /** Respostas guardadas neste aparelho de provas que ja acabaram saem; so fica a da prova aberta, se houver. */
+  function limparProvasGuardadas(idAtual) {
+    try {
+      var chaves = [];
+      for (var i = 0; i < window.localStorage.length; i++) chaves.push(window.localStorage.key(i));
+      chaves.forEach(function (k) { if (k && k.indexOf('rdoteste_prova_') === 0 && k !== 'rdoteste_prova_' + idAtual) window.localStorage.removeItem(k); });
+    } catch (e) {}
+  }
   function naoSouEu() {
     guardar('rdoteste_codigo', '');
     try { window.sessionStorage.removeItem('rdoteste_trilha_vista'); } catch (e) {}
@@ -262,7 +297,7 @@
 
   // ================= Minha trilha =================
   var FALHAS_DE_REDE = { sem_conexao: 1, resposta_invalida: 1, falha_no_servidor: 1 };
-  var SEM_NOVA_TENTATIVA = { codigo_invalido: 1, inativo: 1, sem_codigo: 1, muitas_tentativas: 1 };
+  var SEM_NOVA_TENTATIVA = { codigo_invalido: 1, inativo: 1, codigo_duplicado: 1, sem_codigo: 1, muitas_tentativas: 1 };
   function carregar(tentativa) {
     var r = raiz();
     r.appendChild(el('p', 'sub', 'Carregando a sua trilha…'));
@@ -270,9 +305,7 @@
       // Internet caindo ou falha passageira do Google: tenta mais uma vez sozinho antes de mostrar o erro.
       if (!t.ok && tentativa !== 2 && FALHAS_DE_REDE[t.erro]) { setTimeout(function () { carregar(2); }, 1500); return; }
       var x = raiz();
-      // Codigo que nao vale mais (trocado, desativado ou bloqueado): tentar de novo nao adianta, e cada toque
-      // contava como tentativa errada (5 seguidas travam o aparelho por 5 minutos). O caminho e entrar de novo.
-      if (!t.ok && SEM_NOVA_TENTATIVA[t.erro]) { telaErro(x, msgErro(t), voltarAoApp, 'Entrar de novo pelo app'); return; }
+      // Codigo que nao vale mais: chamar() ja mostrou "Entrar de novo pelo app" e nem chega aqui.
       if (!t.ok) { telaErro(x, msgErro(t)); rodape(x); return; }
       if (!t.matriculada) { x.appendChild(el('div', 'aviso', ERROS.nao_matriculada)); rodape(x); return; }
       receber(t);
@@ -310,6 +343,7 @@
   function desenharTrilha() {
     if (REGRAS_USO && !REGRAS_USO.aceitas) return telaRegrasUso();
     var e = ESTADO, r = raiz();
+    if (!provaAberta(e)) limparProvasGuardadas('');
     barraQuem(r);
     r.appendChild(el('h1', '', 'Minha trilha'));
     if (!e.concluida) {
@@ -349,7 +383,12 @@
       }
       if (p.tipo === 'prova') {
         var sp = (e.provas && e.provas[p.id]) || e.prova;
-        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') c.appendChild(botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', function () { telaProvaIntro(sp); }));
+        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') {
+          var bsp = botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', function () { telaProvaIntro(sp); });
+          // Mesma regra do cartao da vez: a prova precisa caber inteira no horario (a que ja esta aberta continua).
+          if (sp.estado === 'liberada' && HORARIO && !HORARIO.provaCabe) bsp.disabled = true;
+          c.appendChild(bsp);
+        }
         (sp.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
           c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
         });
@@ -682,8 +721,14 @@
     img.loading = 'lazy';
     img.addEventListener('load', function () { img.className = 'figura'; });
     img.addEventListener('error', function () { img.className = 'figura falhou'; img.alt = 'A figura não carregou. Confira a internet.'; });
-    if (id) img.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
-    return img;
+    if (!id) return img;
+    img.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
+    // Toque para ver maior (20/11/2026): no celular a figura fica com uns 310 px e o texto dentro dela nao se le.
+    var a = el('a', 'figura-link');
+    a.href = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w2000';
+    a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = 'Toque para ver maior';
+    a.appendChild(img);
+    return a;
   }
 
   /** Desenha os blocos da apostila: titulos, paragrafos, itens, tabelas, quadros e figuras. */
@@ -821,7 +866,7 @@
             if (c.erro === 'aula_expirada') { enviar.className = 'oculto'; msg.appendChild(botao('Sortear novas perguntas', 'laranja', function () { perguntasAula(a); })); }
             return;
           }
-          enviar.className = 'oculto'; voltar.className = 'oculto';
+          enviar.className = 'oculto'; voltar.className = 'oculto'; msg.className = ''; msg.textContent = '';
           if (c.trilha) receber(c.trilha);
           c.correcao.forEach(function (k, i) {
             var labs = blocos[i].querySelectorAll('.alt');
@@ -886,7 +931,9 @@
   var relogioId = null;
   function telaProva(p) {
     var r = raiz();
+    barraQuem(r);
     var chaveLocal = 'rdoteste_prova_' + p.id;
+    limparProvasGuardadas(p.id);
     var resp = {};
     Object.keys(p.respostas || {}).forEach(function (k) { resp[k] = p.respostas[k]; });
     try { var loc = JSON.parse(guardado(chaveLocal) || '{}'); Object.keys(loc).forEach(function (k) { resp[k] = loc[k]; }); } catch (e) {}
@@ -907,7 +954,12 @@
         chamar('salvarRespostasProva', { id: p.id, respostas: resp }, function (s) {
           // Sem internet: as respostas continuam guardadas neste aparelho. Avisa para entregar a tempo.
           if (s && s.ok) { alerta.className = ''; alerta.textContent = ''; }
-          else { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho: entregue antes do tempo acabar.'; }
+          else if (!s || FALHAS_DE_REDE[s.erro]) { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho: entregue antes do tempo acabar.'; }
+          else {
+            // Outro erro (a prova acabou, o tempo esgotou): a mensagem e a dele, e a entrega fecha a prova.
+            alerta.className = 'erro'; alerta.textContent = msgErro(s);
+            if (s.erro === 'prova_encerrada' || s.erro === 'tempo_esgotado') entregar();
+          }
         }, true);
       }, 1500);
     }

@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <meta name="robots" content="noindex">
 <title>TESTE · Minha loja</title>
+<link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-32.png">
 <!--
   MINHA LOJA — desde 16/11/2026, só na VERSÃO DE TESTE.
 
@@ -46,7 +49,7 @@
 </style>
 </head>
 <body>
-<div style="position:fixed;top:0;right:0;z-index:2147483647;background:#E8B027;color:#02306E;font:800 12px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;padding:2px 10px;border-bottom-left-radius:10px;pointer-events:none;letter-spacing:.04em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
+<div style="background:#E8B027;color:#02306E;text-align:center;font:800 12px/22px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:.06em">VERSÃO DE TESTE</div><script>window.AMBIENTE_TESTE = true;</script>
 
 
 <h1>Minha loja</h1>
@@ -73,6 +76,9 @@
     codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
     sem_codigo: 'Digite o seu código.',
     inativo: 'Este código está desativado.',
+    codigo_duplicado: 'Há um problema no seu cadastro. Fale com a Diretoria.',
+    falha_no_servidor: 'O servidor falhou agora. Tente de novo em alguns segundos.',
+    falha_na_gravacao: 'A planilha não gravou agora. Tente de novo em alguns segundos.',
     muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos.',
     so_na_versao_de_teste: 'Esta tela ainda não está no app das lojas.',
     loja_teste_sem_gente: 'A loja de teste não usa esta tela.',
@@ -81,6 +87,8 @@
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo.'
   };
 
+  var GENERICO = 'Não deu certo. Tente de novo em alguns segundos.';
+  var CODIGO_MORTO = { codigo_invalido: 1, inativo: 1, codigo_duplicado: 1 };   // sai do aparelho na hora
   function id(x) { return document.getElementById(x); }
   function guardado(k) { try { return window.localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function guardar(k, v) { try { if (v) window.localStorage.setItem(k, v); else window.localStorage.removeItem(k); } catch (e) {} }
@@ -90,7 +98,16 @@
     return a;
   }
   function el(tag, classe, texto) { var n = document.createElement(tag); if (classe) n.className = classe; if (texto !== undefined && texto !== null) n.textContent = texto; return n; }
+  var ESPERA_MAXIMA_MS = 40000;
+  /** Uma resposta so por chamada: a do servidor, ou "sem conexao" quando passa do limite de espera (20/11/2026: sem isto, a internet travada deixava a tela esperando para sempre). */
+  function umaVez(pronto) {
+    var acabou = false;
+    function fim(d) { if (acabou) return; acabou = true; pronto(d); }
+    setTimeout(function () { fim({ ok: false, erro: 'sem_conexao' }); }, ESPERA_MAXIMA_MS);
+    return fim;
+  }
   function chamar(fn, args, pronto) {
+    pronto = umaVez(pronto);
     fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
       .then(function (r) { return r.text(); })
       .then(function (t) { var d = null; try { d = JSON.parse(t); } catch (e) {} pronto(d || { ok: false, erro: 'resposta_invalida' }); })
@@ -106,11 +123,12 @@
     msg('', '');
     chamar('minhaLoja', [codigo, aparelho(), { loja: lojaEscolhida, atualizar: !!atualizar }], function (r) {
       if (!r.ok) {
-        if (r.erro === 'codigo_invalido' || r.erro === 'inativo') { guardar('rdoteste_codigo', ''); codigo = ''; id('entrada').classList.remove('oculto'); }
+        if (CODIGO_MORTO[r.erro]) { guardar('rdoteste_codigo', ''); codigo = ''; id('entrada').classList.remove('oculto'); }
         id('quem').textContent = '';
-        msg('erro', ERROS[r.erro] || ('Não deu certo (' + r.erro + ').'));
+        msg('erro', ERROS[r.erro] || GENERICO);
         return;
       }
+      guardar('rdoteste_codigo', codigo);   // so um codigo que entrou fica guardado no aparelho (20/11/2026)
       id('entrada').classList.add('oculto');
       desenhar(r);
     });
@@ -161,7 +179,6 @@
     ev.preventDefault();
     codigo = id('codigo').value.replace(/\D/g, '');
     if (!codigo) return;
-    guardar('rdoteste_codigo', codigo);
     carregar();
   });
   carregar();
