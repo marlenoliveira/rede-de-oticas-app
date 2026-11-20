@@ -96,6 +96,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
     <div style="margin-top:12px;min-height:72px;border:2px solid {{ bordaCodigo }};border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:#062D7B;letter-spacing:.28em;font-variant-numeric:tabular-nums;background:#fff">{{ codigoNaTela }}</div>
 
     <div style="display:{{ mostrarErroLogin }};margin-top:16px;padding:12px 16px;border-radius:12px;background:#FBECEA;border:2px solid #C0392B;font-size:15px;font-weight:700;color:#8E2A1F;line-height:1.4">{{ erroLogin }}</div>
+    <button style="display:{{ mostrarTentarDeNovo }};width:100%;min-height:60px;margin-top:12px;border-radius:16px;background:#062D7B;color:#fff;font-size:19px;font-weight:800" onClick="{{ tentarDeNovo }}">Tentar de novo</button>
 
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px">
       <sc-for list="{{ teclas }}" as="t" hint-placeholder-count="12">
@@ -393,6 +394,9 @@ a{color:#062D7B}a:hover{color:#F96B05}
               </sc-for>
             </div>
           </div>
+          <!-- Pergunta primeiro (17/11/2026): os temas e a contagem do banco ficam atras deste botao; a vendedora nao ve. -->
+          <button style="display:{{ mostrarBotaoTemas }};min-height:48px;padding:10px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:15px;font-weight:700" onClick="{{ alternarTemas }}">{{ textoBotaoTemas }}</button>
+          <div style="display:{{ mostrarTemasAberto }};margin-top:12px">
           <div style="display:{{ mostrarTemas }}">
             <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8A9099;margin-bottom:8px">Dirigir reforço por tema</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -409,12 +413,13 @@ a{color:#062D7B}a:hover{color:#F96B05}
               <span style="font-size:12px;color:#8A9099;font-variant-numeric:tabular-nums">{{ cb.nome }} <strong style="color:#062D7B">{{ cb.n }}</strong></span>
             </sc-for>
           </div>
+          </div>
         </div>
         <sc-if value="{{ treinoAtivo }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px">
             <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F96B05">{{ tipoRodada }} · {{ nQuestao }} de {{ totalQuestoes }}</div>
             <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:15px;font-weight:700;color:#1E9E5A">{{ acertos }} acertos</span>
+              <span style="font-size:15px;font-weight:700;color:#1E9E5A">{{ acertosRotulo }}</span>
               <button style="min-height:48px;padding:8px 16px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:14px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
             </div>
           </div>
@@ -448,6 +453,8 @@ a{color:#062D7B}a:hover{color:#F96B05}
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
             <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ treinarDeNovo }}">Treinar de novo</button>
             <button style="min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #EDEFF2;background:#fff;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ zerarPlacar }}">Zerar placar</button>
+            <!-- Placar abaixo de 5: o botao leva direto a Consulta rapida (17/11/2026). -->
+            <button style="display:{{ mostrarIrConsulta }};min-height:56px;padding:16px 24px;border-radius:12px;border:2px solid #062D7B;background:#fff;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ irConsulta }}">Abrir a Consulta rápida</button>
           </div>
         </sc-if>
       </sc-if>
@@ -502,7 +509,12 @@ a{color:#062D7B}a:hover{color:#F96B05}
       <sc-if value="{{ emDesempenho }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap">
           <h1 style="font-size:32px;font-weight:800;color:#062D7B;margin:0 0 8px;line-height:1.1">Meu desempenho</h1>
-          <div style="font-size:14px;color:#8A9099">{{ vendedora }} · comparado à semana anterior</div>
+          <div style="font-size:14px;color:#8A9099">{{ vendedora }} · {{ periodoRotulo }}</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <sc-for list="{{ periodos }}" as="pe" hint-placeholder-count="3">
+            <button style="min-height:48px;padding:12px 16px;border-radius:12px;border:2px solid {{ pe.borda }};background:{{ pe.fundo }};color:{{ pe.cor }};font-size:15px;font-weight:700" onClick="{{ pe.escolher }}">{{ pe.nome }}</button>
+          </sc-for>
         </div>
         <div style="display:grid;grid-template-columns:{{ gridKpi }};gap:16px;margin-top:16px">
           <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
@@ -525,7 +537,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
             </sc-for>
           </div>
           <div style="border:1px solid #EDEFF2;border-radius:12px;padding:24px">
-            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">Atendimentos de hoje</div>
+            <div style="font-size:20px;font-weight:800;color:#062D7B;margin-bottom:16px">{{ tituloAtendimentos }}</div>
             <div style="display:{{ mostrarVazio }};font-size:15px;color:#8A9099;padding:8px 0">Nenhum atendimento registrado ainda.</div>
             <sc-for list="{{ atendimentosHoje }}" as="at" hint-placeholder-count="5">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
@@ -547,7 +559,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
                 <div style="font-size:16px;font-weight:700;color:#062D7B">{{ o.cliente }}</div>
                 <div style="font-size:13px;color:#8A9099">{{ o.nivel }}</div>
               </div>
-              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#062D7B;font-variant-numeric:tabular-nums">há {{ o.dias }} dias</span>
+              <span style="font-size:13px;font-weight:800;padding:8px 12px;border-radius:12px;background:#EDEFF2;color:#062D7B;font-variant-numeric:tabular-nums">{{ o.diasTexto }}</span>
             </div>
           </sc-for>
         </div>
@@ -629,7 +641,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
               <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid #EDEFF2">
                 <div>
                   <div style="font-size:16px;font-weight:700;color:#062D7B">{{ fd.vendedora }}</div>
-                  <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ fd.cliente }} · há {{ fd.min }} min</div>
+                  <div style="font-size:13px;color:#8A9099;font-variant-numeric:tabular-nums">{{ fd.cliente }} · às {{ fd.min }}</div>
                 </div>
                 <span style="font-size:12px;font-weight:800;padding:8px 12px;border-radius:12px;background:{{ fd.fundo }};color:{{ fd.cor }}">{{ fd.etapa }}</span>
               </div>
@@ -746,7 +758,7 @@ a{color:#062D7B}a:hover{color:#F96B05}
               </div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
-              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">Salvar pessoa</button>
+              <button style="min-height:56px;padding:16px 32px;border-radius:12px;background:#F96B05;color:#fff;font-size:18px;font-weight:800" onClick="{{ confirmarPessoa }}">{{ rotuloSalvarPessoa }}</button>
               <button style="min-height:48px;padding:12px 16px;border-radius:12px;color:#062D7B;font-size:16px;font-weight:700" onClick="{{ fecharForm }}">Cancelar</button>
             </div>
           </div>
@@ -788,9 +800,9 @@ a{color:#062D7B}a:hover{color:#F96B05}
       </div>
     </div>
 
-    <div style="display:{{ mostrarAbas }};position:sticky;bottom:0;background:#fff;border-top:1px solid #EDEFF2;padding:8px 8px 16px;gap:4px;z-index:20">
+    <div style="display:{{ mostrarAbas }};flex-wrap:wrap;position:sticky;bottom:0;background:#fff;border-top:1px solid #EDEFF2;padding:8px 8px 16px;gap:4px;z-index:20">
       <sc-for list="{{ abas }}" as="n" hint-placeholder-count="5">
-        <button style="flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:11px;font-weight:800;letter-spacing:.02em" onClick="{{ n.ir }}">
+        <button style="flex:0 0 {{ n.largura }};min-width:0;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:{{ n.fundo }};color:{{ n.cor }};font-size:{{ n.fonte }};font-weight:800;letter-spacing:.02em;line-height:1.15;text-align:center" onClick="{{ n.ir }}">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ n.cor }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>
           {{ n.rotulo }}
         </button>
@@ -808,7 +820,7 @@ class Component extends DCLogic {
     resultado: null, nivelVendido: null,
     valorTexto: '', descontoTexto: '0', justificativa: '',
     visao: null, segundoPar: null, armacao: null, orcamento: null,
-    tipoTreino: 'Sortear tudo',
+    tipoTreino: 'Sortear tudo', verTemas: false,
     // Bloco da Trilha escolhido para treinar (Lentes, Armações, Negociação ou tudo). Fica no aparelho.
     blocoTreino: (function () { try { return window.localStorage.getItem('rdo_bloco') || ''; } catch (e) { return ''; } })(),
     rodadas30: null,
@@ -817,7 +829,7 @@ class Component extends DCLogic {
     menu: false,
     lojas: [], lojaSel: null, equipe: [], carregando: true, erroEquipe: null, okEquipe: null,
     ident: null, identErro: null, identCarregando: true,
-    codigoDigitado: '', entrando: false, erroLogin: null,
+    codigoDigitado: '', entrando: false, erroLogin: null, codigoParaTentar: null,
     horaInicio: null, tratamentos: {}, salvando: false, erroSalvar: null,
     atendimentos: [], atendCarregando: true, atendErro: null,
     conteudo: null, erroBanco: null,
@@ -830,7 +842,7 @@ class Component extends DCLogic {
     return {
       sem_permissao: 'Você não tem permissão para essa ação.',
       outra_loja: 'Essa pessoa é de outra loja. Você só pode cadastrar na sua loja.',
-      so_vendedora: 'A gerente só pode cadastrar pessoas no papel de vendedora.',
+      so_vendedora: 'A gerente só pode cadastrar pessoas no papel de vendedora. Para gerente, supervisão ou diretoria, peça à Diretoria.',
       email_invalido: 'E-mail inválido. Confira e tente de novo.',
       sem_permissao_para_esta_pessoa: 'Você só pode fazer isso com vendedoras da sua própria loja.',
       inativo: 'Seu acesso está desativado. Fale com a gerente.',
@@ -846,7 +858,8 @@ class Component extends DCLogic {
       nome_loja_obrigatorio: 'Informe o nome da loja.',
       cidade_obrigatoria: 'Informe a cidade da loja.',
       aba_nao_encontrada: 'Uma aba da planilha não foi encontrada. Fale com a diretoria.',
-      pessoa_nao_encontrada: 'Essa pessoa não está na lista de usuários.',
+      pessoa_nao_encontrada: 'Essa pessoa não está mais na lista. Abra a Equipe de novo e confira.',
+      pessoa_ja_existe: 'Já existe uma pessoa ativa com esse nome nessa loja. Se for a mesma pessoa, use o cadastro que já existe; se for outra, cadastre com nome e sobrenome.',
       erro_desconhecido: 'Algo deu errado. Tente de novo em alguns segundos.',
       email_duplicado: 'Esse e-mail aparece em mais de uma linha da aba USUARIOS. Peça à diretoria para deixar só uma linha antes de continuar.',
       papel_exige_todas: 'Diretoria e Supervisão só existem com Loja = TODAS. Escolha outro papel ou deixe a loja como TODAS.',
@@ -872,7 +885,13 @@ class Component extends DCLogic {
     // lembrar de mandar - e nenhum consegue esquecer.
     const completos = [this._codigo || '', this._aparelho || ''].concat(args || []);
     const abrir = r => {
-      if (r && typeof r === 'object' && r.ok === false) return falha(r.erro || 'erro_desconhecido', r);
+      if (r && typeof r === 'object' && r.ok === false) {
+        // Codigo que deixou de valer no meio do uso (trocado, desativado ou repetido): a pessoa volta a tela de
+        // codigo na hora, com o aviso, em vez de cada botao falhar com uma mensagem diferente (20/11/2026).
+        const morto = r.erro === 'inativo' || r.erro === 'codigo_invalido' || r.erro === 'codigo_duplicado';
+        if (morto && this.state.ident) { this.sair(); this.setState({ erroLogin: this.MENSAGEM_LOGIN(r.erro, r) }); }
+        return falha(r.erro || 'erro_desconhecido', r);
+      }
       ok(r);
     };
     const g = typeof google !== 'undefined' && google.script && google.script.run;
@@ -891,6 +910,11 @@ class Component extends DCLogic {
     // Content-Type text/plain de proposito. Com application/json o
     // navegador faz uma checagem previa (OPTIONS) que o Apps Script nao
     // responde, e a conversa morre antes de comecar.
+    // Limite de espera (18/11/2026): com a internet travada a chamada nao voltava nunca e a tela ficava em
+    // "carregando" sem fim. Depois de 40 segundos vale como "sem conexao"; resposta que chegar depois e ignorada.
+    let acabou = false;
+    const fim = f => { if (acabou) return; acabou = true; f(); };
+    setTimeout(() => fim(() => falha('sem_conexao', null)), 40000);
     fetch(this.URL_SERVIDOR, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -900,10 +924,10 @@ class Component extends DCLogic {
       .then(t => {
         let d = null;
         try { d = JSON.parse(t); } catch (e) {}
-        if (!d) return falha('resposta_invalida', null);
-        abrir(d);
+        if (!d) return fim(() => falha('resposta_invalida', null));
+        fim(() => abrir(d));
       })
-      .catch(() => falha('sem_conexao', null));
+      .catch(() => fim(() => falha('sem_conexao', null)));
   }
 
 
@@ -960,6 +984,9 @@ class Component extends DCLogic {
     // Diretoria e supervisao nao pertencem a loja nenhuma: o servidor exige TODAS.
     const lojaAlvo = (papel === 'diretoria' || papel === 'supervisao') ? 'TODAS' : s.lojaSel;
     const pessoa = { nome: s.fNome.trim(), email: s.fEmail.trim(), papel: papel, loja: lojaAlvo, ativo: true };
+    // Toque duplo (18/11/2026): sem esta trava, dois toques em "Salvar pessoa" cadastravam a pessoa duas vezes,
+    // com dois codigos, e o primeiro codigo nem aparecia na tela.
+    if (s.entregando) return;
     this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
     this.gs('salvarPessoa', [pessoa], r => {
       // O codigo volta UMA vez. Se a gerente fechar esta tela sem anotar,
@@ -974,6 +1001,7 @@ class Component extends DCLogic {
 
   /** Gera outro código para alguém que perdeu o dela. */
   novoCodigoPara(pessoa) {
+    if (this.state.entregando) return;   // toque duplo geraria dois codigos, e o primeiro ja nao valeria
     this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
     this.gs('gerarNovoCodigo', [{ linha: pessoa.linha, nome: pessoa.nome }], r => {
       this.setState({ entrega: this.montarEntrega(r.nome, r.codigoNovo, r.loja), entregando: false },
@@ -990,11 +1018,13 @@ class Component extends DCLogic {
   montarEntrega(nome, codigo, loja) {
     const primeiro = String(nome || '').split(' ')[0];
     const texto =
-      'Oi, ' + primeiro + '! Esse é o app da Casa do Olhar para você registrar os atendimentos.\n\n' +
+      // Formato fixo de toda mensagem da rede (Marlen, 26/10/2026): abre com "Oi tudo bem?", fecha
+      // com "Obrigado!", sem o nome de quem recebe. Ajustado em 17/11/2026 (antes: "Oi, <nome>!").
+      'Oi tudo bem?\n\nEsse é o app de treino e atendimento da Casa do Olhar.\n\n' +
       '1) Abra este link no celular:\n' + this.LINK_DO_APP + '\n\n' +
       '2) Digite o seu código de acesso: ' + codigo + '\n\n' +
       '3) Para ficar com o ícone na tela inicial: toque no botão de compartilhar do navegador e escolha "Adicionar à Tela de Início".\n\n' +
-      'Guarde esse código, ele é só seu. Qualquer dúvida me chama.';
+      'Guarde esse código, ele é só seu.\n\nObrigado!';
     return { nome: nome, primeiro: primeiro, codigo: codigo, loja: loja, texto: texto, copiado: false };
   }
 
@@ -1030,6 +1060,7 @@ class Component extends DCLogic {
 
   salvarLoja() {
     const s = this.state;
+    if (s.entregando) return;
     this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
     const nova = { codigo: (s.lCodigo || '').trim().toUpperCase(),
                    nome: (s.lNome || '').trim(), cidade: (s.lCidade || '').trim() };
@@ -1061,6 +1092,9 @@ class Component extends DCLogic {
    * de dentro do quadro isolado - a que nao guarda o codigo.
    */
   get LINK_DO_APP() {
+    // Versao de teste: o link do teste (17/11/2026: a mensagem mandava quem foi cadastrado no teste
+    // para o app das lojas, onde o codigo dela nao existe).
+    if (typeof window !== 'undefined' && window.AMBIENTE_TESTE) return 'https://marlenoliveira.github.io/rede-de-oticas-app/teste/';
     return 'https://marlenoliveira.github.io/rede-de-oticas-app/';
   }
 
@@ -1111,7 +1145,7 @@ class Component extends DCLogic {
    * Valida o codigo NO SERVIDOR. O navegador nunca decide se o codigo
    * presta - ele so entrega e espera a resposta.
    */
-  identificar(codigo, guardarDepois) {
+  identificar(codigo, guardarDepois, tentativa) {
     this._codigo = String(codigo || '').replace(/\D/g, '');
     this._aparelho = this.idDoAparelho();
     if (!this._codigo) {
@@ -1127,6 +1161,10 @@ class Component extends DCLogic {
         // "Minha trilha" (trilha.html), uma vez por sessao do navegador. Para
         // todo o resto, nada muda.
         if (r && r.trilha && this.primeiraVezNaSessao()) { this.abrirTrilha(); return; }
+        // Versao de teste (16/11/2026): a gerente entra direto em "Minha loja"
+        // (loja.html), uma vez por sessao do navegador. No app das lojas, nada muda.
+        if (r && r.papel === 'gerente' && !r.teste && typeof window !== 'undefined' && window.AMBIENTE_TESTE
+            && this.primeiraVezNaSessao()) { this.abrirPagina('loja.html'); return; }
         this.setState({ identCarregando: false, entrando: false, ident: r,
                         erroLogin: null, codigoDigitado: '' },
           () => { this.carregarLojas(); this.carregarAtendimentos(); this.carregarBanco(); });
@@ -1138,8 +1176,13 @@ class Component extends DCLogic {
           this.guardar('rdo_codigo', '');
           this._codigo = '';
         }
+        // Internet caindo ou falha passageira do Google (18/11/2026): tenta mais uma vez sozinho. Se falhar de
+        // novo, a tela de codigo mostra "Tentar de novo", que entra com o codigo ja guardado (sem redigitar).
+        const deRede = cod === 'sem_conexao' || cod === 'resposta_invalida' || cod === 'falha_no_servidor';
+        if (deRede && !tentativa) { setTimeout(() => this.identificar(codigo, guardarDepois, 1), 1500); return; }
         this.setState({ identCarregando: false, entrando: false, ident: null,
-          erroLogin: this.MENSAGEM_LOGIN(cod, resposta) });
+          erroLogin: this.MENSAGEM_LOGIN(cod, resposta),
+          codigoParaTentar: deRede ? { codigo: this._codigo, guardar: !!guardarDepois } : null });
       });
   }
 
@@ -1153,18 +1196,42 @@ class Component extends DCLogic {
     if (cod === 'codigo_duplicado') return 'Há um problema no seu cadastro. Fale com a diretoria.';
     if (cod === 'aba_nao_encontrada') return 'Uma aba da planilha não foi encontrada. Fale com a diretoria.';
     if (cod === 'fora_do_apps_script') return 'Abra o app pelo link oficial que a gerente enviou.';
-    if (cod === 'codigo_invalido' || cod === 'sem_codigo') return 'Código não confere. Confira com a gerente.';
+    if (cod === 'codigo_invalido' || cod === 'sem_codigo') {
+      // Aviso so na penultima tentativa (20/11/2026): a mensagem continua a mesma para codigo que existe ou nao.
+      const aviso = (resposta && resposta.restam === 1) ? ' Na próxima tentativa errada, o app trava neste aparelho por ' + ((resposta && resposta.esperaMinutos) || 5) + ' minutos.' : '';
+      return 'Código não confere. Confira com a gerente.' + aviso;
+    }
+    if (cod === 'sem_conexao') return 'Sem conexão com o servidor. Confira a internet e toque em Tentar de novo.';
     return 'Não consegui entrar agora. Tente de novo em alguns segundos.';
   }
 
+  /** Ativar ou desativar uma pessoa: pergunta antes, e um toque por vez (o segundo toque, antes da resposta, desfazia o primeiro). */
+  alternarAtivo(p) {
+    if (this.state.entregando) return;
+    const pergunta = p.ativo ? 'Desativar ' + p.nome + '? Ela perde o acesso ao app na hora.' : 'Reativar ' + p.nome + '? Ela volta a entrar no app com o código dela.';
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function' && !window.confirm(pergunta)) return;
+    this.setState({ erroEquipe: null, okEquipe: null, entregando: true });
+    this.gs('alternarAtivo', [{ linha: p.linha, nome: p.nome }],
+      () => { this.setState({ entregando: false }); this.carregarEquipe(); },
+      e => this.setState({ entregando: false, erroEquipe: this.ERROS[e] || 'Não foi possível alterar.' }));
+  }
+
   sair() {
+    this._chaveAtend = '';   // o rascunho de atendimento de quem saiu nao vale para a proxima pessoa
     this.guardar('rdo_codigo', '');
     // Tablet da loja: a proxima pessoa matriculada tambem tem de cair na trilha.
     try { window.sessionStorage.removeItem('rdo_trilha_vista'); } catch (e) {}
     this._codigo = '';
+    // Tudo da pessoa que saiu sai da tela (20/11/2026): a rodada de treino, o placar, as perguntas ja vistas, o cartao de
+    // entrega de codigo e os formularios abertos. Antes, a proxima pessoa do tablet continuava a rodada da anterior e a
+    // rodada era gravada no codigo dela, com os acertos da outra.
+    this._t0Rodada = 0; this._vistas = {}; this._erradas = {};
     this.setState({ ident: null, identCarregando: false, entrando: false,
                     codigoDigitado: '', erroLogin: null, menu: false,
-                    atendimentos: [], lojas: [], equipe: [] });
+                    atendimentos: [], lojas: [], equipe: [],
+                    rodada: null, iq: 0, escolha: null, acertos: 0, treinoFim: false, rodadas30: null, treinouHoje: false,
+                    entrega: null, formAberto: false, lojaAberta: false, perfil: null, verTemas: false,
+                    erroEquipe: null, okEquipe: null, fNome: '', fEmail: '', fPapel: 'vendedora', lCodigo: '', lNome: '', lCidade: '' });
   }
   componentWillUnmount() { window.removeEventListener('resize', this._r); }
 
@@ -1201,6 +1268,11 @@ class Component extends DCLogic {
    * e quanto tempo levou. O tempo conta da primeira a ultima resposta.
    * Se o servidor falhar, o placar aparece do mesmo jeito; o registro e
    * acessorio, o treino nao.
+   *
+   * 18/11/2026: o registro e o que o Painel do treino mostra, e rodada que falhava ao gravar (internet,
+   * fila, falha passageira do Google) se perdia calada. Agora a tela tenta de novo sozinha, duas vezes
+   * (5 e 20 segundos depois). A chave da rodada garante que ela nunca entra duas vezes. Se a pessoa sair
+   * do app ou outra entrar no aparelho, a nova tentativa nao sai: a rodada e de quem a fez.
    */
   fecharRodada() {
     const s = this.state;
@@ -1209,10 +1281,18 @@ class Component extends DCLogic {
     this._t0Rodada = 0;
     // treinouHoje apaga o lembrete da tela: quem acabou de treinar nao precisa dele.
     this.setState({ treinoFim: true, rodadas30: null, treinouHoje: true });
-    this.gs('registrarRodada', [{ bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n,
-        acertos: s.acertos, segundos: segundos }],
-      r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
-      () => {});
+    const pedido = { bloco: s.blocoTreino || 'Tudo', tema: s.tipoTreino || 'Sortear tudo', questoes: n,
+      acertos: s.acertos, segundos: segundos,
+      chave: 'rd-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36) };
+    const dono = this._codigo;
+    const NAO_REPETE = { codigo_invalido: 1, inativo: 1, muitas_tentativas: 1, sem_codigo: 1, funcao_desconhecida: 1 };
+    const mandar = vez => {
+      if (this._codigo !== dono) return;
+      this.gs('registrarRodada', [pedido],
+        r => this.setState({ rodadas30: (r && typeof r.rodadas30 === 'number') ? r.rodadas30 : null }),
+        cod => { if (vez < 3 && !NAO_REPETE[cod]) setTimeout(() => mandar(vez + 1), vez === 1 ? 5000 : 20000); });
+    };
+    mandar(1);
   }
 
   montarRodada(tipoEscolhido) {
@@ -1221,6 +1301,16 @@ class Component extends DCLogic {
     if (!bancos || !Object.keys(bancos).length) return [];
     const tipo = tipoEscolhido || this.state.tipoTreino || 'Sortear tudo';
     const girar = (arr, s) => { const k = arr.length ? ((s % arr.length) + arr.length) % arr.length : 0; return arr.slice(k).concat(arr.slice(0, k)); };
+    // Erradas do sorteio (17/11/2026): sem repetida ("Antirreflexo" e a certa de duas perguntas e podia
+    // aparecer duas vezes) e sem a que contem a certa ou esta contida nela ("TR90" x "Titanio ou TR90"),
+    // que tambem estaria certa. A mesma regra esta nas aulas da trilha (Trilha.gs, ambigua_).
+    const normA = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9.,%±+-]+/g, ' ').trim();
+    const ambigua = (c, x) => { const a = normA(c), b2 = normA(x); return a.length >= 3 && b2.length >= 3 && (b2.indexOf(a) > -1 || a.indexOf(b2) > -1); };
+    // `fora` (18/11/2026): respostas do tema que TAMBEM servem para esta pergunta, ditas com outras palavras; o
+    // servidor manda a lista conferida contra o manual (ERRADAS_FORA_, Codigo.gs).
+    const poolDe = (b, it) => { const p0 = (b.pool || b.itens.map(x => x[1])).filter((x, i, arr) => x !== it[1] && arr.indexOf(x) === i);
+      const fora = (b.fora && b.fora[it[0]]) || [];
+      const p1 = p0.filter(x => !ambigua(it[1], x) && fora.indexOf(x) < 0); return p1.length >= 3 ? p1 : p0; };
     const base = Math.floor(Math.random() * 97);
     const blocoSel = this.state.blocoTreino || '';
     const nomes = Object.keys(bancos).filter(k => !blocoSel || bancos[k].bloco === blocoSel);
@@ -1231,7 +1321,7 @@ class Component extends DCLogic {
       nomes.forEach(k => {
         const b = bancos[k];
         b.itens.forEach(it => {
-          const pool = (b.pool || b.itens.map(x => x[1])).filter(x => x !== it[1]);
+          const pool = poolDe(b, it);
           const fin = mistura(mistura(pool).slice(0, 3).concat([it[1]]));
           todas.push({ id: b.tipo + '::' + it[0], tipo: b.tipo, enunciado: it[0], instrucao: b.instrucao, opcoes: fin, certa: fin.indexOf(it[1]), explicacao: it[2] });
         });
@@ -1253,7 +1343,7 @@ class Component extends DCLogic {
       const itens = girar(b.itens, base + bi * 3);
       for (let i = 0; i < porBanco && i < itens.length && q.length < 8; i++) {
         const it = itens[i];
-        const pool = (b.pool || b.itens.map(x => x[1])).filter(x => x !== it[1]);
+        const pool = poolDe(b, it);
         const distr = girar(pool, base + bi * 7 + i * 3).slice(0, 3);
         const ops = distr.concat([it[1]]);
         for (let j = ops.length - 1; j > 0; j--) { const k2 = Math.floor(Math.random() * (j + 1)); const t = ops[j]; ops[j] = ops[k2]; ops[k2] = t; }
@@ -1343,6 +1433,15 @@ class Component extends DCLogic {
     try { window.location.href = 'trilha.html'; } catch (e) {}
   }
 
+  /**
+   * Recados e Gente (desde 16/11/2026): paginas soltas que so existem na
+   * VERSAO DE TESTE. No app das lojas os itens nem aparecem (escondeAba).
+   */
+  abrirPagina(pagina) {
+    if (this._codigo) this.guardar('rdo_codigo', this._codigo);
+    try { window.location.href = pagina; } catch (e) {}
+  }
+
   /** Verdadeiro so na primeira entrada desta sessao do navegador. */
   primeiraVezNaSessao() {
     try {
@@ -1406,12 +1505,15 @@ class Component extends DCLogic {
       justificativa: (s.justificativa || '').trim(),
       valor:         vendeu ? this.valorNumero(s.valorTexto) : 0,
       tratamentos:   trat.join('; '),
-      etapas:        etapas
+      etapas:        etapas,
+      // Chave deste atendimento (18/11/2026): se a internet cair na volta e ela tocar em salvar de novo, o
+      // servidor reconhece a chave e nao grava a mesma venda duas vezes.
+      chave:         this._chaveAtend || (this._chaveAtend = 'at-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36))
     };
 
     this.setState({ salvando: true, erroSalvar: null });
     this.gs('salvarAtendimento', [registro],
-      () => this.setState({ salvando: false, erroSalvar: null, fase: 'salvo' }),
+      () => { this._chaveAtend = ''; this.setState({ salvando: false, erroSalvar: null, fase: 'salvo' }); },
       (codigo) => this.setState({ salvando: false,
         erroSalvar: (this.ERROS[codigo] || 'Não consegui salvar. Confira sua internet e tente de novo.') +
                     ' O atendimento continua aqui na tela — nada foi perdido.' }));
@@ -1451,9 +1553,11 @@ class Component extends DCLogic {
     // nao ha dado, em vez de mostrar zero disfarcado de resultado.
     const atendTodos = Array.isArray(s.atendimentos) ? s.atendimentos : [];
     const noPeriodo  = this.filtrarPeriodo(atendTodos, s.periodo);
-    const meuEmail   = String(id.email || '').toLowerCase().trim();
     const lojaFoco   = veRede ? String(s.lojaSel || '').trim() : identLoja;
-    const meus   = noPeriodo.filter(l => String(l['Email'] || '').toLowerCase().trim() === meuEmail);
+    // "Meu desempenho" e de quem atendeu, pelo NOME gravado na linha (como o servidor faz). Ate 18/11/2026 o
+    // filtro era pelo e-mail: com o e-mail em branco (ele deixou de ser obrigatorio), a gerente via como dela
+    // os atendimentos de todas as vendedoras da loja que tambem nao tinham e-mail.
+    const meus   = noPeriodo.filter(l => String(l['Vendedora iniciou'] || '').trim() === identNome);
     const daLoja = noPeriodo.filter(l => String(l['Loja'] || '').trim() === lojaFoco);
     const R  = this.resumo(meus);
     const RL = this.resumo(daLoja);
@@ -1465,8 +1569,11 @@ class Component extends DCLogic {
     });
     const brl = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
     const umDia = 86400000;
-    const diasDe = l => { const d = this.comoData(l['Data']);
-      return d ? Math.max(0, Math.round((new Date().getTime() - d.getTime()) / umDia)) : 0; };
+    // Dias de calendario (17/11/2026): contar por horas arredondadas dizia "ha 1 dias" para orcamento de hoje.
+    const diasDe = l => { const d = this.comoData(l['Data']); if (!d) return 0;
+      const h0 = new Date(); h0.setHours(0, 0, 0, 0); const d0 = new Date(d.getTime()); d0.setHours(0, 0, 0, 0);
+      return Math.max(0, Math.round((h0.getTime() - d0.getTime()) / umDia)); };
+    const diasTexto = n => n === 0 ? 'hoje' : (n === 1 ? 'há 1 dia' : 'há ' + n + ' dias');
     const resumoLinha = l => [String(l['Nivel']||'').trim(), String(l['Tipo visao']||'').trim(),
                               String(l['Tratamentos']||'').trim()].filter(Boolean).join(' · ') || '—';
     const corResultado = r => r === 'Vendeu' ? VD : (r === 'Vai pensar' ? '#7A5B04' : CZ);
@@ -1493,12 +1600,18 @@ class Component extends DCLogic {
     // Vendedora nao entra em Loja, Equipe nem Perfil.
     // Supervisao le tudo, mas nao entra em Equipe (nao cadastra ninguem).
     // Painel do treino: Diretoria, supervisao e gerencia (decisao do Marlen em 14/11/2026).
+    // Diretoria e supervisao nao atendem no balcao: "Atender" e "Meu desempenho" ficavam sempre vazios (17/11/2026, melhoria 5).
     const escondeAba = id => (papel === 'vendedora' && (id === 'equipe' || id === 'loja' || id === 'painel'))
+                          || ((papel === 'diretoria' || papel === 'supervisao') && (id === 'atendimento' || id === 'desempenho'))
                           || (papel === 'supervisao' && id === 'equipe')
-                          || (id === 'trilha' && !(s.ident && s.ident.trilha));
+                          || (id === 'trilha' && !(s.ident && s.ident.trilha))
+                          // Recados e Gente: so na versao de teste (montar-teste.js liga a chave).
+                          || ((id === 'recados' || id === 'gente') && !(typeof window !== 'undefined' && window.AMBIENTE_TESTE))
+                          // Minha loja: so na versao de teste, e nunca para a vendedora.
+                          || (id === 'minhaloja' && (papel === 'vendedora' || !(typeof window !== 'undefined' && window.AMBIENTE_TESTE)));
     const telaBloqueada = escondeAba(s.tela)
                        || (papel === 'vendedora' && s.tela === 'perfil');
-    const telaAtiva = telaBloqueada ? 'desempenho' : s.tela;
+    const telaAtiva = telaBloqueada ? ((papel === 'diretoria' || papel === 'supervisao') ? 'niveis' : 'desempenho') : s.tela;
     const passos = this.PASSOS;
     const pa = passos[s.passo] || { nome:'', ajuda:'', fala:'', nunca:'', chave:'', itens:[] };
 
@@ -1513,15 +1626,22 @@ class Component extends DCLogic {
       // Nao e uma tela deste app: abre a pagina painel.html, no mesmo endereco.
       // Ela usa o codigo que o app ja guarda no aparelho, entao nao pede de novo.
       { id: 'painel', rotulo: 'Painel', selo: 'gerente', d: 'M4 20V10M10 20V4M16 20v-7M22 20H2' },
+      // Versao de teste (16/11/2026): pagina loja.html, os 5 numeros da loja.
+      { id: 'minhaloja', rotulo: 'Minha loja', selo: 'gerente', d: 'M3 10l9-6 9 6v10H3V10zm6 10v-6h6v6' },
       // So aparece para quem esta matriculada na trilha (o servidor diz quem).
-      { id: 'trilha', rotulo: 'Minha trilha', d: 'M5 20V4l7 4 7-4v16l-7-4-7 4z' }
+      { id: 'trilha', rotulo: 'Minha trilha', d: 'M5 20V4l7 4 7-4v16l-7-4-7 4z' },
+      // Versao de teste (16/11/2026): paginas recados.html e gente.html.
+      { id: 'recados', rotulo: 'Recados', d: 'M4 6h16v12H4V6zm0 0l8 7 8-7' },
+      { id: 'gente', rotulo: 'Gente', d: 'M12 20s-7-4.4-7-9.6A3.9 3.9 0 0112 8a3.9 3.9 0 017 2.4C19 15.6 12 20 12 20z' }
     ];
     const mapNav = n => ({
       rotulo: n.rotulo, d: n.d, selo: n.selo || '',
       cor: s.tela === n.id ? AZ : CZ,
       fundo: s.tela === n.id ? BL : 'transparent',
       peso: s.tela === n.id ? 800 : 600,
-      ir: () => n.id === 'painel' ? this.abrirPainel() : (n.id === 'trilha' ? this.abrirTrilha() : this.ir(n.id))
+      ir: () => n.id === 'painel' ? this.abrirPainel() : (n.id === 'trilha' ? this.abrirTrilha()
+        : ((n.id === 'recados' || n.id === 'gente') ? this.abrirPagina(n.id + '.html')
+        : (n.id === 'minhaloja' ? this.abrirPagina('loja.html') : this.ir(n.id))))
     });
 
     const feitosCount = Object.keys(s.feitos).filter(k => s.feitos[k]).length;
@@ -1561,6 +1681,9 @@ class Component extends DCLogic {
       erroLogin: s.erroLogin || '',
       mostrarErroLogin: s.erroLogin ? 'block' : 'none',
       rotuloEntrar: s.entrando ? 'Entrando…' : 'Entrar',
+      // So aparece quando a entrada falhou por internet: entra de novo com o codigo que ja estava guardado ou digitado.
+      mostrarTentarDeNovo: (s.codigoParaTentar && s.erroLogin) ? 'block' : 'none',
+      tentarDeNovo: () => { const c = s.codigoParaTentar; if (c && !s.entrando) this.identificar(c.codigo, c.guardar); },
       fundoEntrar: (s.entrando || digitado.length < 6) ? '#8A9099' : LA,
       entrar: () => {
         if (s.entrando) return;
@@ -1611,7 +1734,14 @@ class Component extends DCLogic {
       grid3: desktop ? 'repeat(3,1fr)' : '1fr',
       gridKpi: s.w >= 1000 ? 'repeat(3,1fr)' : (s.w >= 700 ? 'repeat(2,1fr)' : '1fr'),
       navegacao: itensNav.filter(n => !escondeAba(n.id)).map(mapNav),
-      abas: itensNav.filter(n => !escondeAba(n.id)).map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '' })),
+      // Barra de baixo (17/11/2026): com mais de 6 itens a linha passava da largura da tela (11 itens da
+      // gerente = 600 px numa tela de 390) e o celular afastava a pagina inteira, deixando tudo pequeno.
+      // Ate 6 itens, uma linha; de 7 a 12, duas linhas com itens do mesmo tamanho.
+      abas: (() => { const lista = itensNav.filter(n => !escondeAba(n.id)); const k = lista.length <= 6 ? lista.length : Math.ceil(lista.length / 2);
+        const largura = 'calc((100% - ' + ((k - 1) * 4) + 'px) / ' + k + ')';
+        // Letra maior (melhoria 6): 13 px com ate 5 itens por linha; 12 px na linha de 6, para "Consulta" caber.
+        const fonte = k >= 6 ? '12px' : '13px';
+        return lista.map(n => Object.assign(mapNav(n), { rotulo: n.id === 'desempenho' ? 'Meu' : (n.id === 'atendimento' ? 'Atender' : (n.id === 'trilha' ? 'Trilha' : n.rotulo)), selo: '', largura: largura, fonte: fonte })); })(),
 
       emNiveis: telaAtiva === 'niveis', emAtendimento: telaAtiva === 'atendimento',
       emTreino: telaAtiva === 'treino', emConsulta: telaAtiva === 'consulta',
@@ -1648,9 +1778,7 @@ class Component extends DCLogic {
         avisoSemCodigo: p.temCodigo === 'NAO' ? 'inline-flex' : 'none',
         // A pessoa é apontada pela LINHA da planilha, e o servidor confere
         // o nome antes de mexer. O e-mail deixou de ser chave.
-        alternar: () => this.gs('alternarAtivo', [{ linha: p.linha, nome: p.nome }],
-          () => this.carregarEquipe(),
-          e => this.setState({ erroEquipe: this.ERROS[e] || 'Não foi possível alterar.' })),
+        alternar: () => this.alternarAtivo(p),
         gerarCodigo: () => this.novoCodigoPara(p)
       })),
 
@@ -1690,6 +1818,7 @@ class Component extends DCLogic {
         escolher: () => this.setState({ fPapel: p })
       }, chip(s.fPapel === p))),
       confirmarPessoa: () => this.salvarPessoa(),
+      rotuloSalvarPessoa: s.entregando ? 'Salvando…' : 'Salvar pessoa',
 
       // Frases de manual: vem do servidor. Enquanto nao chegam, a tela
       // diz 'carregando'. Texto generico no lugar de regra e pior que
@@ -1797,10 +1926,10 @@ class Component extends DCLogic {
       resumoSalvo: s.resultado === 'vendeu'
         ? 'Venda registrada: nível ' + (s.nivelVendido || '—') + ', R$ ' + (s.valorTexto || '0,00') + (s.visao ? ' · ' + s.visao : '') + (s.segundoPar === 'Sim' ? ' · com segundo par' : '') + (desconto ? ' · desconto de ' + desconto + '%' : ' · sem desconto') + '.'
         : (s.resultado === 'pensar'
-            ? (s.orcamento === 'Sim' ? 'Orçamento deixado com o cliente. Follow-up agendado para 24h — leve um motivo legítimo.' : 'Cliente vai pensar, sem orçamento deixado. Vale o convite para voltar com a receita.')
+            ? (s.orcamento === 'Sim' ? 'Orçamento deixado com o cliente. Retorno marcado para 24h — depois disso, só com um motivo verdadeiro.' : 'Cliente vai pensar, sem orçamento deixado. Vale o convite para voltar com a receita.')
             : 'Atendimento registrado como “só olhando”. Vale o convite para voltar com a receita.'),
       aderencia: Math.round((feitosCount / totalGeral) * 100) + '%',
-      novoAtendimento: () => this.setState({ passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null, valorTexto: '', descontoTexto: '0', justificativa: '', visao: null, segundoPar: null, armacao: null, orcamento: null, tratamentos: {}, horaInicio: this.agora(), erroSalvar: null, salvando: false }),
+      novoAtendimento: () => { this._chaveAtend = ''; this.setState({ passo: 0, fase: 'passos', feitos: {}, resultado: null, nivelVendido: null, valorTexto: '', descontoTexto: '0', justificativa: '', visao: null, segundoPar: null, armacao: null, orcamento: null, tratamentos: {}, horaInicio: this.agora(), erroSalvar: null, salvando: false }); },
       irDesempenho: () => this.ir('desempenho'),
 
       treinoAtivo: !s.treinoFim && !!q, treinoFim: s.treinoFim,
@@ -1808,6 +1937,7 @@ class Component extends DCLogic {
       nQuestao: s.iq + 1, totalQuestoes: s.rodada ? s.rodada.length : 6,
       progressoTreino: s.rodada ? Math.round(((s.iq + (respondeu ? 1 : 0)) / s.rodada.length) * 100) + '%' : '0%',
       acertos: s.acertos,
+      acertosRotulo: s.acertos + (s.acertos === 1 ? ' acerto' : ' acertos'),
       opcoes: q ? q.opcoes.map((o, i) => {
         const certa = i === q.certa, escolhida = i === s.escolha;
         let borda = BL, fundo = '#fff', cor = '#3A3F47', fundoMarca = '#C7CCD3', marca = '';
@@ -1836,7 +1966,9 @@ class Component extends DCLogic {
       placar: s.acertos + '/' + (s.rodada ? s.rodada.length : 6),
       corPlacar: s.acertos >= 5 ? VD : (s.acertos >= 3 ? '#7A5B04' : VM),
       mensagemPlacar: s.acertos >= 5 ? 'Pronta para o salão' : (s.acertos >= 3 ? 'Quase lá' : 'Revise antes do próximo turno'),
-      dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia antes de abrir a loja.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
+      dicaPlacar: s.acertos >= 5 ? 'Mantenha a sequência: uma rodada por dia.' : 'Reveja a tela de Consulta rápida e os 4 níveis e faça outra rodada.',
+      mostrarIrConsulta: s.acertos >= 5 ? 'none' : 'inline-block',
+      irConsulta: () => this.ir('consulta'),
       treinarDeNovo: () => this.setState({ rodada: this.montarRodada(), iq: 0, escolha: null, acertos: 0, treinoFim: false }),
       origemRodada: s.blocoTreino ? 'rodada sorteada do bloco ' + s.blocoTreino : 'rodada sorteada de todo o banco',
       // Blocos na ordem da Trilha do Vendedor: Lentes, Armações, Negociação.
@@ -1848,6 +1980,10 @@ class Component extends DCLogic {
       totalTipos: temasDoBloco.length,
       contagemBanco: temasDoBloco.map(k => ({ nome: k, n: this.BANCOS[k].itens.length })),
       mostrarTemas: papel === 'vendedora' ? 'none' : 'block',
+      mostrarBotaoTemas: papel === 'vendedora' ? 'none' : 'block',
+      mostrarTemasAberto: (papel !== 'vendedora' && s.verTemas) ? 'block' : 'none',
+      textoBotaoTemas: s.verTemas ? 'Fechar os temas ▴' : 'Escolher um tema ▾',
+      alternarTemas: () => this.setState({ verTemas: !s.verTemas }),
       mostrarRodadas30: s.rodadas30 === null ? 'none' : 'block',
       textoRodadas30: 'Suas rodadas nos últimos 30 dias: ' + s.rodadas30 + '. A Diretoria e a gerência acompanham os dias de treino, a nota e o tempo de cada rodada.',
       mostrarLembrete: (s.conteudo && s.conteudo.lembrete && !s.treinouHoje) ? 'block' : 'none',
@@ -1855,7 +1991,7 @@ class Component extends DCLogic {
       tiposTreino: ['Sortear tudo'].concat(temasDoBloco.filter(k => !this.BANCOS[k].soMistura)).map(t => Object.assign({
         texto: t,
         selo: (t !== 'Sortear tudo' && this.BANCOS[t].itens.length < 5) ? 'inline' : 'none',
-        escolher: () => this.setState({ tipoTreino: t, rodada: this.montarRodada(t), iq: 0, escolha: null, acertos: 0, treinoFim: false })
+        escolher: () => this.setState({ tipoTreino: t, rodada: this.montarRodada(t), iq: 0, escolha: null, acertos: 0, treinoFim: false, verTemas: false })
       }, chip(s.tipoTreino === t))),
 
 
@@ -1874,7 +2010,7 @@ class Component extends DCLogic {
       orcamentosAbertos: R.pensando.slice().reverse().slice(0, 10).map(l => ({
         cliente: 'Orçamento de ' + (String(l['Data'] || '').trim() || '—'),
         nivel: resumoLinha(l),
-        dias: diasDe(l)
+        dias: diasDe(l), diasTexto: diasTexto(diasDe(l))
       })),
       mostrarSemOrcamento: R.pensando.length ? 'none' : 'block',
       mix: ['Essencial', 'Intermediária', 'Premium', 'Personalizada'].map((nome, i) => ({
@@ -1887,7 +2023,7 @@ class Component extends DCLogic {
         return {
           // Sem nome de cliente: a planilha nao guarda esse campo, e guardar
           // dado de cliente aqui entraria em LGPD sem necessidade.
-          cliente: 'Atendimento de ' + (String(l['Hora inicio'] || '').trim() || '—'),
+          cliente: 'Atendimento das ' + (String(l['Hora inicio'] || '').trim() || '—'),
           hora: String(l['Data'] instanceof Date ? '' : (l['Data'] || '')).trim(),
           nivel: resumoLinha(l),
           estado: res,
@@ -1900,6 +2036,9 @@ class Component extends DCLogic {
 
       periodos: ['Hoje', 'Semana', 'Mês'].map(n => Object.assign({ nome: n, escolher: () => this.setState({ periodo: n }) }, chip(s.periodo === n))),
       periodoAtual: s.periodo,
+      // O rotulo dizia "comparado a semana anterior", e nada na tela e comparado: agora diz o periodo mostrado.
+      periodoRotulo: { 'Hoje': 'hoje', 'Semana': 'últimos 7 dias', 'Mês': 'últimos 30 dias' }[s.periodo] || '',
+      tituloAtendimentos: { 'Hoje': 'Atendimentos de hoje', 'Semana': 'Atendimentos dos últimos 7 dias', 'Mês': 'Atendimentos dos últimos 30 dias' }[s.periodo] || 'Atendimentos',
       kpisLoja: [
         kpi('Atendimentos da loja', RL.vazio, String(RL.total), 'período: ' + String(s.periodo).toLowerCase()),
         kpi('Vendas fechadas', RL.vazio, String(RL.vendas), ''),

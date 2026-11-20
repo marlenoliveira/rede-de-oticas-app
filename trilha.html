@@ -7,6 +7,9 @@
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <title>Minha trilha</title>
+<link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-32.png">
 <!--
   MINHA TRILHA — etapa 1 da trilha do treinamento (14/11/2026).
 
@@ -45,7 +48,7 @@
   .quem { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; color: var(--cinza);
     border-bottom: 1px solid var(--linha); padding-bottom: 8px; }
   .quem b { color: var(--tinta); }
-  .quem button { width: auto; min-height: 40px; padding: 6px 12px; margin: 0; font-size: 15px; background: #fff; color: var(--azul); }
+  .quem button { width: auto; min-height: 40px; padding: 6px 12px; margin: 0; font-size: 15px; background: #fff; color: var(--azul); white-space: nowrap; flex: none; }
   /* Progresso */
   .barra { height: 14px; background: #EDEFF2; border-radius: 8px; overflow: hidden; margin: 8px 0 2px; }
   .barra i { display: block; height: 100%; background: var(--verde); border-radius: 8px; }
@@ -85,7 +88,9 @@
   .ap-li { margin: 6px 0 6px 6px; }
   .ap-quadro { border-left: 6px solid var(--azul); background: #EEF3FA; border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
   .ap-tab { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
-  .ap-tab table { border-collapse: collapse; font-size: 16px; min-width: 100%; }
+  /* A tabela cabe na tela do celular: colunas iguais e texto quebrando (20/11/2026: a 375 px a 3a coluna saia cortada, sem sinal de que rolava). */
+  .ap-tab table { border-collapse: collapse; font-size: 16px; width: 100%; table-layout: fixed; overflow-wrap: anywhere; word-break: break-word; }
+  @media (max-width: 400px) { .ap-tab table { font-size: 14px; } .ap-tab th, .ap-tab td { padding: 6px; } }
   .ap-tab th, .ap-tab td { border: 1px solid var(--linha); padding: 8px; text-align: left; vertical-align: top; }
   .ap-tab th { background: #F3F5F8; }
   .ap-fig { margin: 14px 0; }
@@ -134,26 +139,35 @@
   var ESPERA_MAXIMA_MS = 40000;
 
   var ERROS = {
-    nao_matriculada: 'Você não está na trilha. Use o app normalmente.',
+    nao_matriculada: 'Você ainda não está na trilha. Fale com quem acompanha a loja. O restante do app continua normal.',
+    regras_nao_aceitas: 'Antes, leia e aceite as Regras de uso, na primeira tela da trilha.',
+    regras_mudaram: 'As Regras de uso mudaram. Leia de novo e aceite.',
     loja_de_teste: 'A trilha não funciona na loja de teste.',
-    fechada: 'Esta aula ainda está fechada: termine a anterior.',
-    amanha: 'Você já começou hoje o conteúdo de um dia. Esta aula abre no próximo dia.',
-    perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
+    fechada: 'Esta aula ainda não abriu: termine a anterior.',
+    amanha: 'Um dia da trilha por dia útil. Esta aula abre no próximo dia útil.',
+    perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação. Aguarde; se passar de um dia, avise quem acompanha a loja.',
     sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
-    aula_expirada: 'Estas perguntas não valem mais (a aula foi aberta de novo em outro lugar). Abra a aula outra vez.',
-    prova_em_andamento: 'Sua Prova Final está aberta. Termine a prova antes de voltar às aulas.',
-    aulas_abertas: 'A Prova Final abre quando todas as aulas estiverem fechadas.',
-    refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da Trilha.',
-    aguardando_data: 'A próxima tentativa ainda não abriu.',
+    aula_expirada: 'Estas perguntas não valem mais. Se a internet caiu na hora de corrigir, a sua resposta pode ter chegado: volte à trilha para ver. Se não chegou, sorteie novas perguntas.',
+    prova_em_andamento: 'Sua prova está aberta. Termine a prova antes de voltar às aulas.',
+    aulas_abertas: 'A prova abre quando todas as aulas da etapa estiverem feitas.',
+    refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da etapa.',
+    aguardando_data: 'A prova ainda não abriu. Veja a data na trilha.',
     aguarda_diretoria: 'Sua trilha está parada aqui até a Diretoria decidir.',
     aprovada: 'Você já passou nesta prova.',
     prova_encerrada: 'Esta prova já foi encerrada.',
     tempo_esgotado: 'O tempo da prova acabou.',
     prova_perdida: 'Houve uma falha com a sua prova. Volte à trilha: a tentativa não vai contar.',
     fora_do_horario: 'Fora do horário da trilha.',
-    fora_do_horario_prova: 'A prova leva 60 minutos e precisa terminar dentro do horário da trilha.',
+    fora_do_horario_prova: 'A prova é feita na loja e precisa caber inteira no horário.',
     codigo_invalido: 'Seu código não foi reconhecido. Entre de novo pelo app.',
     inativo: 'Seu acesso está desativado. Fale com quem acompanha a loja.',
+    muitas_tentativas: 'Muitas tentativas com código errado. Espere 5 minutos e entre de novo pelo app.',
+    codigo_duplicado: 'Há um problema no seu cadastro. Fale com a Diretoria.',
+    papel_invalido: 'Há um problema no seu cadastro. Fale com a Diretoria.',
+    sem_codigo: 'Entre primeiro no app com o seu código.',
+    aba_nao_encontrada: 'Uma aba da planilha não foi encontrada. Fale com a Diretoria.',
+    falha_no_servidor: 'O servidor falhou agora. Tente de novo em alguns segundos.',
+    falha_na_gravacao: 'A planilha não gravou agora. Tente de novo em alguns segundos.',
     sem_conexao: 'Sem resposta do servidor. Confira a internet e tente de novo.',
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
   };
@@ -182,7 +196,9 @@
     a.href = href; a.target = '_blank'; a.rel = 'noopener';
     return a;
   }
-  function raiz() { var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
+  var TELA = '', DESENHADA_EM = 0;
+  var VEZ = 0;   // sobe a cada tela nova: a resposta de uma chamada feita numa tela que ja saiu nao redesenha nada
+  function raiz() { TELA = ''; VEZ++; var r = document.getElementById('raiz'); r.textContent = ''; if (window.scrollTo) window.scrollTo(0, 0); return r; }
 
   var CODIGO = guardado('rdo_codigo');
   var pendentes = 0;
@@ -195,8 +211,16 @@
   function chamar(fn, extra, pronto, quieto) {
     var args = [CODIGO, aparelho()];
     if (extra !== undefined) args.push(extra);
-    var acabou = false;
-    function fim(d) { if (acabou) return; acabou = true; if (!quieto) aguarde(-1); pronto(d); }
+    var acabou = false, vez = VEZ;
+    function fim(d) {
+      if (acabou) return; acabou = true; if (!quieto) aguarde(-1);
+      // Codigo que nao vale mais (trocado, desativado, repetido ou travado): uma tela so, para TODA chamada (20/11/2026).
+      // Antes, no meio de uma acao, o erro vinha com "Tentar de novo", e cada toque contava como tentativa errada.
+      if (d && !d.ok && SEM_NOVA_TENTATIVA[d.erro]) { codigoMorto(d); return; }
+      // Resposta atrasada de uma tela que ja saiu (a pessoa voltou a trilha antes de ela chegar): nao redesenha nada.
+      if (vez !== VEZ) return;
+      pronto(d);
+    }
     if (!quieto) aguarde(1);
     setTimeout(function () { fim({ ok: false, erro: 'sem_conexao' }); }, ESPERA_MAXIMA_MS);
     fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -207,10 +231,26 @@
   }
   function msgErro(r) {
     var m = ERROS[(r && r.erro) || ''] || 'Algo deu errado. Tente de novo em alguns segundos.';
-    if (r && r.horario) m += ' A trilha abre ' + r.horario + '.';
+    // A aula e livre; so a prova tem horario (17/11/2026). "A trilha abre..." so vale se a aula voltar ao horario.
+    if (r && r.horario) m += (r.erro === 'fora_do_horario_prova' ? ' O horário é ' : ' A trilha abre ') + r.horario + '.';
     return m;
   }
   function voltarAoApp() { try { window.location.href = './'; } catch (e) {} }
+  /** Codigo que nao vale mais: o guardado sai do aparelho (trocado, desativado ou repetido; travado por 5 minutos, nao) e a tela manda entrar de novo pelo app. */
+  function codigoMorto(d) {
+    if (d.erro === 'codigo_invalido' || d.erro === 'inativo' || d.erro === 'codigo_duplicado') guardar('rdo_codigo', '');
+    if (relogioId) { clearInterval(relogioId); relogioId = null; }
+    var x = raiz();
+    telaErro(x, msgErro(d), voltarAoApp, 'Entrar de novo pelo app');
+  }
+  /** Respostas guardadas neste aparelho de provas que ja acabaram saem; so fica a da prova aberta, se houver. */
+  function limparProvasGuardadas(idAtual) {
+    try {
+      var chaves = [];
+      for (var i = 0; i < window.localStorage.length; i++) chaves.push(window.localStorage.key(i));
+      chaves.forEach(function (k) { if (k && k.indexOf('rdo_prova_') === 0 && k !== 'rdo_prova_' + idAtual) window.localStorage.removeItem(k); });
+    } catch (e) {}
+  }
   function naoSouEu() {
     guardar('rdo_codigo', '');
     try { window.sessionStorage.removeItem('rdo_trilha_vista'); } catch (e) {}
@@ -239,15 +279,31 @@
     r.appendChild(botao(rotulo || 'Tentar de novo', '', acao || carregar));
   }
 
-  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null;
-  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; }
+  // HOJE (18/11/2026): que dia e hoje para o servidor (dia da semana, se e dia util para a loja dela, o nome do
+  // feriado e o proximo dia util). Servidor antigo nao manda: fica null e a tela se vira com o relogio do aparelho.
+  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null, CERTIFICADO = null, REGRAS_USO = null, HOJE = null;
+  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; CERTIFICADO = t.certificado || null; REGRAS_USO = t.regrasUso || null; HOJE = t.hoje || null; }
+  /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
+  function comCertificado(fn) {
+    if (window.baixarCertificado) return fn();
+    var s = document.createElement('script');
+    s.src = 'certificado.js';
+    s.onload = fn;
+    s.onerror = function () { window.alert('Não deu certo. Confira a internet e tente de novo.'); };
+    document.head.appendChild(s);
+  }
 
   // ================= Minha trilha =================
-  function carregar() {
+  var FALHAS_DE_REDE = { sem_conexao: 1, resposta_invalida: 1, falha_no_servidor: 1 };
+  var SEM_NOVA_TENTATIVA = { codigo_invalido: 1, inativo: 1, codigo_duplicado: 1, sem_codigo: 1, muitas_tentativas: 1 };
+  function carregar(tentativa) {
     var r = raiz();
     r.appendChild(el('p', 'sub', 'Carregando a sua trilha…'));
     chamar('estadoTrilha', undefined, function (t) {
+      // Internet caindo ou falha passageira do Google: tenta mais uma vez sozinho antes de mostrar o erro.
+      if (!t.ok && tentativa !== 2 && FALHAS_DE_REDE[t.erro]) { setTimeout(function () { carregar(2); }, 1500); return; }
       var x = raiz();
+      // Codigo que nao vale mais: chamar() ja mostrou "Entrar de novo pelo app" e nem chega aqui.
       if (!t.ok) { telaErro(x, msgErro(t)); rodape(x); return; }
       if (!t.matriculada) { x.appendChild(el('div', 'aviso', ERROS.nao_matriculada)); rodape(x); return; }
       receber(t);
@@ -256,15 +312,42 @@
   }
 
   var ICONE = { feito: '✔', atual: '▶', fechado: '🔒' };
-  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia',
+  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'ainda não abriu', amanha: 'abre no próximo dia útil',
     perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
 
+  /**
+   * Regras de uso (17/11/2026): a primeira tela da trilha, no lugar da folha
+   * assinada. Sem "Li e aceito", nada da trilha abre (o servidor tambem trava).
+   */
+  function telaRegrasUso() {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(el('h1', '', 'Regras de uso do treinamento'));
+    r.appendChild(el('p', 'sub', 'Leia antes de começar. A trilha abre depois que você aceitar.'));
+    (REGRAS_USO.itens || []).forEach(function (x, i) { r.appendChild(rico('div', 'ap-li', (i + 1) + '. ' + x)); });
+    r.appendChild(el('div', 'aviso', REGRAS_USO.declaracao || 'Declaro que li e entendi estas regras.'));
+    var msg = el('div');
+    r.appendChild(msg);
+    r.appendChild(botao('Li e aceito', 'laranja', function (ev) {
+      ev.target.disabled = true;
+      chamar('aceitarRegras', { versao: REGRAS_USO.versao }, function (res) {
+        if (!res.ok) { ev.target.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(res); if (res.erro === 'regras_mudaram') carregar(); return; }
+        receber(res); desenharTrilha();
+      });
+    }));
+    rodape(r);
+  }
+
   function desenharTrilha() {
+    if (REGRAS_USO && !REGRAS_USO.aceitas) return telaRegrasUso();
     var e = ESTADO, r = raiz();
+    if (!provaAberta(e)) limparProvasGuardadas('');
     barraQuem(r);
     r.appendChild(el('h1', '', 'Minha trilha'));
     if (!e.concluida) {
-      r.appendChild(el('p', 'sub', e.atual.fase + ' · você está no passo ' + e.atual.n + ' de ' + e.totalJornada + '.'));
+      // A conta DELA (19/11/2026): quem já trabalha não faz os Primeiros dias e ia do passo 2 direto ao 10.
+      // Servidor antigo não manda `ordem` nem `totalPassos`: vale a numeração de antes.
+      r.appendChild(el('p', 'sub', e.atual.fase + ' · você está no passo ' + (e.atual.ordem || e.atual.n) + ' de ' + (e.totalPassos || e.totalJornada) + '.'));
     }
     var b = el('div', 'barra'), i = el('i');
     var pct = e.concluida ? 100 : Math.round(100 * (e.aulasFeitas + e.videosFeitos) / (e.aulasTotal + e.videosTotal));
@@ -272,8 +355,12 @@
     b.appendChild(i);
     r.appendChild(b);
     r.appendChild(el('p', 'sub', e.aulasFeitas + ' de ' + e.aulasTotal + ' aulas feitas'));
-    if (HORARIO && !HORARIO.aberto && !e.concluida) {
-      r.appendChild(el('div', 'aviso', 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
+    // Aula a qualquer hora; prova so na loja, no horario (17/11/2026). Com a aula livre, o aviso so
+    // aparece quando a vez e da prova.
+    if (HORARIO && !HORARIO.aberto && !e.concluida && (!HORARIO.aulaLivre || (e.atual && e.atual.tipo === 'prova'))) {
+      r.appendChild(el('div', 'aviso', HORARIO.aulaLivre
+        ? 'A prova é feita na loja, no horário: ' + HORARIO.texto + '. As aulas você faz quando quiser.'
+        : 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
     }
     if (e.modoTeste) {
       r.appendChild(el('div', 'aviso', 'Modo de teste: tudo liberado para você ver o app inteiro, fora de ordem e fora do horário. As vendedoras seguem a ordem: uma aula depois da outra e o conteúdo de um dia por dia.'));
@@ -288,22 +375,72 @@
       if (p.tipo === 'aulas') listaAulas(c, p);
       if (p.tipo === 'video' && p.estado === 'feito') {
         c.appendChild(botao('Assistir de novo', 'leve', function () { telaVideo(p); }));
+      } else if (p.tipo === 'video' && e.modoTeste) {
+        // Modo de teste: o vídeo também abre fora de ordem, como as aulas e as provas (só assistir; concluir é no cartão da vez).
+        c.appendChild(botao('Assistir', 'leve', function () { telaVideo(p); }));
       }
       if (p.tipo === 'prova') {
-        if (e.prova.estado === 'liberada' || e.prova.estado === 'em_andamento') c.appendChild(botao('Abrir a Prova Final', 'laranja', telaProvaIntro));
-        (e.prova.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
+        var sp = (e.provas && e.provas[p.id]) || e.prova;
+        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') {
+          var bsp = botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', function () { telaProvaIntro(sp); });
+          // Mesma regra do cartao da vez: a prova precisa caber inteira no horario (a que ja esta aberta continua).
+          if (sp.estado === 'liberada' && HORARIO && !HORARIO.provaCabe) bsp.disabled = true;
+          c.appendChild(bsp);
+        }
+        (sp.tentativas || []).filter(function (t) { return t.estado === 'corrigida'; }).forEach(function (t) {
           c.appendChild(el('div', 'sub', t.n + 'ª tentativa (' + t.data + '): ' + t.acertos + ' de ' + t.questoes + (t.passou ? ' · passou' : '')));
         });
       }
-      if (p.id === 'simulacoes') {
-        e.simulacoes.forEach(function (s) {
-          c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + ' (' + String(s.notas).split(';').join(', ') + ')'));
+      if (p.tipo === 'pessoa' && e.praticas && e.praticas[p.id]) {
+        e.praticas[p.id].forEach(function (s) {
+          c.appendChild(el('div', 'sub', s.data + ': ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '')));
         });
+      }
+      // O certificado da Trilha fica guardado no passo das simulacoes, depois de aprovadas.
+      if (p.id === 'simulacoes' && p.estado === 'feito' && CERTIFICADO) {
+        var cert0 = CERTIFICADO;
+        c.appendChild(botao('Baixar meu certificado da Trilha', 'verde', function () { comCertificado(function () { window.baixarCertificado(cert0); }); }));
       }
       det.appendChild(c);
     });
     r.appendChild(det);
+    r.appendChild(botao('Atualizar a trilha', 'leve', carregar));
+    linkRegrasUso(r);
     rodape(r);
+    TELA = 'trilha'; DESENHADA_EM = Date.now();
+  }
+
+  /**
+   * Reler as Regras de uso depois de aceitar (19/11/2026): ela aceita regras que falam de advertência e
+   * precisa ter onde ler de novo. O link fica no pé da trilha e abre as regras só para leitura.
+   */
+  function linkRegrasUso(r) {
+    if (!REGRAS_USO || !REGRAS_USO.aceitas) return;
+    var p = el('p', '', '');
+    p.style.marginTop = '28px';
+    var a = el('a', '', 'Regras de uso' + (REGRAS_USO.aceitasEm ? ' (aceitas em ' + REGRAS_USO.aceitasEm + ')' : ''));
+    a.href = '#';
+    var msg = el('div');
+    a.addEventListener('click', function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      chamar('lerRegrasUso', undefined, function (res) {
+        if (!res.ok) { msg.className = 'erro'; msg.textContent = msgErro(res); return; }
+        telaRegrasLeitura(res);
+      });
+    });
+    p.appendChild(a);
+    r.appendChild(p);
+    r.appendChild(msg);
+  }
+  function telaRegrasLeitura(res) {
+    var r = raiz();
+    barraQuem(r);
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
+    r.appendChild(el('h1', '', 'Regras de uso do treinamento'));
+    var em = res.aceitasEm || (REGRAS_USO && REGRAS_USO.aceitasEm) || '';
+    if (em) r.appendChild(el('p', 'sub', 'Você leu e aceitou estas regras em ' + em + '.'));
+    (res.itens || []).forEach(function (x, i) { r.appendChild(rico('div', 'ap-li', (i + 1) + '. ' + x)); });
+    r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
   }
 
   /**
@@ -356,7 +493,14 @@
     barraQuem(r);
     r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
     r.appendChild(el('h1', '', p.titulo));
-    r.appendChild(videoNaTela(p.videoId, p.titulo));
+    videosDoPasso(p).forEach(function (v) {
+      if (videosDoPasso(p).length > 1) r.appendChild(el('div', 'tit', v.titulo));
+      r.appendChild(videoNaTela(v.id, v.titulo));
+    });
+  }
+  /** Os videos de um passo: um so, ou a lista (o passo 4 tem os do SsOtica 1 e 2). */
+  function videosDoPasso(p) {
+    return (p.videos && p.videos.length) ? p.videos : [{ id: p.videoId, titulo: p.titulo }];
   }
 
   /** O cartao grande: a UMA coisa que a pessoa tem de fazer agora. */
@@ -365,21 +509,57 @@
     function rot(t) { c.appendChild(el('div', 'rot', t)); }
     function tit(t) { c.appendChild(el('div', 'tit', t)); }
     function txt(t) { c.appendChild(el('p', '', t)); }
-    var foraHora = HORARIO && !HORARIO.aberto;
+    var foraHora = HORARIO && !HORARIO.aberto && !HORARIO.aulaLivre;   // so trava aula se a aula nao for livre
+    // Um dia do Roteiro por dia util (D6): no sabado, no domingo, no feriado e no dia que nao conta para a
+    // loja dela nao comeca dia novo. Quem diz que dia e hoje e o servidor (HOJE), nao o relogio do aparelho.
+    function porHojeESo(titulo, titCartao) {
+      var dia = HOJE ? HOJE.semana : new Date().getDay();
+      var naSegunda = (dia === 6 || dia === 0) && (!HOJE || HOJE.proximoUtilSemana === 1);
+      var depois = (naSegunda ? 'Na segunda-feira: ' : 'No próximo dia útil' + (HOJE && HOJE.proximoUtil ? ' (' + HOJE.proximoUtil + ')' : '') + ': ') + titulo + '.';
+      rot('Por hoje é só');
+      tit(titCartao);
+      if (dia === 6) txt('No sábado não começa dia novo da trilha. Pratique no balcão o que estudou. ' + depois);
+      else if (HOJE && dia === 0) txt('No domingo não começa dia novo da trilha. ' + depois);
+      else if (HOJE && HOJE.util === false) txt('Hoje não conta como dia útil' + (HOJE.motivo ? ' (' + HOJE.motivo + ')' : '') + ': não começa dia novo da trilha. ' + depois);
+      else txt('Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. No próximo dia útil: ' + titulo + '.');
+    }
     if (e.concluida) {
       c.className = 'agora fim';
       rot('Parabéns');
-      tit('Você concluiu esta parte da trilha');
-      txt('Abertura, Ponte, Trilha do Vendedor, Prova Final e simulações. A próxima parte é o Bloco Lentes.');
+      tit('Você concluiu a trilha inteira');
+      txt('Trilha do Vendedor, Prova Final, simulações e os blocos Lentes, Armações e Negociação. Agora você é Vendedora em Formação.');
+      if (CERTIFICADO) {
+        var cert = CERTIFICADO;
+        c.appendChild(botao('Baixar meu certificado', 'verde', function () { comCertificado(function () { window.baixarCertificado(cert); }); }));
+      }
       return c;
     }
     var at = e.atual;
+    // Prova aberta vem antes de tudo: o relógio não para. Nas lojas ela é sempre o passo atual (e o cartão da prova,
+    // abaixo, já mostra); no modo de teste, com as provas fora de ordem, pode não ser.
+    var ab = provaAberta(e);
+    if (ab && !(at.tipo === 'prova' && at.id === ab.id)) {
+      rot(ab.nome || 'Prova');
+      tit('Sua prova está aberta');
+      txt('O relógio não para. Volte e termine.');
+      c.appendChild(botao('Voltar à prova', 'laranja', function () { telaProvaIntro(ab); }));
+      return c;
+    }
     if (at.tipo === 'video') {
       var p = e.passos.filter(function (x) { return x.id === at.id; })[0];
+      if (p.amanha) {
+        c.className = 'agora espera';
+        porHojeESo(p.titulo, 'O próximo passo abre no próximo dia útil');
+        return c;
+      }
+      var vs = videosDoPasso(p);
       rot('Agora');
       tit(p.titulo);
-      txt('Assista ao vídeo aqui e depois toque em "Assisti. Concluí".');
-      c.appendChild(videoNaTela(p.videoId, p.titulo));
+      txt(vs.length > 1 ? 'Assista aos ' + vs.length + ' vídeos aqui e depois toque em "Assisti. Concluí".' : 'Assista ao vídeo aqui e depois toque em "Assisti. Concluí".');
+      vs.forEach(function (v) {
+        if (vs.length > 1) c.appendChild(el('p', 'sub', v.titulo));
+        c.appendChild(videoNaTela(v.id, v.titulo));
+      });
       c.appendChild(botao('Assisti. Concluí', 'laranja', function (ev) {
         ev.target.disabled = true;
         chamar('concluirVideo', { video: at.id }, function (res) {
@@ -396,9 +576,10 @@
       var pp = e.passos.filter(function (x) { return x.id === at.id; })[0];
       if (pp && pp.explica) txt(pp.explica);
       txt('Não depende de você. Assim que for lançado, a próxima etapa abre aqui.');
-      if (at.id === 'simulacoes' && e.simulacoes.length) {
-        var u = e.simulacoes[e.simulacoes.length - 1];
-        c.appendChild(el('p', 'sub', 'Último lançamento (' + u.data + '): ' + String(u.notas).split(';').join(', ') + (u.resultado === 'aprovada' ? '' : ' · refazer')));
+      var lancs = (e.praticas && e.praticas[at.id]) || [];
+      if (lancs.length) {
+        var u = lancs[lancs.length - 1];
+        c.appendChild(el('p', 'sub', 'Último lançamento (' + u.data + '): ' + (u.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (u.notas ? ' (' + String(u.notas).split(';').join(', ') + ')' : '')));
       }
       c.appendChild(botao('Atualizar', 'leve', carregar));
       return c;
@@ -412,7 +593,13 @@
     if (aberta) {
       rot('Sua aula de agora');
       tit(aberta.titulo);
-      txt('Ouça, leia e responda 4 perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
+      // "Aula 2 de 3 de hoje" (19/11/2026): quantas faltam para fechar o dia da trilha. Quando ela continua um
+      // dia aberto antes, a frase diz desde quando: depois dele, ainda pode começar outro hoje.
+      var ad = e.aulaDoDia;
+      if (ad && ad.total) {
+        c.appendChild(el('p', 'sub', 'Aula ' + ad.n + ' de ' + ad.total + (ad.deHoje ? ' de hoje.' : ' do dia da trilha que você começou em ' + ad.desde + '.')));
+      }
+      txt('Ouça, leia e responda ' + REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
       var bc = botao('Começar a aula', 'laranja', function () { telaAula(aberta); });
       if (foraHora) bc.disabled = true;
       c.appendChild(bc);
@@ -420,9 +607,7 @@
     }
     c.className = 'agora espera';
     if (prox && prox.estado === 'amanha') {
-      rot('Por hoje é só');
-      tit('A próxima aula abre no próximo dia');
-      txt('Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. Amanhã: ' + prox.titulo + '.');
+      porHojeESo(prox.titulo, 'A próxima aula abre no próximo dia útil');
     } else if (prox && (prox.estado === 'perguntas_pendentes' || prox.estado === 'sem_perguntas')) {
       rot('Aguarde');
       tit(prox.titulo);
@@ -435,9 +620,9 @@
   }
 
   function cartaoProva(e, c, foraHora) {
-    var pr = e.prova, regra = REGRAS.prova;
+    var pr = e.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova;
     var refazer = e.aulas.filter(function (a) { return a.refazer; });
-    rot2(c, 'Prova Final');
+    rot2(c, pr.nome || 'Prova');
     if (pr.estado === 'em_andamento') {
       c.appendChild(el('div', 'tit', 'Sua prova está aberta'));
       c.appendChild(el('p', '', 'O relógio não para. Volte e termine.'));
@@ -445,8 +630,8 @@
     } else if (pr.estado === 'liberada') {
       c.appendChild(el('div', 'tit', 'Tentativa ' + pr.tentativa + ' de ' + regra.tentativas));
       c.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta.'));
-      var bp = botao('Abrir a Prova Final', 'laranja', telaProvaIntro);
-      if (HORARIO && !HORARIO.provaCabe) { bp.disabled = true; c.appendChild(el('p', 'sub', 'A prova leva 60 minutos e precisa terminar dentro do horário: ' + HORARIO.texto + '.')); }
+      var bp = botao('Abrir a ' + (pr.nome || 'prova'), 'laranja', telaProvaIntro);
+      if (HORARIO && !HORARIO.provaCabe) { bp.disabled = true; c.appendChild(el('p', 'sub', 'A prova leva ' + regra.minutos + ' minutos e precisa terminar dentro do horário: ' + HORARIO.texto + '.')); }
       c.appendChild(bp);
     } else if (pr.estado === 'refazer_aulas' || refazer.length) {
       c.className = 'agora espera';
@@ -460,12 +645,18 @@
       }
     } else if (pr.estado === 'aguardando_data') {
       c.className = 'agora espera';
-      c.appendChild(el('div', 'tit', 'A ' + pr.tentativa + 'ª tentativa abre em ' + pr.abreEm));
-      c.appendChild(el('p', '', 'Você já refez as aulas. Agora é esperar a data.'));
+      if (pr.tentativa > 1) {
+        c.appendChild(el('div', 'tit', 'A ' + pr.tentativa + 'ª tentativa abre em ' + pr.abreEm));
+        c.appendChild(el('p', '', 'Você já refez as aulas. Agora é esperar a data.'));
+      } else {
+        // Prova de bloco: no 5o dia util do bloco (os dias 2 a 4 sao de pratica com quem aplica).
+        c.appendChild(el('div', 'tit', 'A prova abre em ' + pr.abreEm));
+        c.appendChild(el('p', '', 'Até lá, pratique no balcão com quem aplica o que você estudou.'));
+      }
     } else if (pr.estado === 'aguarda_diretoria') {
       c.className = 'agora espera';
       c.appendChild(el('div', 'tit', 'Sua trilha está parada aqui'));
-      c.appendChild(el('p', '', 'Não passou na 3ª tentativa. A Diretoria decide o próximo passo. Continue atendendo no que você já está liberada.'));
+      c.appendChild(el('p', '', 'Não passou na ' + regra.tentativas + 'ª tentativa. A Diretoria decide o próximo passo. Continue atendendo no que você já está liberada.'));
     } else {
       c.className = 'agora espera';
       c.appendChild(el('div', 'tit', 'Abre quando as aulas fecharem'));
@@ -476,6 +667,12 @@
     return c;
   }
   function rot2(c, t) { c.appendChild(el('div', 'rot', t)); }
+  /** A prova em andamento, se houver (uma por pessoa). */
+  function provaAberta(e) {
+    var ps = (e && e.provas) || {};
+    for (var k in ps) if (ps.hasOwnProperty(k) && ps[k] && ps[k].estado === 'em_andamento') return ps[k];
+    return null;
+  }
 
   // ================= Aula =================
   function proximaAberta(depoisDe) {
@@ -522,8 +719,14 @@
     img.loading = 'lazy';
     img.addEventListener('load', function () { img.className = 'figura'; });
     img.addEventListener('error', function () { img.className = 'figura falhou'; img.alt = 'A figura não carregou. Confira a internet.'; });
-    if (id) img.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
-    return img;
+    if (!id) return img;
+    img.src = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
+    // Toque para ver maior (20/11/2026): no celular a figura fica com uns 310 px e o texto dentro dela nao se le.
+    var a = el('a', 'figura-link');
+    a.href = 'https://drive.google.com/thumbnail?id=' + id + '&sz=w2000';
+    a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = 'Toque para ver maior';
+    a.appendChild(img);
+    return a;
   }
 
   /** Desenha os blocos da apostila: titulos, paragrafos, itens, tabelas, quadros e figuras. */
@@ -589,23 +792,27 @@
       // Enquanto o audio nao toca dentro do app, abre o arquivo do audio (nunca a pasta).
       e1.appendChild(linkBotao('🎧 Ouvir a aula', a.audio.link));
     }
-    if (a.video) {
-      var ev = etapa('▶', a.video.nome, '');
-      ev.appendChild(videoNaTela(a.video.id, a.video.nome));
-    }
+    // Um ou mais videos dentro da aula (SsOtica, Demonstrativo).
+    [].concat(a.video || []).forEach(function (v) {
+      var ev = etapa('▶', v.nome, '');
+      ev.appendChild(videoNaTela(v.id, v.nome));
+    });
     var e2 = etapa(2, 'Ler', a.leitura.onde);
     var texto = el('div', 'ap oculto');
+    var erroLer = el('div', 'oculto');
     var bLer = botao('📖 Ler a aula aqui', '', function () {
       bLer.disabled = true;
       chamar('lerAula', { aula: a.id }, function (res) {
-        bLer.className = 'oculto';
-        if (!res.ok) { e2.appendChild(el('div', 'erro', msgErro(res))); return; }
+        // Falhou (internet): o botao continua ali para tentar de novo, sem sair da aula.
+        if (!res.ok) { bLer.disabled = false; bLer.textContent = '📖 Tentar de novo: ler a aula aqui'; erroLer.className = 'erro'; erroLer.textContent = msgErro(res); return; }
+        bLer.className = 'oculto'; erroLer.className = 'oculto';
         texto.className = 'ap';
         desenharTexto(texto, res.blocos);
         texto.appendChild(botao('Terminei de ler: responder as perguntas', 'laranja', function () { perguntasAula(a); }));
       });
     });
     e2.appendChild(bLer);
+    e2.appendChild(erroLer);
     e2.appendChild(texto);
     var e3 = etapa(3, 'Responder', REGRAS.aula.perguntas + ' perguntas. Com ' + REGRAS.aula.abre + ' certas, a próxima aula abre.');
     e3.appendChild(botao('Responder as perguntas', 'laranja', function () { perguntasAula(a); }));
@@ -651,8 +858,13 @@
         for (var i = 0; i < res.perguntas.length; i++) if (resp[i] === undefined) { msg.className = 'aviso'; msg.textContent = 'Responda todas as perguntas.'; return; }
         enviar.disabled = true;
         chamar('responderAula', { aula: a.id, sorteio: res.sorteio, respostas: resp }, function (c) {
-          if (!c.ok) { enviar.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(c); return; }
-          enviar.className = 'oculto';
+          if (!c.ok) {
+            enviar.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(c);
+            // O sorteio nao vale mais (ou a resposta chegou e a internet caiu na volta): nada de ficar presa aqui.
+            if (c.erro === 'aula_expirada') { enviar.className = 'oculto'; msg.appendChild(botao('Sortear novas perguntas', 'laranja', function () { perguntasAula(a); })); }
+            return;
+          }
+          enviar.className = 'oculto'; voltar.className = 'oculto'; msg.className = ''; msg.textContent = '';
           if (c.trilha) receber(c.trilha);
           c.correcao.forEach(function (k, i) {
             var labs = blocos[i].querySelectorAll('.alt');
@@ -677,14 +889,28 @@
         });
       });
       x.appendChild(enviar);
+      // Sempre ha como voltar: sem isto, um erro ao corrigir deixava a pessoa presa nesta tela (so restava "Não sou eu").
+      var voltar = botao('Voltar à trilha', 'leve', carregar);
+      x.appendChild(voltar);
     });
   }
 
   // ================= Prova =================
-  function telaProvaIntro() {
-    var pr = ESTADO.prova, regra = REGRAS.prova, r = raiz();
+  // `prova`: a prova que o botão nomeia (no caminho todo, no modo de teste, pode haver várias abertas);
+  // sem ela, a prova da vez. Um clique direto manda o evento, que não tem `id`.
+  function telaProvaIntro(prova) {
+    var pr = (prova && prova.id) ? prova : ESTADO.prova, regra = (REGRAS.provas && REGRAS.provas[pr.id]) || REGRAS.prova, r = raiz();
     barraQuem(r);
-    r.appendChild(el('h1', '', 'Prova Final · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
+    // Outra prova já aberta (só acontece no modo de teste): uma por vez. Avisa e leva de volta à aberta.
+    var ab = provaAberta(ESTADO);
+    if (ab && ab.id !== pr.id) {
+      r.appendChild(el('h1', '', pr.nome || 'Prova'));
+      r.appendChild(el('div', 'aviso', 'Você tem a ' + (ab.nome || 'prova') + ' aberta, e o relógio dela não para. Termine essa antes de começar outra.'));
+      r.appendChild(botao('Voltar à ' + (ab.nome || 'prova'), 'laranja', function () { telaProvaIntro(ab); }));
+      r.appendChild(botao('Voltar à trilha', 'leve', desenharTrilha));
+      return;
+    }
+    r.appendChild(el('h1', '', (pr.nome || 'Prova') + ' · tentativa ' + (pr.tentativa || 1) + ' de ' + regra.tentativas));
     r.appendChild(el('p', '', 'Prova de ' + NOME));
     r.appendChild(el('p', '', regra.questoes + ' questões · ' + regra.minutos + ' minutos · passa com ' + regra.corte + ' · sem consulta'));
     r.appendChild(el('div', 'aviso', pr.estado === 'em_andamento' ? 'Sua prova já começou e o relógio está correndo.' : 'Depois que começar, o relógio não para, mesmo se você fechar o app. Ao fim você vê só a nota.'));
@@ -692,7 +918,7 @@
     r.appendChild(msg);
     r.appendChild(botao(pr.estado === 'em_andamento' ? 'Voltar à prova' : 'Começar a prova', 'laranja', function (ev) {
       ev.target.disabled = true;
-      chamar('iniciarProva', undefined, function (res) {
+      chamar('iniciarProva', { prova: pr.id }, function (res) {
         if (!res.ok) { ev.target.disabled = false; msg.className = 'erro'; msg.textContent = msgErro(res); return; }
         telaProva(res);
       });
@@ -703,7 +929,9 @@
   var relogioId = null;
   function telaProva(p) {
     var r = raiz();
+    barraQuem(r);
     var chaveLocal = 'rdo_prova_' + p.id;
+    limparProvasGuardadas(p.id);
     var resp = {};
     Object.keys(p.respostas || {}).forEach(function (k) { resp[k] = p.respostas[k]; });
     try { var loc = JSON.parse(guardado(chaveLocal) || '{}'); Object.keys(loc).forEach(function (k) { resp[k] = loc[k]; }); } catch (e) {}
@@ -724,7 +952,12 @@
         chamar('salvarRespostasProva', { id: p.id, respostas: resp }, function (s) {
           // Sem internet: as respostas continuam guardadas neste aparelho. Avisa para entregar a tempo.
           if (s && s.ok) { alerta.className = ''; alerta.textContent = ''; }
-          else { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho: entregue antes do tempo acabar.'; }
+          else if (!s || FALHAS_DE_REDE[s.erro]) { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho. Quando a internet voltar, toque em Entregar a prova antes de o tempo acabar.'; }
+          else {
+            // Outro erro (a prova acabou, o tempo esgotou): a mensagem e a dele, e a entrega fecha a prova.
+            alerta.className = 'erro'; alerta.textContent = msgErro(s);
+            if (s.erro === 'prova_encerrada' || s.erro === 'tempo_esgotado') entregar();
+          }
         }, true);
       }, 1500);
     }
@@ -784,12 +1017,24 @@
     r.appendChild(el('h1', '', 'Resultado'));
     r.appendChild(el('div', 'grande', res.acertos + ' de ' + res.questoes));
     var proximo;
-    if (res.passou) proximo = 'Agora vêm as 6 simulações, com quem aplica.';
+    var at = res.trilha && res.trilha.estado ? res.trilha.estado.atual : undefined;
+    if (res.passou) proximo = at ? ('Agora vem: ' + at.titulo + (at.tipo === 'pessoa' ? ', com quem aplica.' : '.'))
+      : (at === null ? 'Você concluiu a trilha inteira.' : 'Volte à trilha para ver o próximo passo.');
     else if (res.proxima === 'aguarda_diretoria') proximo = 'A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.';
-    else proximo = 'Refaça as perguntas das aulas da Trilha.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
+    else proximo = 'Refaça as perguntas das aulas desta etapa.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
     r.appendChild(el('div', res.passou ? 'bom' : 'aviso', (res.passou ? 'Passou. ' : 'Não passou desta vez. ') + proximo));
     r.appendChild(botao('Voltar à trilha', '', function () { if (res.trilha) desenharTrilha(); else carregar(); }));
   }
+
+  // Tela parada (tablet da loja, icone na tela de inicio do celular): ao voltar para ela depois de um minuto, a
+  // trilha se atualiza sozinha. Sem isto, "Por hoje é só" e o botao apagado da prova ficavam velhos no dia seguinte.
+  // Com um video no cartao (passo de video) nao atualiza: recarregar pararia o video no meio.
+  function aoVoltar() {
+    var noVideo = ESTADO && ESTADO.atual && ESTADO.atual.tipo === 'video';
+    if (TELA === 'trilha' && !noVideo && !pendentes && Date.now() - DESENHADA_EM > 60000 && (!document.visibilityState || document.visibilityState === 'visible')) carregar();
+  }
+  document.addEventListener('visibilitychange', aoVoltar);
+  window.addEventListener('pageshow', aoVoltar);
 
   if (!CODIGO) { var x = raiz(); x.appendChild(el('div', 'aviso', 'Entre primeiro no app com o seu código.')); rodape(x); }
   else carregar();

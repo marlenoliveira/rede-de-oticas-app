@@ -6,6 +6,9 @@
 <meta name="color-scheme" content="light">
 <meta name="robots" content="noindex">
 <title>Painel do treino</title>
+<link rel="apple-touch-icon" sizes="180x180" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://marlenoliveira.github.io/rede-de-oticas-app/icones/casa-32.png">
 <!--
   PAINEL DO TREINO — desde 13/11/2026 (pedido do Marlen).
 
@@ -72,9 +75,15 @@
   .tr-diretoria { border-left-color: #6E1A12; } .tr-em_dia { border-left-color: var(--verde); }
   .tr-ficha { margin-top: 8px; font-size: 16px; }
   .tr-ficha div { margin: 3px 0; }
+  a.zap { display: block; text-align: center; text-decoration: none; font-weight: 800; min-height: 48px; box-sizing: border-box;
+    padding: 11px 18px; border-radius: 12px; border: 2px solid var(--verde); background: var(--verde); color: #fff; margin: 8px 0 2px; }
+  .zap-dica { font-size: 14px; color: var(--cinza); margin: 0 0 4px; }
   .tr-notas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .tr-notas input { margin: 0; }
   select { font: inherit; width: 100%; min-height: 52px; border-radius: 12px; border: 2px solid var(--linha); padding: 8px 10px; margin: 8px 0; background: #fff; }
+  /* Aguarde (o servidor do Google leva alguns segundos) */
+  #aguarde { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--azul); color: #fff;
+    font-weight: 800; padding: 12px 20px; border-radius: 999px; font-size: 17px; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 9; }
 </style>
 </head>
 <body>
@@ -102,6 +111,7 @@
 <div id="lojas"></div>
 
 <div class="regua oculto" id="regua"></div>
+<div id="aguarde" class="oculto">Aguarde…</div>
 
 <script>
 (function () {
@@ -116,12 +126,18 @@
     sem_permissao: 'Este código não é da Diretoria, da supervisão nem da gerência. O painel não abre para ele.',
     codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
     sem_codigo: 'Digite o seu código.',
-    muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos e tente de novo.',
-    codigo_duplicado: 'Este código está repetido na planilha. Avise a Diretoria.',
+    muitas_tentativas: 'Muitas tentativas erradas. Espere 5 minutos e tente de novo.',
+    codigo_duplicado: 'Há um problema no seu cadastro. Fale com a Diretoria.',
+    inativo: 'Este código está desativado. Fale com quem acompanha a loja.',
+    falha_no_servidor: 'O servidor falhou agora. Toque em Atualizar em alguns segundos.',
     sem_conexao: 'Sem conexão com o servidor. Confira a internet e toque em Atualizar.',
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.'
   };
 
+  // Codigo que nao vale mais (trocado, desativado ou repetido): sai do aparelho; senao "Atualizar" insistia nele (20/11/2026).
+  var CODIGO_MORTO = { codigo_invalido: 1, inativo: 1, codigo_duplicado: 1 };
+  // Falha passageira (internet, Google): nao e motivo para pedir o codigo de novo.
+  var FALHA_PASSAGEIRA = { sem_conexao: 1, resposta_invalida: 1, falha_no_servidor: 1 };
   function id(x) { return document.getElementById(x); }
   function guardado(chave) { try { return window.localStorage.getItem(chave) || ''; } catch (e) { return ''; } }
   function guardar(chave, valor) {
@@ -140,7 +156,16 @@
     return n;
   }
 
+  var ESPERA_MAXIMA_MS = 40000;
+  /** Uma resposta so por chamada: a do servidor, ou "sem conexao" quando passa do limite de espera. */
+  function umaVez(pronto) {
+    var acabou = false;
+    function fim(d) { if (acabou) return; acabou = true; pronto(d); }
+    setTimeout(function () { fim({ ok: false, erro: 'sem_conexao' }); }, ESPERA_MAXIMA_MS);
+    return fim;
+  }
   function chamar(codigo, pronto) {
+    pronto = umaVez(pronto);
     fetch(URL_SERVIDOR, {
       method: 'POST',
       // text/plain de proposito: com application/json o navegador faz uma
@@ -273,6 +298,7 @@
   // poder matricular, esta parte nao aparece e o Painel fica como era.
   // ------------------------------------------------------------
   function chamarFn(fn, codigo, extra, pronto) {
+    pronto = umaVez(pronto);
     var args = [codigo, aparelho()];
     if (extra !== undefined) args.push(extra);
     fetch(URL_SERVIDOR, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -282,28 +308,67 @@
       .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
   }
   var ERROS_TRILHA = {
-    sem_permissao: 'Este código não pode fazer isso.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa.',
-    notas_invalidas: 'Preencha as 6 notas, de 0 a 10.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.',
-    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.', fase_b_nao_construida: 'Vendedora nova ainda não entra: a parte dos Primeiros dias não está pronta no app.',
+    sem_permissao: 'Seu acesso não permite esta ação.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa. Toque em Atualizar.',
+    resultado_invalido: 'Escolha: aprovada ou refazer.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado: peça a quem acompanha a loja.', tipo_invalido: 'Escolha: já trabalha ou nova.',
+    nao_matriculada: 'Esta pessoa não está na trilha. Toque em Atualizar.', loja_de_teste: 'A loja de teste não entra na trilha.',
+    falha_no_servidor: 'O servidor falhou agora. Tente de novo em alguns segundos.', falha_na_gravacao: 'A planilha não gravou agora. Tente de novo em alguns segundos.',
+    resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.',
+    regras_nao_aceitas: 'Ela ainda não aceitou as Regras de uso no app.',
+    loja_em_piloto: 'Loja em piloto: a trilha não entra nela por enquanto.', so_diretoria: 'Quem aguarda a Diretoria só sai da trilha pela Diretoria.',
     pessoa_nao_encontrada: 'Pessoa não encontrada ou inativa.', nao_aguarda_diretoria: 'Esta pessoa não está aguardando a Diretoria.'
   };
+  /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
+  function comCertificado(fn) {
+    if (window.baixarCertificado) return fn();
+    var s = document.createElement('script');
+    s.src = 'certificado.js';
+    s.onload = fn;
+    s.onerror = function () { window.alert('Não deu certo. Confira a internet e tente de novo.'); };
+    document.head.appendChild(s);
+  }
   var LISTAS = [['parada', 'Parada', 'tr-parada'], ['pessoa', 'Esperando uma pessoa', 'tr-pessoa-esp'],
                 ['diretoria', 'Aguarda a Diretoria', 'tr-diretoria'], ['em_dia', 'Em dia', 'tr-em_dia']];
 
   function carregarTrilha(codigo) {
+    // A parte da trilha chega alguns segundos depois do resto. Sem este aviso ela aparecia de repente, no alto,
+    // e empurrava a tela para baixo no meio da leitura (18/11/2026).
+    var caixa = id('trilha');
+    if (!caixa.firstChild) caixa.appendChild(el('p', 'sub', 'Carregando a trilha…'));
     chamarFn('painelTrilha', codigo, undefined, function (r) {
       var box = id('trilha');
       box.textContent = '';
+      // Internet ou falha passageira: avisa, em vez de a parte da trilha sumir calada.
+      if (r && !r.ok && (r.erro === 'sem_conexao' || r.erro === 'resposta_invalida' || r.erro === 'falha_no_servidor')) {
+        box.appendChild(el('div', 'aviso', 'A parte da trilha não carregou agora. Confira a internet e toque em Atualizar.'));
+        return;
+      }
       if (!r || !r.ok || !Array.isArray(r.pessoas)) return; // servidor antigo ou sem permissao: o Painel continua como era
-      if (!r.pessoas.length && !(r.podeMatricular && r.candidatas.length)) return;
+      // Diretoria e supervisao veem a parte de matricula mesmo sem ninguem, com o aviso (17/11/2026).
+      if (!r.pessoas.length && !r.podeMatricular) return;
       desenharTrilha(box, r, codigo);
     });
   }
 
+  // Uma acao por vez: o servidor leva alguns segundos e, sem aviso, o toque repetido lancava duas vezes
+  // (ou dava "este passo nao e o da vez" na segunda).
+  var ocupado = false;
   function acaoTrilha(fn, codigo, extra, aviso) {
+    if (ocupado) return;
     if (aviso && !window.confirm(aviso)) return;
+    ocupado = true;
+    id('aguarde').className = '';
     chamarFn(fn, codigo, extra, function (r) {
-      if (!r || !r.ok) { window.alert(ERROS_TRILHA[(r && r.erro) || ''] || 'Não deu certo. Tente de novo.'); return; }
+      ocupado = false;
+      id('aguarde').className = 'oculto';
+      if (!r || !r.ok) {
+        var erro = (r && r.erro) || '';
+        // Codigo que deixou de valer no meio do uso: o Painel volta a pedir o codigo, em vez de um alerta sem saida.
+        if (CODIGO_MORTO[erro] || erro === 'muitas_tentativas') { codigoSaiu(erro); return; }
+        var texto = ERROS_TRILHA[erro] || (erro === 'sem_conexao' ? 'Sem conexão com o servidor. Confira a internet e toque em Atualizar para ver se foi gravado.' : 'Não deu certo. Tente de novo.');
+        if (erro === 'loja_em_piloto' && r.ate) texto = 'Loja em piloto até ' + r.ate + ': a trilha entra nela depois disso.';
+        window.alert(texto);
+        return;
+      }
       carregarTrilha(codigo);
     });
   }
@@ -311,6 +376,14 @@
   function desenharTrilha(box, r, codigo) {
     box.appendChild(el('h2', '', 'Trilha do treinamento'));
     box.appendChild(el('p', 'resumo', 'Só quem está matriculada na trilha. Toque no nome para abrir a ficha.'));
+    // Aba DIAS QUE NAO CONTAM (18/11/2026): se o app nao entendeu alguma linha (data que nao e data, loja que nao
+    // existe), a Diretoria e a supervisao veem aqui qual. Sem isto, um erro de digitacao faria o feriado da cidade
+    // voltar a contar como dia util, calado. So aparece quando ha linha com problema.
+    var ne = (r.diasFora && r.diasFora.naoEntendidas) || [];
+    if (ne.length) {
+      var quais = ne.map(function (x) { return 'linha ' + x.linha + ' (' + (x.motivo === 'data' ? 'data' : 'loja') + (x.texto ? ' "' + x.texto + '"' : '') + ')'; }).join(', ');
+      box.appendChild(el('div', 'aviso', 'Aba DIAS QUE NÃO CONTAM da planilha: o app não entendeu ' + quais + '. Corrija na planilha: enquanto isso, o dia dessa linha continua contando como dia útil.'));
+    }
     LISTAS.forEach(function (L) {
       var doGrupo = r.pessoas.filter(function (p) { return p.lista === L[0]; });
       if (!doGrupo.length) return;
@@ -321,18 +394,24 @@
     });
     if (r.podeMatricular && r.candidatas.length) {
       box.appendChild(el('h2', '', 'Matricular na trilha'));
-      box.appendChild(el('p', 'resumo', 'Só vendedora que já trabalha na loja. Lojas do piloto não aparecem.'));
+      box.appendChild(el('p', 'resumo', 'Quem já trabalha na loja começa pela Ponte; a vendedora nova, pelos Primeiros dias. Lojas do piloto não aparecem.'));
       var sel = el('select');
       r.candidatas.forEach(function (c, i) { var o = el('option', '', c.loja + ' · ' + c.nome); o.value = String(i); sel.appendChild(o); });
       box.appendChild(sel);
-      var b = el('button', '', 'Matricular');
-      b.type = 'button';
-      b.addEventListener('click', function () {
-        var c = r.candidatas[Number(sel.value)];
-        acaoTrilha('matricular', codigo, { loja: c.loja, nome: c.nome, tipo: 'ja_trabalha' },
-          'Matricular ' + c.nome + ' (' + c.loja + ') na trilha? Ela passa a ver "Minha trilha" ao entrar no app.');
+      [['ja_trabalha', 'Matricular: já trabalha na loja', 'começa pela Ponte'], ['nova', 'Matricular: vendedora nova', 'começa pelos Primeiros dias']].forEach(function (x) {
+        var b = el('button', x[0] === 'nova' ? 'leve' : '', x[1]);
+        b.type = 'button';
+        b.addEventListener('click', function () {
+          var c = r.candidatas[Number(sel.value)];
+          acaoTrilha('matricular', codigo, { loja: c.loja, nome: c.nome, id: c.id, tipo: x[0] },
+            'Matricular ' + c.nome + ' (' + c.loja + ') na trilha? Ela ' + x[2] + ' e passa a ver "Minha trilha" ao entrar no app.');
+        });
+        box.appendChild(b);
       });
-      box.appendChild(b);
+    } else if (r.podeMatricular) {
+      // Sem ninguem para matricular, a parte aparece com o aviso em vez de sumir (Marlen, 17/11/2026: "Sim, mostrar").
+      box.appendChild(el('h2', '', 'Matricular na trilha'));
+      box.appendChild(el('p', 'resumo', 'Ninguém para matricular agora. Lojas do piloto não aparecem.'));
     }
   }
 
@@ -344,51 +423,105 @@
     linha1.appendChild(el('b', '', p.nome));
     linha1.appendChild(el('span', '', p.loja));
     cab.appendChild(linha1);
-    var onde = p.concluida ? 'Etapa 1 concluída' : (p.atual.fase + ' · passo ' + p.atual.n + ' de ' + p.totalJornada + ' · ' + p.atual.titulo);
+    var onde = p.concluida ? 'Trilha inteira concluída · Vendedora em Formação' : (p.atual.fase + ' · passo ' + (p.atual.ordem || p.atual.n) + ' de ' + (p.totalPassos || p.totalJornada) + ' · ' + p.atual.titulo);
     cab.appendChild(el('div', 'resumo', onde));
     if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
+    // Faixa da regua das Regras de uso, com as mesmas cores do treino (17/11/2026).
+    var FAIXA_TRILHA = { lembrete: 'Lembrete', conversa: 'Conversa com a gerente', advertencia: 'Advertência por escrito', diretoria: 'A Diretoria decide' };
+    if (p.faixa && FAIXA_TRILHA[p.faixa]) cab.appendChild(el('span', 'selo s-' + p.faixa, FAIXA_TRILHA[p.faixa]));
     c.appendChild(cab);
+    // Chamar no WhatsApp quem esta parada (versao de teste, desde 16/11/2026). O app nao manda nada:
+    // abre o WhatsApp de quem acompanha com a mensagem pronta; ela escolhe o contato e envia.
+    if (p.chamar && p.chamar.texto) {
+      var z = el('a', 'zap', 'Chamar no WhatsApp');
+      z.href = 'https://wa.me/?text=' + encodeURIComponent(p.chamar.texto);
+      z.target = '_blank'; z.rel = 'noopener';
+      z.addEventListener('click', function (ev) {
+        if (p.chamar.ateMs && Date.now() > p.chamar.ateMs) {
+          ev.preventDefault();
+          window.alert('Fora do horário comercial. Mande no próximo horário: segunda a sexta, das 8h às 18h.');
+        }
+      });
+      c.appendChild(z);
+      c.appendChild(el('p', 'zap-dica', 'Abre o WhatsApp com a mensagem pronta. Você escolhe o contato e envia.'));
+    }
     var f = el('div', 'tr-ficha oculto');
     f.appendChild(el('div', '', 'Começou em ' + p.desde + ' · ' + (p.tipo === 'ja_trabalha' ? 'já trabalhava na loja' : 'vendedora nova')));
-    f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada !== null && p.parada !== undefined ? ' · ' + p.parada + ' dias úteis' : '')));
+    f.appendChild(el('div', '', 'Última atividade: ' + (p.ultima || 'nenhuma') + (p.parada ? ' · há ' + p.parada + (p.parada === 1 ? ' dia útil' : ' dias úteis') + ' sem atividade' : '')));
+    // Regras de uso (17/11/2026): o aceite da propria vendedora no app. Sem foto, sem biometria.
+    var rg = p.regras || {};
+    f.appendChild(el('div', '', rg.aceitasEm ? 'Regras de uso aceitas em ' + rg.aceitasEm : 'Regras de uso: ainda não aceitas no app'));
     f.appendChild(el('div', '', 'Aulas fechadas: ' + p.aulasFeitas + ' de ' + p.aulasTotal + ' · vídeos: ' + p.videosFeitos + ' de ' + p.videosTotal));
-    var t = (p.prova.tentativas || []).filter(function (x) { return x.estado === 'corrigida'; });
-    f.appendChild(el('div', '', 'Prova Final: ' + (t.length ? t.map(function (x) {
-      return x.n + 'ª ' + x.acertos + ' de ' + x.questoes + ' (' + x.data + (x.minutos !== null ? ', ' + x.minutos + ' min' : '') + ')';
-    }).join(' · ') + (p.prova.estado === 'aprovada' ? ' · aprovada' : '') : 'ainda não fez')));
-    if (p.simulacoes.length) f.appendChild(el('div', '', '6 simulações: ' + p.simulacoes.map(function (s) {
-      return s.data + ' ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + ' (' + String(s.notas).split(';').join(', ') + ')';
-    }).join(' · ')));
+    // Cada prova da jornada: so as que ja tiveram tentativa (a Prova Final aparece sempre).
+    var provas = p.provas || { prova_final: p.prova };
+    Object.keys(provas).forEach(function (k) {
+      var sp = provas[k];
+      var t = (sp.tentativas || []).filter(function (x) { return x.estado === 'corrigida'; });
+      if (!t.length && k !== 'prova_final') return;
+      f.appendChild(el('div', '', (sp.nome || 'Prova Final') + ': ' + (t.length ? t.map(function (x) {
+        return x.n + 'ª ' + x.acertos + ' de ' + x.questoes + ' (' + x.data + (x.minutos !== null ? ', ' + x.minutos + ' min' : '') + ')';
+      }).join(' · ') + (sp.estado === 'aprovada' ? ' · aprovada' : '') : 'ainda não fez')));
+    });
+    // Praticas marcadas por quem aplica (simulacoes, 5o dia, praticas dos blocos).
+    var NOME_PRATICA = { simulacoes: '6 simulações', avaliacao_dia5: 'Avaliação do 5º dia', pratica_lentes: 'Prática de Lentes',
+      pratica_armacoes: 'Prática de Armações', pratica_negociacao: 'Prática de Negociação' };
+    var praticas = p.praticas || { simulacoes: p.simulacoes || [] };
+    Object.keys(praticas).forEach(function (k) {
+      if (!praticas[k].length) return;
+      f.appendChild(el('div', '', (NOME_PRATICA[k] || k) + ': ' + praticas[k].map(function (s) {
+        return s.data + ' ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '');
+      }).join(' · ')));
+    });
     if (p.podeLancar && p.atual.id === 'ponte') {
       var bp = el('button', '', 'Lançar: Ponte feita');
       bp.type = 'button';
-      bp.addEventListener('click', function () { acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, passo: 'ponte' }, 'Confirmar que a conversa da Ponte com ' + p.nome + ' foi feita?'); });
+      bp.addEventListener('click', function () { acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: 'ponte' }, 'Confirmar que a conversa da Ponte com ' + p.nome + ' foi feita?'); });
       f.appendChild(bp);
     }
-    if (p.podeLancar && p.atual.id === 'simulacoes') {
-      f.appendChild(el('div', '', 'Notas das 6 simulações (0 a 10; passa com 8 em cada):'));
-      var g = el('div', 'tr-notas'), ins = [];
-      for (var i = 0; i < 6; i++) { var inp = el('input'); inp.type = 'number'; inp.min = '0'; inp.max = '10'; inp.inputMode = 'numeric'; inp.placeholder = String(i + 1); ins.push(inp); g.appendChild(inp); }
-      f.appendChild(g);
-      var bs = el('button', '', 'Lançar as 6 simulações');
-      bs.type = 'button';
-      bs.addEventListener('click', function () {
-        var notas = ins.map(function (x) { return x.value === '' ? NaN : Number(x.value); });
-        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, passo: 'simulacoes', notas: notas },
-          'Lançar as notas ' + notas.join(', ') + ' para ' + p.nome + '?');
+    if (p.podeLancar && p.atual.tipo === 'pessoa' && p.atual.id !== 'ponte') {
+      // D5 (17/11/2026): a gerente ou a supervisora marca aprovada ou refazer. A marcação
+      // aqui é o registro oficial, no lugar do papel assinado. O app não guarda a nota.
+      var COMO = {
+        simulacoes: 'As 6 simulações: depois de aplicar, marque o resultado. Passa com 8 de 10 em cada, pela Régua das 6 Simulações.',
+        avaliacao_dia5: 'O 5º dia: checklist completo e atendimento avaliado com média de 3,5 ou mais (Formulários do Onboarding).',
+        pratica_lentes: 'Avaliação prática de Lentes: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.',
+        pratica_armacoes: 'Avaliação prática de Armações: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.',
+        pratica_negociacao: 'Avaliação prática de Negociação: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.'
+      };
+      f.appendChild(el('div', '', (COMO[p.atual.id] || p.atual.titulo) + ' Esta marcação é o registro oficial.'));
+      var ba = el('button', '', 'Aprovada');
+      ba.type = 'button';
+      ba.addEventListener('click', function () {
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: p.atual.id, resultado: 'aprovada' },
+          'Marcar "' + p.atual.titulo + '" de ' + p.nome + ' como APROVADA?');
       });
-      f.appendChild(bs);
+      f.appendChild(ba);
+      var br = el('button', 'leve', 'Refazer');
+      br.type = 'button';
+      br.addEventListener('click', function () {
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: p.atual.id, resultado: 'refazer' },
+          'Marcar "' + p.atual.titulo + '" de ' + p.nome + ' como REFAZER?');
+      });
+      f.appendChild(br);
+    }
+    // Certificado de conclusao da Trilha (versao de teste, desde 16/11/2026). Tinha saido sem querer na
+    // reforma do passo 2 (17/11/2026); o servidor continuava mandando e o botao nao aparecia.
+    if (p.certificado) {
+      var bc = el('button', '', 'Baixar o certificado');
+      bc.type = 'button';
+      bc.addEventListener('click', function () { comCertificado(function () { window.baixarCertificado(p.certificado); }); });
+      f.appendChild(bc);
     }
     if (p.podeLiberar) {
-      var bl = el('button', 'leve', 'Liberar nova série da Prova Final');
+      var bl = el('button', 'leve', 'Liberar nova série: ' + (p.prova.nome || 'Prova Final'));
       bl.type = 'button';
-      bl.addEventListener('click', function () { acaoTrilha('liberarNovaSerie', codigo, { loja: p.loja, nome: p.nome }, 'Liberar uma nova série para ' + p.nome + '? Ela refaz as aulas da Trilha antes.'); });
+      bl.addEventListener('click', function () { acaoTrilha('liberarNovaSerie', codigo, { loja: p.loja, nome: p.nome, id: p.id }, 'Liberar uma nova série da ' + (p.prova.nome || 'Prova Final') + ' para ' + p.nome + '? Ela refaz as aulas da etapa antes.'); });
       f.appendChild(bl);
     }
     if (podeMatricular && p.podeTirar !== false) {
       var bd = el('button', 'leve', 'Tirar da trilha');
       bd.type = 'button';
-      bd.addEventListener('click', function () { acaoTrilha('desmatricular', codigo, { loja: p.loja, nome: p.nome }, 'Tirar ' + p.nome + ' da trilha? Ela volta a ver o app como antes. O que já fez continua gravado.'); });
+      bd.addEventListener('click', function () { acaoTrilha('desmatricular', codigo, { loja: p.loja, nome: p.nome, id: p.id }, 'Tirar ' + p.nome + ' da trilha? Ela volta a ver o app como antes. O que já fez continua gravado.'); });
       f.appendChild(bd);
     }
     c.appendChild(f);
@@ -401,10 +534,20 @@
     m.textContent = '';
     m.appendChild(el('div', 'erro', ERROS[codigoErro] || 'Algo deu errado. Tente de novo em alguns segundos.'));
   }
+  /** O codigo deixou de valer (ou o aparelho travou): limpa o Painel e pede o codigo de novo. */
+  function codigoSaiu(erro) {
+    if (CODIGO_MORTO[erro]) { guardar('rdo_codigo', ''); id('atualizar').className = 'leve oculto'; }
+    id('trilha').textContent = ''; id('lojas').textContent = ''; id('quando').textContent = ''; id('regua').className = 'regua oculto';
+    mostrarErro(erro);
+    id('entrada').className = '';
+    if (window.scrollTo) window.scrollTo(0, 0);
+  }
 
   function carregar(codigo, veioDoFormulario) {
     id('mensagem').textContent = '';
     id('quando').textContent = 'Carregando…';
+    // "Atualizar" desde a primeira carga com codigo guardado (20/11/2026): antes so aparecia depois de o treino chegar.
+    id('atualizar').className = codigo ? 'leve' : 'leve oculto';
     // Treino e trilha pedidos ao mesmo tempo (antes, a trilha esperava o treino chegar).
     carregarTrilha(codigo);
     chamar(codigo, function (r) {
@@ -416,8 +559,9 @@
       }
       id('quando').textContent = '';
       var erro = (r && r.erro) || 'resposta_invalida';
+      if (CODIGO_MORTO[erro] || erro === 'muitas_tentativas') { codigoSaiu(erro); return; }
       mostrarErro(erro);
-      if (erro !== 'sem_conexao' && erro !== 'resposta_invalida') id('entrada').className = '';
+      if (!FALHA_PASSAGEIRA[erro]) id('entrada').className = '';
     });
   }
 
