@@ -453,7 +453,14 @@
     barraQuem(r);
     r.appendChild(botao('← Voltar à trilha', 'leve', desenharTrilha));
     r.appendChild(el('h1', '', p.titulo));
-    r.appendChild(videoNaTela(p.videoId, p.titulo));
+    videosDoPasso(p).forEach(function (v) {
+      if (videosDoPasso(p).length > 1) r.appendChild(el('div', 'tit', v.titulo));
+      r.appendChild(videoNaTela(v.id, v.titulo));
+    });
+  }
+  /** Os videos de um passo: um so, ou a lista (o passo 4 tem os do SsOtica 1 e 2). */
+  function videosDoPasso(p) {
+    return (p.videos && p.videos.length) ? p.videos : [{ id: p.videoId, titulo: p.titulo }];
   }
 
   /** O cartao grande: a UMA coisa que a pessoa tem de fazer agora. */
@@ -463,6 +470,19 @@
     function tit(t) { c.appendChild(el('div', 'tit', t)); }
     function txt(t) { c.appendChild(el('p', '', t)); }
     var foraHora = HORARIO && !HORARIO.aberto && !HORARIO.aulaLivre;   // so trava aula se a aula nao for livre
+    // Um dia do Roteiro por dia util (D6): no sabado, no domingo, no feriado e no dia que nao conta para a
+    // loja dela nao comeca dia novo. Quem diz que dia e hoje e o servidor (HOJE), nao o relogio do aparelho.
+    function porHojeESo(titulo, titCartao) {
+      var dia = HOJE ? HOJE.semana : new Date().getDay();
+      var naSegunda = (dia === 6 || dia === 0) && (!HOJE || HOJE.proximoUtilSemana === 1);
+      var depois = (naSegunda ? 'Na segunda-feira: ' : 'No próximo dia útil' + (HOJE && HOJE.proximoUtil ? ' (' + HOJE.proximoUtil + ')' : '') + ': ') + titulo + '.';
+      rot('Por hoje é só');
+      tit(titCartao);
+      if (dia === 6) txt('No sábado não começa dia novo da trilha. Pratique no balcão o que estudou. ' + depois);
+      else if (HOJE && dia === 0) txt('No domingo não começa dia novo da trilha. ' + depois);
+      else if (HOJE && HOJE.util === false) txt('Hoje não conta como dia útil' + (HOJE.motivo ? ' (' + HOJE.motivo + ')' : '') + ': não começa dia novo da trilha. ' + depois);
+      else txt('Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. No próximo dia útil: ' + titulo + '.');
+    }
     if (e.concluida) {
       c.className = 'agora fim';
       rot('Parabéns');
@@ -487,10 +507,19 @@
     }
     if (at.tipo === 'video') {
       var p = e.passos.filter(function (x) { return x.id === at.id; })[0];
+      if (p.amanha) {
+        c.className = 'agora espera';
+        porHojeESo(p.titulo, 'O próximo passo abre no próximo dia útil');
+        return c;
+      }
+      var vs = videosDoPasso(p);
       rot('Agora');
       tit(p.titulo);
-      txt('Assista ao vídeo aqui e depois toque em "Assisti. Concluí".');
-      c.appendChild(videoNaTela(p.videoId, p.titulo));
+      txt(vs.length > 1 ? 'Assista aos ' + vs.length + ' vídeos aqui e depois toque em "Assisti. Concluí".' : 'Assista ao vídeo aqui e depois toque em "Assisti. Concluí".');
+      vs.forEach(function (v) {
+        if (vs.length > 1) c.appendChild(el('p', 'sub', v.titulo));
+        c.appendChild(videoNaTela(v.id, v.titulo));
+      });
       c.appendChild(botao('Assisti. Concluí', 'laranja', function (ev) {
         ev.target.disabled = true;
         chamar('concluirVideo', { video: at.id }, function (res) {
@@ -538,17 +567,7 @@
     }
     c.className = 'agora espera';
     if (prox && prox.estado === 'amanha') {
-      // Um dia do Roteiro por dia util (D6): no sabado, no domingo, no feriado e no dia que nao conta para a
-      // loja dela nao comeca dia novo. Quem diz que dia e hoje e o servidor (HOJE), nao o relogio do aparelho.
-      var dia = HOJE ? HOJE.semana : new Date().getDay();
-      var naSegunda = (dia === 6 || dia === 0) && (!HOJE || HOJE.proximoUtilSemana === 1);
-      var depois = (naSegunda ? 'Na segunda-feira: ' : 'No próximo dia útil' + (HOJE && HOJE.proximoUtil ? ' (' + HOJE.proximoUtil + ')' : '') + ': ') + prox.titulo + '.';
-      rot('Por hoje é só');
-      tit('A próxima aula abre no próximo dia útil');
-      if (dia === 6) txt('No sábado não começa dia novo da trilha. Pratique no balcão o que estudou. ' + depois);
-      else if (HOJE && dia === 0) txt('No domingo não começa dia novo da trilha. ' + depois);
-      else if (HOJE && HOJE.util === false) txt('Hoje não conta como dia útil' + (HOJE.motivo ? ' (' + HOJE.motivo + ')' : '') + ': não começa dia novo da trilha. ' + depois);
-      else txt('Você já fez hoje o conteúdo de um dia. Pratique no balcão o que estudou. No próximo dia útil: ' + prox.titulo + '.');
+      porHojeESo(prox.titulo, 'A próxima aula abre no próximo dia útil');
     } else if (prox && (prox.estado === 'perguntas_pendentes' || prox.estado === 'sem_perguntas')) {
       rot('Aguarde');
       tit(prox.titulo);
