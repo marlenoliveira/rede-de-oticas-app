@@ -128,8 +128,8 @@
     sem_permissao: 'Este código não é da Diretoria, da supervisão nem da gerência. O painel não abre para ele.',
     codigo_invalido: 'Código não reconhecido. Confira e tente de novo.',
     sem_codigo: 'Digite o seu código.',
-    muitas_tentativas: 'Muitas tentativas erradas. Espere alguns minutos e tente de novo.',
-    codigo_duplicado: 'Este código está repetido na planilha. Avise a Diretoria.',
+    muitas_tentativas: 'Muitas tentativas erradas. Espere 5 minutos e tente de novo.',
+    codigo_duplicado: 'Há um problema no seu cadastro. Fale com a Diretoria.',
     inativo: 'Este código está desativado. Fale com quem acompanha a loja.',
     falha_no_servidor: 'O servidor falhou agora. Toque em Atualizar em alguns segundos.',
     sem_conexao: 'Sem conexão com o servidor. Confira a internet e toque em Atualizar.',
@@ -310,8 +310,8 @@
       .catch(function () { pronto({ ok: false, erro: 'sem_conexao' }); });
   }
   var ERROS_TRILHA = {
-    sem_permissao: 'Este código não pode fazer isso.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa.',
-    resultado_invalido: 'Escolha: aprovada ou refazer.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado.', tipo_invalido: 'Escolha: já trabalha ou nova.',
+    sem_permissao: 'Seu acesso não permite esta ação.', passo_fora_de_hora: 'Este passo não é o da vez desta pessoa. Toque em Atualizar.',
+    resultado_invalido: 'Escolha: aprovada ou refazer.', nao_lanca_o_proprio: 'Ninguém lança o próprio resultado: peça a quem acompanha a loja.', tipo_invalido: 'Escolha: já trabalha ou nova.',
     nao_matriculada: 'Esta pessoa não está na trilha. Toque em Atualizar.', loja_de_teste: 'A loja de teste não entra na trilha.',
     falha_no_servidor: 'O servidor falhou agora. Tente de novo em alguns segundos.', falha_na_gravacao: 'A planilha não gravou agora. Tente de novo em alguns segundos.',
     resposta_invalida: 'O servidor respondeu algo inesperado. Tente de novo em alguns segundos.',

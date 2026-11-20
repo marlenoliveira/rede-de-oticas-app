@@ -844,7 +844,7 @@ class Component extends DCLogic {
     return {
       sem_permissao: 'Você não tem permissão para essa ação.',
       outra_loja: 'Essa pessoa é de outra loja. Você só pode cadastrar na sua loja.',
-      so_vendedora: 'A gerente só pode cadastrar pessoas no papel de vendedora.',
+      so_vendedora: 'A gerente só pode cadastrar pessoas no papel de vendedora. Para gerente, supervisão ou diretoria, peça à Diretoria.',
       email_invalido: 'E-mail inválido. Confira e tente de novo.',
       sem_permissao_para_esta_pessoa: 'Você só pode fazer isso com vendedoras da sua própria loja.',
       inativo: 'Seu acesso está desativado. Fale com a gerente.',
@@ -860,8 +860,8 @@ class Component extends DCLogic {
       nome_loja_obrigatorio: 'Informe o nome da loja.',
       cidade_obrigatoria: 'Informe a cidade da loja.',
       aba_nao_encontrada: 'Uma aba da planilha não foi encontrada. Fale com a diretoria.',
-      pessoa_nao_encontrada: 'Essa pessoa não está na lista de usuários.',
-      pessoa_ja_existe: 'Já existe uma pessoa ativa com esse nome nessa loja. Use nome e sobrenome, ou reative o cadastro que já existe.',
+      pessoa_nao_encontrada: 'Essa pessoa não está mais na lista. Abra a Equipe de novo e confira.',
+      pessoa_ja_existe: 'Já existe uma pessoa ativa com esse nome nessa loja. Se for a mesma pessoa, use o cadastro que já existe; se for outra, cadastre com nome e sobrenome.',
       erro_desconhecido: 'Algo deu errado. Tente de novo em alguns segundos.',
       email_duplicado: 'Esse e-mail aparece em mais de uma linha da aba USUARIOS. Peça à diretoria para deixar só uma linha antes de continuar.',
       papel_exige_todas: 'Diretoria e Supervisão só existem com Loja = TODAS. Escolha outro papel ou deixe a loja como TODAS.',
@@ -1200,7 +1200,7 @@ class Component extends DCLogic {
     if (cod === 'fora_do_apps_script') return 'Abra o app pelo link oficial que a gerente enviou.';
     if (cod === 'codigo_invalido' || cod === 'sem_codigo') {
       // Aviso so na penultima tentativa (20/11/2026): a mensagem continua a mesma para codigo que existe ou nao.
-      const aviso = (resposta && resposta.restam === 1) ? ' Na próxima tentativa errada, este aparelho trava por ' + ((resposta && resposta.esperaMinutos) || 5) + ' minutos.' : '';
+      const aviso = (resposta && resposta.restam === 1) ? ' Na próxima tentativa errada, o app trava neste aparelho por ' + ((resposta && resposta.esperaMinutos) || 5) + ' minutos.' : '';
       return 'Código não confere. Confira com a gerente.' + aviso;
     }
     if (cod === 'sem_conexao') return 'Sem conexão com o servidor. Confira a internet e toque em Tentar de novo.';

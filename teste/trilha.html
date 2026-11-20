@@ -141,17 +141,17 @@
   var ESPERA_MAXIMA_MS = 40000;
 
   var ERROS = {
-    nao_matriculada: 'Você não está na trilha. Use o app normalmente.',
+    nao_matriculada: 'Você ainda não está na trilha. Fale com quem acompanha a loja. O restante do app continua normal.',
     regras_nao_aceitas: 'Antes, leia e aceite as Regras de uso, na primeira tela da trilha.',
     regras_mudaram: 'As Regras de uso mudaram. Leia de novo e aceite.',
     loja_de_teste: 'A trilha não funciona na loja de teste.',
-    fechada: 'Esta aula ainda está fechada: termine a anterior.',
+    fechada: 'Esta aula ainda não abriu: termine a anterior.',
     amanha: 'Um dia da trilha por dia útil. Esta aula abre no próximo dia útil.',
-    perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação.',
+    perguntas_pendentes: 'As perguntas desta aula ainda estão em aprovação. Aguarde; se passar de um dia, avise quem acompanha a loja.',
     sem_perguntas: 'Esta aula ainda não tem perguntas no app. Avise quem acompanha a loja.',
     aula_expirada: 'Estas perguntas não valem mais. Se a internet caiu na hora de corrigir, a sua resposta pode ter chegado: volte à trilha para ver. Se não chegou, sorteie novas perguntas.',
     prova_em_andamento: 'Sua prova está aberta. Termine a prova antes de voltar às aulas.',
-    aulas_abertas: 'A prova abre quando todas as aulas da etapa estiverem fechadas.',
+    aulas_abertas: 'A prova abre quando todas as aulas da etapa estiverem feitas.',
     refazer_aulas: 'Antes da próxima tentativa, refaça as perguntas das aulas da etapa.',
     aguardando_data: 'A prova ainda não abriu. Veja a data na trilha.',
     aguarda_diretoria: 'Sua trilha está parada aqui até a Diretoria decidir.',
@@ -314,7 +314,7 @@
   }
 
   var ICONE = { feito: '✔', atual: '▶', fechado: '🔒' };
-  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'fechada', amanha: 'abre no próximo dia útil',
+  var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'ainda não abriu', amanha: 'abre no próximo dia útil',
     perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
 
   /**
@@ -954,7 +954,7 @@
         chamar('salvarRespostasProva', { id: p.id, respostas: resp }, function (s) {
           // Sem internet: as respostas continuam guardadas neste aparelho. Avisa para entregar a tempo.
           if (s && s.ok) { alerta.className = ''; alerta.textContent = ''; }
-          else if (!s || FALHAS_DE_REDE[s.erro]) { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho: entregue antes do tempo acabar.'; }
+          else if (!s || FALHAS_DE_REDE[s.erro]) { alerta.className = 'aviso'; alerta.textContent = 'Sem conexão agora. Suas respostas estão guardadas neste aparelho. Quando a internet voltar, toque em Entregar a prova antes de o tempo acabar.'; }
           else {
             // Outro erro (a prova acabou, o tempo esgotou): a mensagem e a dele, e a entrega fecha a prova.
             alerta.className = 'erro'; alerta.textContent = msgErro(s);
