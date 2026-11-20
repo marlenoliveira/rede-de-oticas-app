@@ -343,6 +343,9 @@
       if (p.tipo === 'aulas') listaAulas(c, p);
       if (p.tipo === 'video' && p.estado === 'feito') {
         c.appendChild(botao('Assistir de novo', 'leve', function () { telaVideo(p); }));
+      } else if (p.tipo === 'video' && e.modoTeste) {
+        // Modo de teste: o vídeo também abre fora de ordem, como as aulas e as provas (só assistir; concluir é no cartão da vez).
+        c.appendChild(botao('Assistir', 'leve', function () { telaVideo(p); }));
       }
       if (p.tipo === 'prova') {
         var sp = (e.provas && e.provas[p.id]) || e.prova;
