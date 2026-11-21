@@ -75,6 +75,10 @@
   .tr-diretoria { border-left-color: #6E1A12; } .tr-em_dia { border-left-color: var(--verde); }
   .tr-ficha { margin-top: 8px; font-size: 16px; }
   .tr-ficha div { margin: 3px 0; }
+  .atrasada { color: var(--vermelho); font-weight: 800; }
+  .tr-aplica { background: #F4F6F8; border-radius: 10px; padding: 10px 12px; margin: 10px 0 6px; }
+  .tr-aplica b { display: block; margin-bottom: 4px; }
+  .tr-aplica a { color: var(--azul); font-weight: 700; display: inline-block; margin: 6px 0 2px; min-height: 32px; }
   a.zap { display: block; text-align: center; text-decoration: none; font-weight: 800; min-height: 48px; box-sizing: border-box;
     padding: 11px 18px; border-radius: 12px; border: 2px solid var(--verde); background: var(--verde); color: #fff; margin: 8px 0 2px; }
   .zap-dica { font-size: 14px; color: var(--cinza); margin: 0 0 4px; }
@@ -421,11 +425,16 @@
     cab.type = 'button';
     var linha1 = el('div', 'cab');
     linha1.appendChild(el('b', '', p.nome));
-    linha1.appendChild(el('span', '', p.loja));
+    linha1.appendChild(el('span', '', p.loja + (p.quemAplica ? ' · quem aplica: ' + p.quemAplica : '')));
     cab.appendChild(linha1);
     var onde = p.concluida ? 'Trilha inteira concluída · Vendedora em Formação' : (p.atual.fase + ' · passo ' + (p.atual.ordem || p.atual.n) + ' de ' + (p.totalPassos || p.totalJornada) + ' · ' + p.atual.titulo);
     cab.appendChild(el('div', 'resumo', onde));
     if (p.motivo) cab.appendChild(el('div', 'resumo', p.motivo));
+    // Parte pratica pendente com quem aplica (21/11/2026): nao trava a trilha dela, mas tem prazo; o atraso fica em vermelho.
+    (p.pendencias || []).forEach(function (x) {
+      cab.appendChild(el('div', 'resumo' + (x.atrasada ? ' atrasada' : ''), (x.atrasada ? 'ATRASADA: ' : 'Pendente: ') + x.titulo + ' · desde ' + x.desde +
+        (x.atrasada ? ' · o prazo era ' : ' · prazo até ') + x.ateEm + (x.refazer ? ' · marcada para refazer' : '')));
+    });
     // Faixa da regua das Regras de uso, com as mesmas cores do treino (17/11/2026).
     var FAIXA_TRILHA = { lembrete: 'Lembrete', conversa: 'Conversa com a gerente', advertencia: 'Advertência por escrito', diretoria: 'A Diretoria decide' };
     if (p.faixa && FAIXA_TRILHA[p.faixa]) cab.appendChild(el('span', 'selo s-' + p.faixa, FAIXA_TRILHA[p.faixa]));
@@ -472,38 +481,43 @@
         return s.data + ' ' + (s.resultado === 'aprovada' ? 'aprovada' : 'refazer') + (s.notas ? ' (' + String(s.notas).split(';').join(', ') + ')' : '');
       }).join(' · ')));
     });
-    if (p.podeLancar && p.atual.id === 'ponte') {
-      var bp = el('button', '', 'Lançar: Ponte feita');
-      bp.type = 'button';
-      bp.addEventListener('click', function () { acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: 'ponte' }, 'Confirmar que a conversa da Ponte com ' + p.nome + ' foi feita?'); });
-      f.appendChild(bp);
-    }
-    if (p.podeLancar && p.atual.tipo === 'pessoa' && p.atual.id !== 'ponte') {
-      // D5 (17/11/2026): a gerente ou a supervisora marca aprovada ou refazer. A marcação
-      // aqui é o registro oficial, no lugar do papel assinado. O app não guarda a nota.
-      var COMO = {
-        simulacoes: 'As 6 simulações: depois de aplicar, marque o resultado. Passa com 8 de 10 em cada, pela Régua das 6 Simulações.',
-        avaliacao_dia5: 'O 5º dia: checklist completo e atendimento avaliado com média de 3,5 ou mais (Formulários do Onboarding).',
-        pratica_lentes: 'Avaliação prática de Lentes: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.',
-        pratica_armacoes: 'Avaliação prática de Armações: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.',
-        pratica_negociacao: 'Avaliação prática de Negociação: 5 cenários. Passa com 14 de 20, nenhum cenário abaixo de 2 e os mínimos da ficha.'
-      };
-      f.appendChild(el('div', '', (COMO[p.atual.id] || p.atual.titulo) + ' Esta marcação é o registro oficial.'));
-      var ba = el('button', '', 'Aprovada');
+    // O que quem acompanha lanca nela (21/11/2026): o passo de pessoa da vez (Ponte, 5o dia) e cada parte pratica
+    // pendente, com "Como aplicar" e a ficha no Drive. D5 (17/11/2026): a marcacao aqui e o registro oficial, no
+    // lugar do papel assinado; o app nao guarda a nota.
+    (p.lancaveis || []).forEach(function (x) {
+      var bx = el('div', 'tr-aplica');
+      bx.appendChild(el('b', '', 'Como aplicar: ' + x.titulo));
+      (x.como || []).forEach(function (t) { bx.appendChild(el('div', '', t)); });
+      if (x.link) {
+        var a = el('a', '', 'Abrir no Drive: ' + (x.ficha || 'a ficha'));
+        a.href = x.link; a.target = '_blank'; a.rel = 'noopener';
+        bx.appendChild(a);
+      }
+      if (x.pendencia) bx.appendChild(el('div', x.pendencia.atrasada ? 'atrasada' : '', (x.pendencia.atrasada ? 'Atrasada: o prazo era ' : 'Prazo: até ') + x.pendencia.ateEm + ' (' + x.pendencia.prazo + ' dias úteis depois da prova).'));
+      bx.appendChild(el('div', '', 'Esta marcação é o registro oficial.'));
+      f.appendChild(bx);
+      if (x.id === 'ponte') {
+        var bp = el('button', '', 'Lançar: Ponte feita');
+        bp.type = 'button';
+        bp.addEventListener('click', function () { acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: 'ponte' }, 'Confirmar que a conversa da Ponte com ' + p.nome + ' foi feita?'); });
+        f.appendChild(bp);
+        return;
+      }
+      var ba = el('button', '', 'Aprovada' + (p.lancaveis.length > 1 ? ': ' + x.titulo : ''));
       ba.type = 'button';
       ba.addEventListener('click', function () {
-        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: p.atual.id, resultado: 'aprovada' },
-          'Marcar "' + p.atual.titulo + '" de ' + p.nome + ' como APROVADA?');
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: x.id, resultado: 'aprovada' },
+          'Marcar "' + x.titulo + '" de ' + p.nome + ' como APROVADA?');
       });
       f.appendChild(ba);
-      var br = el('button', 'leve', 'Refazer');
+      var br = el('button', 'leve', 'Refazer' + (p.lancaveis.length > 1 ? ': ' + x.titulo : ''));
       br.type = 'button';
       br.addEventListener('click', function () {
-        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: p.atual.id, resultado: 'refazer' },
-          'Marcar "' + p.atual.titulo + '" de ' + p.nome + ' como REFAZER?');
+        acaoTrilha('lancarPassoPessoa', codigo, { loja: p.loja, nome: p.nome, id: p.id, passo: x.id, resultado: 'refazer' },
+          'Marcar "' + x.titulo + '" de ' + p.nome + ' como REFAZER?');
       });
       f.appendChild(br);
-    }
+    });
     // Certificado de conclusao da Trilha (versao de teste, desde 16/11/2026). Tinha saido sem querer na
     // reforma do passo 2 (17/11/2026); o servidor continuava mandando e o botao nao aparecia.
     if (p.certificado) {
