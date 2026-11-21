@@ -283,8 +283,8 @@
 
   // HOJE (18/11/2026): que dia e hoje para o servidor (dia da semana, se e dia util para a loja dela, o nome do
   // feriado e o proximo dia util). Servidor antigo nao manda: fica null e a tela se vira com o relogio do aparelho.
-  var ESTADO = null, REGRAS = null, NOME = '', HORARIO = null, CERTIFICADO = null, REGRAS_USO = null, HOJE = null;
-  function receber(t) { ESTADO = t.estado; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; CERTIFICADO = t.certificado || null; REGRAS_USO = t.regrasUso || null; HOJE = t.hoje || null; }
+  var ESTADO = null, REGRAS = null, NOME = "", HORARIO = null, CERTIFICADO = null, REGRAS_USO = null, HOJE = null, QUEM_APLICA = "";
+  function receber(t) { ESTADO = t.estado; QUEM_APLICA = t.quemAplica || ''; REGRAS = t.regras; NOME = t.nome; HORARIO = t.horario || null; CERTIFICADO = t.certificado || null; REGRAS_USO = t.regrasUso || null; HOJE = t.hoje || null; }
   /** Carrega certificado.js so quando o servidor manda um certificado (versao de teste, desde 16/11/2026). */
   function comCertificado(fn) {
     if (window.baixarCertificado) return fn();
@@ -313,7 +313,7 @@
     });
   }
 
-  var ICONE = { feito: '✔', atual: '▶', fechado: '🔒' };
+  var ICONE = { feito: '✔', atual: '▶', fechado: '🔒', pendente: '⏳' };
   var ROTULO_AULA = { feita: 'feita', aberta: 'sua aula de agora', fechada: 'ainda não abriu', amanha: 'abre no próximo dia útil',
     perguntas_pendentes: 'perguntas em aprovação', sem_perguntas: 'ainda sem perguntas no app' };
 
@@ -368,12 +368,16 @@
       r.appendChild(el('div', 'aviso', 'Modo de teste: tudo liberado para você ver o app inteiro, fora de ordem e fora do horário. As vendedoras seguem a ordem: uma aula depois da outra e o conteúdo de um dia por dia.'));
     }
     r.appendChild(cartaoAgora(e));
+    var bp = blocoPendencias(e);
+    if (bp) r.appendChild(bp);
     r.appendChild(blocoRever(e));
     var det = el('details');
     det.appendChild(el('summary', '', 'Ver o caminho todo'));
     e.passos.forEach(function (p) {
       var c = el('div', 'passo ' + p.estado);
       c.appendChild(el('div', 't', ICONE[p.estado] + ' ' + p.titulo));
+      // Parte pratica pendente com quem aplica (21/11/2026): nao trava a trilha dela.
+      if (p.estado === 'pendente') c.appendChild(el('div', 'sub', 'Pendente com quem aplica. Não trava a sua trilha: siga nas aulas.'));
       if (p.tipo === 'aulas') listaAulas(c, p);
       if (p.tipo === 'video' && p.estado === 'feito') {
         c.appendChild(botao('Assistir de novo', 'leve', function () { telaVideo(p); }));
@@ -449,6 +453,20 @@
    * "Rever o que voce ja fez", sempre a vista (o Marlen, 14/11/2026: "o que a
    * pessoa ja fez tem que estar liberado para ela"). Um toque abre a aula de novo.
    */
+  /**
+   * Parte pratica pendente com quem aplica (21/11/2026): as 6 simulacoes e as avaliacoes praticas dos blocos nao
+   * travam as aulas; quem aplica tem prazo. A que e o passo da vez ja esta no cartao "agora".
+   */
+  function blocoPendencias(e) {
+    var pend = (e.pendencias || []).filter(function (x) { return !e.atual || x.id !== e.atual.id; });
+    if (!pend.length) return null;
+    var c = el('div', 'aviso');
+    c.appendChild(el('b', '', 'Com quem aplica' + (QUEM_APLICA ? ' (' + QUEM_APLICA + ')' : '') + ':'));
+    pend.forEach(function (x) { c.appendChild(el('div', '', x.titulo + ' · prazo até ' + x.ateEm + (x.refazer ? ' · marcada para refazer' : ''))); });
+    c.appendChild(el('p', 'sub', 'Não trava a sua trilha: siga nas aulas. Combine com quem aplica o dia da parte prática.'));
+    return c;
+  }
+
   function blocoRever(e) {
     var box = el('div');
     var feitas = e.aulas.filter(function (a) { return a.estado === 'feita'; });
@@ -577,6 +595,9 @@
       tit(at.titulo);
       var pp = e.passos.filter(function (x) { return x.id === at.id; })[0];
       if (pp && pp.explica) txt(pp.explica);
+      if (QUEM_APLICA) txt('Na sua loja, quem aplica: ' + QUEM_APLICA + '.');
+      var pd = (e.pendencias || []).filter(function (x) { return x.id === at.id; })[0];
+      if (pd) txt('Prazo para quem aplica: até ' + pd.ateEm + '.');
       txt('Não depende de você. Assim que for lançado, a próxima etapa abre aqui.');
       var lancs = (e.praticas && e.praticas[at.id]) || [];
       if (lancs.length) {
@@ -651,7 +672,7 @@
         c.appendChild(el('div', 'tit', 'A ' + pr.tentativa + 'ª tentativa abre em ' + pr.abreEm));
         c.appendChild(el('p', '', 'Você já refez as aulas. Agora é esperar a data.'));
       } else {
-        // Prova de bloco: no 5o dia util do bloco (os dias 2 a 4 sao de pratica com quem aplica).
+        // Prova dos Primeiros dias: no 5o dia util. Prova de bloco: no dia util seguinte as aulas do bloco (21/11/2026).
         c.appendChild(el('div', 'tit', 'A prova abre em ' + pr.abreEm));
         c.appendChild(el('p', '', 'Até lá, pratique no balcão com quem aplica o que você estudou.'));
       }
@@ -1022,6 +1043,9 @@
     var at = res.trilha && res.trilha.estado ? res.trilha.estado.atual : undefined;
     if (res.passou) proximo = at ? ('Agora vem: ' + at.titulo + (at.tipo === 'pessoa' ? ', com quem aplica.' : '.'))
       : (at === null ? 'Você concluiu a trilha inteira.' : 'Volte à trilha para ver o próximo passo.');
+    // A parte pratica que ficou com quem aplica (nao trava a trilha dela; 21/11/2026).
+    var pend = res.trilha && res.trilha.estado ? (res.trilha.estado.pendencias || []).filter(function (x) { return !at || x.id !== at.id; }) : [];
+    if (res.passou && pend.length) proximo += ' Com quem aplica: ' + pend.map(function (x) { return x.titulo; }).join(', ') + '.';
     else if (res.proxima === 'aguarda_diretoria') proximo = 'A trilha fica parada aqui até a Diretoria decidir. Continue atendendo no que você já está liberada.';
     else proximo = 'Refaça as perguntas das aulas desta etapa.' + (res.abreEm ? ' A próxima tentativa abre a partir de ' + res.abreEm + '.' : '');
     r.appendChild(el('div', res.passou ? 'bom' : 'aviso', (res.passou ? 'Passou. ' : 'Não passou desta vez. ') + proximo));
