@@ -357,7 +357,7 @@
     r.appendChild(el('p', 'sub', e.aulasFeitas + ' de ' + e.aulasTotal + ' aulas feitas'));
     // Aula a qualquer hora; prova so na loja, no horario (17/11/2026). Com a aula livre, o aviso so
     // aparece quando a vez e da prova.
-    if (HORARIO && !HORARIO.aberto && !e.concluida && (!HORARIO.aulaLivre || (e.atual && e.atual.tipo === 'prova'))) {
+    if (HORARIO && !HORARIO.aberto && !e.concluida && (!HORARIO.aulaLivre || (e.atual && e.atual.tipo === 'prova') || (e.prova && e.prova.estado === 'liberada'))) {
       r.appendChild(el('div', 'aviso', HORARIO.aulaLivre
         ? 'A prova é feita na loja, no horário: ' + HORARIO.texto + '. As aulas você faz quando quiser.'
         : 'Agora está fora do horário da trilha. Ela abre ' + HORARIO.texto + '. Dá para olhar, mas aula e prova só no horário.'));
@@ -366,6 +366,8 @@
       r.appendChild(el('div', 'aviso', 'Modo de teste: tudo liberado para você ver o app inteiro, fora de ordem e fora do horário. As vendedoras seguem a ordem: uma aula depois da outra e o conteúdo de um dia por dia.'));
     }
     r.appendChild(cartaoAgora(e));
+    var cpp = cartaoProvaPronta(e);
+    if (cpp) r.appendChild(cpp);
     var bp = blocoPendencias(e);
     if (bp) r.appendChild(bp);
     r.appendChild(blocoRever(e));
@@ -385,7 +387,9 @@
       }
       if (p.tipo === 'prova') {
         var sp = (e.provas && e.provas[p.id]) || e.prova;
-        if (sp.estado === 'liberada' || sp.estado === 'em_andamento') {
+        // So a prova da vez abre (a em foco, e.prova): uma de cada vez, na ordem. No modo de teste, todas (fora de ordem).
+        var provaDaVez = e.modoTeste || (e.prova && e.prova.id === p.id);
+        if (provaDaVez && (sp.estado === 'liberada' || sp.estado === 'em_andamento')) {
           var bsp = botao('Abrir a ' + (sp.nome || 'prova'), 'laranja', function () { telaProvaIntro(sp); });
           // Mesma regra do cartao da vez: a prova precisa caber inteira no horario (a que ja esta aberta continua).
           if (sp.estado === 'liberada' && HORARIO && !HORARIO.provaCabe) bsp.disabled = true;
@@ -462,6 +466,25 @@
     c.appendChild(el('b', '', 'Com quem aplica' + (QUEM_APLICA ? ' (' + QUEM_APLICA + ')' : '') + ':'));
     pend.forEach(function (x) { c.appendChild(el('div', '', x.titulo + ' · prazo até ' + x.ateEm + (x.refazer ? ' · marcada para refazer' : ''))); });
     c.appendChild(el('p', 'sub', 'Não trava a sua trilha: siga nas aulas. Combine com quem aplica o dia da parte prática.'));
+    return c;
+  }
+
+  /**
+   * Prova pronta enquanto ela segue nas aulas (24/11/2026: a prova nao trava o conteudo). A prova da vez ja esta
+   * liberada (bloco fechado, no dia e no horario), mas o passo da vez e uma aula: um cartao para ela abrir a prova
+   * na loja, com supervisao, sem precisar abrir "Ver o caminho todo". No fim, quando so falta a prova, o cartao
+   * "agora" ja e o da prova, por isso aqui so entra quando o passo atual NAO e a prova.
+   */
+  function cartaoProvaPronta(e) {
+    if (e.concluida || !e.prova || e.prova.estado !== 'liberada') return null;
+    if (e.atual && e.atual.tipo === 'prova') return null;
+    if (provaAberta(e)) return null;
+    var c = el('div', 'aviso');
+    c.appendChild(el('b', '', 'Prova pronta: ' + (e.prova.nome || 'prova')));
+    c.appendChild(el('p', 'sub', 'Feita na loja, no horário, com supervisão. Não trava a sua trilha: siga nas aulas e faça a prova quando puder ser acompanhada na loja.'));
+    var b = botao('Abrir a ' + (e.prova.nome || 'prova'), 'laranja', function () { telaProvaIntro(e.prova); });
+    if (HORARIO && !HORARIO.provaCabe) { b.disabled = true; c.appendChild(el('p', 'sub', 'A prova precisa caber inteira no horário' + (HORARIO.texto ? ': ' + HORARIO.texto : '') + '.')); }
+    c.appendChild(b);
     return c;
   }
 
